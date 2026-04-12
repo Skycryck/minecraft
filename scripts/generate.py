@@ -1,0 +1,710 @@
+#!/usr/bin/env python3
+"""
+generate.py — Minecraft Stats Dashboard Generator
+===================================================
+Lit les fichiers JSON de stats Minecraft dans un dossier,
+résout les UUIDs en pseudos via l'API Mojang,
+et génère un fichier index.html complet avec le dashboard.
+
+Usage:
+    python generate.py <chemin_dossier_data> [--title "Titre du serveur"]
+
+Exemples:
+    python generate.py stats/serveur-2026/data --title "Serveur 2026"
+    python generate.py stats/serveur-confinement-2020/data --title "Serveur Confinement 2020"
+
+Le fichier index.html est créé dans le dossier parent de <chemin_dossier_data>.
+Ex: stats/serveur-2026/data → stats/serveur-2026/index.html
+"""
+
+import json
+import os
+import sys
+import argparse
+import urllib.request
+import urllib.error
+import time
+from pathlib import Path
+
+
+# ═══════════════════════════════════════════════════════════
+# 1. RÉSOLUTION UUID → PSEUDO (Mojang API)
+# ═══════════════════════════════════════════════════════════
+
+def resolve_uuid(uuid: str) -> str:
+    """Résout un UUID Minecraft en pseudo via l'API Mojang."""
+    clean = uuid.replace("-", "")
+    url = f"https://sessionserver.mojang.com/session/minecraft/profile/{clean}"
+    try:
+        req = urllib.request.urlopen(url, timeout=10)
+        data = json.loads(req.read())
+        return data.get("name", uuid[:8])
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError) as e:
+        print(f"  ⚠ Impossible de résoudre {uuid}: {e}")
+        return uuid[:8]
+
+
+def resolve_all_uuids(uuids: list[str], cache_path: Path | None = None) -> dict[str, str]:
+    """
+    Résout une liste d'UUIDs, avec cache local pour éviter
+    de re-requêter l'API à chaque exécution.
+    """
+    cache = {}
+    if cache_path and cache_path.exists():
+        with open(cache_path) as f:
+            cache = json.load(f)
+
+    result = {}
+    for uuid in uuids:
+        if uuid in cache:
+            result[uuid] = cache[uuid]
+            print(f"  ✓ {uuid} → {cache[uuid]} (cache)")
+        else:
+            name = resolve_uuid(uuid)
+            result[uuid] = name
+            cache[uuid] = name
+            print(f"  ✓ {uuid} → {name} (API)")
+            time.sleep(0.5)  # Rate limiting Mojang
+
+    if cache_path:
+        with open(cache_path, "w") as f:
+            json.dump(cache, f, indent=2)
+
+    return result
+
+
+# ═══════════════════════════════════════════════════════════
+# 2. EXTRACTION & NORMALISATION DES STATS
+# ═══════════════════════════════════════════════════════════
+
+def clean_key(k: str) -> str:
+    return k.replace("minecraft:", "")
+
+
+def clean_dict(d: dict, top_n: int | None = None) -> dict:
+    cleaned = {clean_key(k): v for k, v in d.items()}
+    if top_n:
+        cleaned = dict(sorted(cleaned.items(), key=lambda x: -x[1])[:top_n])
+    return cleaned
+
+
+def process_player(uuid: str, name: str, filepath: str) -> dict:
+    """Extrait et normalise toutes les stats d'un joueur."""
+    with open(filepath) as f:
+        data = json.load(f)
+
+    stats = data.get("stats", {})
+    custom = stats.get("minecraft:custom", {})
+
+    # Temps de jeu : play_time (1.17+) ou play_one_minute (legacy)
+    play_ticks = custom.get("minecraft:play_time",
+                            custom.get("minecraft:play_one_minute", 0))
+
+    # Distances (cm → km)
+    dist_keys = [
+        "walk_one_cm", "sprint_one_cm", "swim_one_cm", "fly_one_cm",
+        "aviate_one_cm", "boat_one_cm", "horse_one_cm", "minecart_one_cm",
+        "climb_one_cm", "crouch_one_cm", "fall_one_cm",
+        "walk_on_water_one_cm", "walk_under_water_one_cm",
+    ]
+    distances = {}
+    for key in dist_keys:
+        mc_key = f"minecraft:{key}"
+        if mc_key in custom:
+            distances[key.replace("_one_cm", "")] = round(custom[mc_key] / 100_000, 2)
+
+    return {
+        "uuid": uuid,
+        "play_hours": round(play_ticks / 20 / 3600, 1),
+        "play_ticks": play_ticks,
+        "deaths": custom.get("minecraft:deaths", 0),
+        "mob_kills": custom.get("minecraft:mob_kills", 0),
+        "player_kills": custom.get("minecraft:player_kills", 0),
+        "jumps": custom.get("minecraft:jump", 0),
+        "damage_dealt": custom.get("minecraft:damage_dealt", 0),
+        "damage_taken": custom.get("minecraft:damage_taken", 0),
+        "animals_bred": custom.get("minecraft:animals_bred", 0),
+        "fish_caught": custom.get("minecraft:fish_caught", 0),
+        "enchant_item": custom.get("minecraft:enchant_item", 0),
+        "open_chest": custom.get("minecraft:open_chest", 0),
+        "sleep_in_bed": custom.get("minecraft:sleep_in_bed", 0),
+        "traded_with_villager": custom.get("minecraft:traded_with_villager", 0),
+        "talked_to_villager": custom.get("minecraft:talked_to_villager", 0),
+        "distances": distances,
+        "total_distance_km": round(sum(distances.values()), 2),
+        "mined_top15": clean_dict(stats.get("minecraft:mined", {}), 15),
+        "total_mined": sum(stats.get("minecraft:mined", {}).values()),
+        "killed_top10": clean_dict(stats.get("minecraft:killed", {}), 10),
+        "total_killed": sum(stats.get("minecraft:killed", {}).values()),
+        "killed_by": clean_dict(stats.get("minecraft:killed_by", {})),
+        "crafted_top15": clean_dict(stats.get("minecraft:crafted", {}), 15),
+        "total_crafted": sum(stats.get("minecraft:crafted", {}).values()),
+        "total_used": sum(stats.get("minecraft:used", {}).values()),
+        "total_picked_up": sum(stats.get("minecraft:picked_up", {}).values()),
+        "total_dropped": sum(stats.get("minecraft:dropped", {}).values()),
+        "broken": clean_dict(stats.get("minecraft:broken", {})),
+    }
+
+
+# ═══════════════════════════════════════════════════════════
+# 3. GÉNÉRATION HTML
+# ═══════════════════════════════════════════════════════════
+
+def generate_html(players_data: dict, title: str) -> str:
+    """Génère le fichier HTML complet du dashboard."""
+    data_json = json.dumps(players_data, separators=(",", ":"))
+
+    return f'''<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+:root{{
+  --bg:#0c0c0f;--bg-card:#16161a;--bg-card-alt:#1c1c22;--bg-hover:#222230;
+  --border:#2a2a35;--border-light:#3a3a48;
+  --text:#e8e6e3;--text-dim:#8b8b96;--text-muted:#5c5c68;
+  --accent:#7c6aef;--accent-light:#9b8df7;--accent-dim:#5a4bb8;
+  --green:#3ecf8e;--green-dim:#2a9d68;
+  --red:#ef6a6a;--orange:#efaa6a;--blue:#6aafef;--cyan:#6aefd9;
+  --yellow:#efd96a;--pink:#ef6ac0;--teal:#6aefe0;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-sans:'Space Grotesk',system-ui,sans-serif;
+  --radius:10px;--radius-sm:6px;
+}}
+html{{font-size:15px;scroll-behavior:smooth}}
+body{{
+  background:var(--bg);color:var(--text);font-family:var(--font-sans);
+  min-height:100vh;line-height:1.5;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%,rgba(124,106,239,.08),transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%,rgba(62,207,142,.04),transparent);
+}}
+a{{color:var(--accent-light);text-decoration:none}}
+::-webkit-scrollbar{{width:6px;height:6px}}
+::-webkit-scrollbar-track{{background:var(--bg)}}
+::-webkit-scrollbar-thumb{{background:var(--border);border-radius:3px}}
+.app{{max-width:1400px;margin:0 auto;padding:1rem}}
+.header{{text-align:center;padding:2.5rem 1rem 2rem;position:relative}}
+.header h1{{
+  font-size:2.6rem;font-weight:700;letter-spacing:-.03em;
+  background:linear-gradient(135deg,var(--accent-light),var(--green),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:.3rem;
+}}
+.header p{{color:var(--text-dim);font-size:.95rem;font-family:var(--font-mono)}}
+.header .meta{{display:flex;gap:1.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap}}
+.header .meta span{{
+  font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted);
+  background:var(--bg-card);padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
+}}
+.header .meta span b{{color:var(--accent-light);font-weight:600}}
+.nav{{
+  display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;
+  padding:1rem 0;position:sticky;top:0;z-index:100;
+  background:rgba(12,12,15,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);margin-bottom:1.5rem;
+}}
+.nav button{{
+  font-family:var(--font-mono);font-size:.78rem;
+  padding:.5rem 1rem;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;
+}}
+.nav button:hover{{border-color:var(--accent);color:var(--text)}}
+.nav button.active{{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(124,106,239,.25)}}
+.card{{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.25rem;margin-bottom:1rem;transition:border-color .2s;
+}}
+.card:hover{{border-color:var(--border-light)}}
+.card h3{{
+  font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-muted);margin-bottom:1rem;font-family:var(--font-mono);
+  display:flex;align-items:center;gap:.5rem;
+}}
+.card h3 .icon{{font-size:1.1rem}}
+.grid{{display:grid;gap:1rem}}
+.grid-2{{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}}
+.grid-3{{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
+.grid-4{{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}}
+.stat-tile{{
+  background:var(--bg-card-alt);border-radius:var(--radius-sm);
+  padding:1rem;text-align:center;border:1px solid var(--border);transition:transform .15s,border-color .15s;
+}}
+.stat-tile:hover{{transform:translateY(-2px);border-color:var(--accent-dim)}}
+.stat-tile .value{{font-size:1.8rem;font-weight:700;font-family:var(--font-mono);line-height:1.1;margin-bottom:.2rem}}
+.stat-tile .label{{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-mono)}}
+.stat-tile .sub{{font-size:.7rem;color:var(--text-dim);margin-top:.15rem;font-family:var(--font-mono)}}
+.leaderboard{{list-style:none}}
+.leaderboard li{{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem .8rem;border-radius:var(--radius-sm);transition:background .15s;font-family:var(--font-mono);font-size:.82rem;
+}}
+.leaderboard li:hover{{background:var(--bg-hover)}}
+.leaderboard .rank{{
+  width:1.6rem;height:1.6rem;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;flex-shrink:0;border:1px solid var(--border);color:var(--text-muted);
+}}
+.leaderboard li:nth-child(1) .rank{{background:linear-gradient(135deg,#ffd700,#b8860b);color:#000;border:none}}
+.leaderboard li:nth-child(2) .rank{{background:linear-gradient(135deg,#c0c0c0,#808080);color:#000;border:none}}
+.leaderboard li:nth-child(3) .rank{{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;border:none}}
+.leaderboard .name{{flex:1;color:var(--text)}}
+.leaderboard .val{{color:var(--accent-light);font-weight:600}}
+.leaderboard .bar-bg{{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;min-width:60px}}
+.leaderboard .bar-fill{{height:100%;border-radius:3px;transition:width .6s ease}}
+.chart-wrap{{position:relative;width:100%;max-height:350px}}
+.chart-wrap canvas{{width:100%!important}}
+.profile-header{{
+  display:flex;align-items:center;gap:1.5rem;padding:1.5rem;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem;flex-wrap:wrap;
+}}
+.profile-avatar{{width:64px;height:64px;border-radius:var(--radius-sm);image-rendering:pixelated;border:2px solid var(--accent-dim);background:var(--bg)}}
+.profile-info h2{{font-size:1.8rem;font-weight:700;letter-spacing:-.02em}}
+.profile-info .uuid{{font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted)}}
+.profile-stats{{display:flex;gap:1.5rem;margin-left:auto;flex-wrap:wrap}}
+.profile-stat{{text-align:center}}
+.profile-stat .pv{{font-size:1.4rem;font-weight:700;font-family:var(--font-mono);color:var(--accent-light)}}
+.profile-stat .pl{{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-mono)}}
+.section{{display:none}}
+.section.active{{display:block}}
+.record-badge{{
+  display:inline-block;padding:.1rem .4rem;border-radius:10px;font-size:.6rem;font-weight:700;margin-left:.3rem;
+  background:linear-gradient(135deg,#ffd700,#b8860b);color:#000;
+}}
+.player-dot{{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}}
+@media(max-width:768px){{
+  .header h1{{font-size:1.6rem}}
+  .grid-2,.grid-3,.grid-4{{grid-template-columns:1fr}}
+  .profile-header{{flex-direction:column;align-items:flex-start}}
+  .profile-stats{{margin-left:0}}
+  .stat-tile .value{{font-size:1.3rem}}
+  .app{{padding:.5rem}}
+}}
+@keyframes fadeUp{{from{{opacity:0;transform:translateY(12px)}}to{{opacity:1;transform:translateY(0)}}}}
+.card{{animation:fadeUp .4s ease both}}
+.card:nth-child(2){{animation-delay:.05s}}
+.card:nth-child(3){{animation-delay:.1s}}
+.card:nth-child(4){{animation-delay:.15s}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+  <h1>⛏ {title}</h1>
+  <p>Dashboard de statistiques du serveur</p>
+  <div class="meta" id="globalMeta"></div>
+</div>
+<div class="nav" id="nav"></div>
+<div id="content"></div>
+</div>
+<script>
+// ═══════════════════════════════════════
+// DATA — auto-generated by generate.py
+// ═══════════════════════════════════════
+const PLAYERS_DATA = {data_json};
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+const PALETTE = ['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
+const PLAYER_COLORS_MAP = {{}};
+const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
+playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
+
+const LABELS = {{
+  stone:'Pierre',netherrack:'Netherrack',sand:'Sable',grass_block:'Herbe',dirt:'Terre',
+  sandstone:'Grès',gravel:'Gravier',spruce_log:'Bûche sapin',coal_ore:'Charbon',iron_ore:'Fer',
+  oak_log:'Bûche chêne',wheat:'Blé',packed_ice:'Glace compacte',andesite:'Andésite',diorite:'Diorite',
+  granite:'Granite',sugar_cane:'Canne à sucre',oak_leaves:'Feuilles chêne',redstone_ore:'Redstone',
+  cobblestone:'Pavé',nether_quartz_ore:'Quartz Nether',nether_gold_ore:'Or Nether',diamond_ore:'Diamant',
+  oak_planks:'Planches chêne',birch_planks:'Planches bouleau',spruce_planks:'Planches sapin',
+  white_concrete:'Béton blanc',end_stone:'Pierre End',beetroots:'Betteraves',melon:'Melon',
+  stone_bricks:'Briques pierre',birch_log:'Bûche bouleau',dark_oak_log:'Bûche chêne noir',
+  acacia_log:'Bûche acacia',deepslate:'Ardoise abîmes',short_grass:'Herbe courte',
+  cherry_log:'Bûche cerisier',tuff:'Tuf',copper_ore:'Cuivre',
+  enderman:'Enderman',zombie:'Zombie',skeleton:'Squelette',creeper:'Creeper',spider:'Araignée',
+  husk:'Husk',cow:'Vache',sheep:'Mouton',pig:'Cochon',blaze:'Blaze',
+  wither_skeleton:'Wither Squelette',magma_cube:'Cube magma',shulker:'Shulker',pillager:'Pillard',
+  hoglin:'Hoglin',squid:'Poulpe',drowned:'Noyé',chicken:'Poulet',slime:'Slime',
+  zombified_piglin:'Piglin zombifié',player:'Joueur',iron_golem:'Golem fer',vindicator:'Vindicateur',
+  phantom:'Phantom',piglin:'Piglin',piglin_brute:'Brute piglin',ghast:'Ghast',ravager:'Ravageur',
+  witch:'Sorcière',vex:'Vex',endermite:'Endermite',ender_dragon:'Ender Dragon',zoglin:'Zoglin',
+  mooshroom:'Champimeuh',breeze:'Breeze',bogged:'Bogged',warden:'Warden',salmon:'Saumon',
+  walk:'Marche',sprint:'Sprint',swim:'Nage',fly:'Vol créatif',aviate:'Élytre',boat:'Bateau',
+  horse:'Cheval',minecart:'Wagon',climb:'Escalade',crouch:'Accroupi',fall:'Chute',
+  walk_on_water:"Sur l'eau",walk_under_water:"Sous l'eau",
+  paper:'Papier',bone_meal:"Poudre d'os",glass:'Verre',glass_pane:'Vitre',torch:'Torche',
+  stick:'Bâton',iron_ingot:'Lingot fer',gold_ingot:'Lingot or',emerald:'Émeraude',
+  firework_rocket:'Fusée',coal:'Charbon',coal_block:'Bloc charbon',redstone_block:'Bloc redstone',
+  lapis_lazuli:'Lapis-lazuli',bread:'Pain',green_dye:'Teinture verte',cut_sandstone:'Grès taillé',
+  dark_oak_planks:'Planches chêne noir',acacia_planks:'Planches acacia',redstone:'Redstone',
+  quartz_block:'Bloc quartz',stone_button:'Bouton pierre',gold_nugget:'Pépite or',
+  sandstone_stairs:'Escalier grès',nether_brick:'Brique Nether',clay:'Argile',
+  bone_block:"Bloc d'os",white_concrete_powder:'Poudre béton blanc',oak_fence:'Barrière chêne'
+}};
+
+function label(k){{return LABELS[k]||k.replace(/_/g,' ').replace(/\\b\\w/g,c=>c.toUpperCase())}}
+function fmt(n){{if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString('fr-FR')}}
+function pct(v,m){{return m?Math.round(v/m*100):0}}
+
+Chart.defaults.color='#8b8b96';
+Chart.defaults.borderColor='rgba(42,42,53,0.5)';
+Chart.defaults.font.family="'JetBrains Mono',monospace";
+Chart.defaults.font.size=11;
+Chart.defaults.plugins.legend.labels.boxWidth=12;
+Chart.defaults.plugins.legend.labels.padding=12;
+
+const charts={{}};
+function destroyChart(id){{if(charts[id]){{charts[id].destroy();delete charts[id]}}}}
+
+// ═══════════════════════════════════════
+// GLOBAL AGGREGATION
+// ═══════════════════════════════════════
+const totalHours=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].play_hours,0);
+const totalMined=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_mined,0);
+const totalKills=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].mob_kills,0);
+const totalDeaths=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].deaths,0);
+const totalDist=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_distance_km,0);
+const totalCrafted=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_crafted,0);
+
+document.getElementById('globalMeta').innerHTML=`
+  <span><b>${{playerNames.length}}</b> joueurs</span>
+  <span><b>${{totalHours.toFixed(0)}}</b>h de jeu</span>
+  <span><b>${{fmt(totalMined)}}</b> blocs minés</span>
+  <span><b>${{fmt(totalKills)}}</b> mobs tués</span>`;
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+const navEl=document.getElementById('nav');
+const contentEl=document.getElementById('content');
+
+function buildNav(){{
+  let h=`<button class="active" data-section="overview">📊 Vue globale</button>`;
+  h+=`<button data-section="leaderboards">🏆 Classements</button>`;
+  playerNames.forEach(name=>{{
+    const dot=`<span class="player-dot" style="background:${{PLAYER_COLORS_MAP[name]}}"></span>`;
+    h+=`<button data-section="player-${{name}}">${{dot}}${{name}}</button>`;
+  }});
+  navEl.innerHTML=h;
+  navEl.querySelectorAll('button').forEach(btn=>{{
+    btn.addEventListener('click',()=>{{
+      navEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      showSection(btn.dataset.section);
+    }});
+  }});
+}}
+
+function showSection(id){{
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el)el.classList.add('active');
+  if(id==='overview')renderOverviewCharts();
+  if(id==='leaderboards')renderLeaderboardCharts();
+  if(id.startsWith('player-'))renderPlayerCharts(id.replace('player-',''));
+}}
+
+function buildAllSections(){{
+  let h='';h+=buildOverview();h+=buildLeaderboards();
+  playerNames.forEach(name=>{{h+=buildPlayerSection(name)}});
+  contentEl.innerHTML=h;
+}}
+
+// ═══════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════
+function buildOverview(){{
+  return `
+  <div class="section active" id="overview">
+    <div class="grid grid-4" style="margin-bottom:1rem">
+      <div class="stat-tile"><div class="value" style="color:var(--accent-light)">${{totalHours.toFixed(0)}}h</div><div class="label">Temps de jeu total</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--green)">${{fmt(totalMined)}}</div><div class="label">Blocs minés</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--red)">${{fmt(totalKills)}}</div><div class="label">Mobs tués</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--orange)">${{fmt(totalCrafted)}}</div><div class="label">Items craftés</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card"><h3><span class="icon">⏱</span> Temps de jeu par joueur</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🗺</span> Distance totale (km)</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⛏</span> Blocs minés par joueur</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⚔</span> Mobs tués par joueur</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+    </div>
+    <div class="card"><h3><span class="icon">📈</span> Comparaison multi-stats</h3>
+      <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
+    </div>
+  </div>`;
+}}
+
+function renderOverviewCharts(){{
+  const barOpts=(lbl)=>({{responsive:true,maintainAspectRatio:false,plugins:{{legend:{{display:false}}}},
+    scales:{{y:{{title:{{display:true,text:lbl}},grid:{{color:'rgba(42,42,53,0.3)'}}}},x:{{grid:{{display:false}}}}}}}});
+  const mkBar=(id,data,tooltipSuffix,yLabel)=>{{
+    destroyChart(id);
+    charts[id]=new Chart(document.getElementById(id),{{type:'bar',data:{{
+      labels:playerNames,datasets:[{{data,backgroundColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]+'cc'),
+        borderColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]),borderWidth:1,borderRadius:4}}]
+    }},options:{{...barOpts(yLabel),plugins:{{legend:{{display:false}},tooltip:{{callbacks:{{label:ctx=>ctx.parsed.y+(tooltipSuffix||'')}}}}}}}}}});
+  }};
+  mkBar('chart-playtime',playerNames.map(n=>PLAYERS_DATA[n].play_hours),'h','Heures');
+  mkBar('chart-distance',playerNames.map(n=>PLAYERS_DATA[n].total_distance_km),' km','km');
+  mkBar('chart-mined',playerNames.map(n=>PLAYERS_DATA[n].total_mined),' blocs','Blocs');
+  mkBar('chart-kills',playerNames.map(n=>PLAYERS_DATA[n].mob_kills),' kills','Kills');
+
+  destroyChart('chart-radar');
+  const top5=playerNames.slice(0,5);
+  const rm=['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','deaths'];
+  const rl=['Temps de jeu','Blocs minés','Mobs tués','Distance','Items craftés','Morts'];
+  const mx=rm.map(m=>Math.max(...playerNames.map(n=>PLAYERS_DATA[n][m]||0)));
+  charts['chart-radar']=new Chart(document.getElementById('chart-radar'),{{type:'radar',data:{{
+    labels:rl,datasets:top5.map(name=>({{label:name,
+      data:rm.map((m,i)=>mx[i]?((PLAYERS_DATA[name][m]||0)/mx[i]*100):0),
+      borderColor:PLAYER_COLORS_MAP[name],backgroundColor:PLAYER_COLORS_MAP[name]+'22',
+      borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[name]}}))
+  }},options:{{responsive:true,maintainAspectRatio:false,
+    scales:{{r:{{grid:{{color:'rgba(42,42,53,0.4)'}},angleLines:{{color:'rgba(42,42,53,0.3)'}},ticks:{{display:false}},pointLabels:{{font:{{size:12}}}}}}}},
+    plugins:{{tooltip:{{callbacks:{{label:ctx=>{{
+      const idx=ctx.dataIndex;const name=ctx.dataset.label;const raw=PLAYERS_DATA[name][rm[idx]]||0;
+      return `${{name}}: ${{typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(raw)}}`;
+    }}}}}}}}}}}});
+}}
+
+// ═══════════════════════════════════════
+// LEADERBOARDS
+// ═══════════════════════════════════════
+function buildLeaderboards(){{
+  const boards=[
+    {{key:'play_hours',title:'⏱ Temps de jeu',suffix:'h',color:'var(--accent-light)'}},
+    {{key:'total_mined',title:'⛏ Blocs minés',suffix:'',color:'var(--green)'}},
+    {{key:'mob_kills',title:'⚔ Mobs tués',suffix:'',color:'var(--red)'}},
+    {{key:'deaths',title:'💀 Morts',suffix:'',color:'var(--orange)'}},
+    {{key:'total_distance_km',title:'🗺 Distance',suffix:' km',color:'var(--blue)'}},
+    {{key:'total_crafted',title:'🔨 Items craftés',suffix:'',color:'var(--cyan)'}},
+    {{key:'player_kills',title:'🗡 PvP Kills',suffix:'',color:'var(--pink)'}},
+    {{key:'enchant_item',title:'✨ Enchantements',suffix:'',color:'var(--yellow)'}},
+    {{key:'fish_caught',title:'🐟 Poissons',suffix:'',color:'var(--teal)'}},
+    {{key:'traded_with_villager',title:'🤝 Échanges PNJ',suffix:'',color:'var(--accent-light)'}},
+    {{key:'animals_bred',title:'💕 Élevage',suffix:'',color:'var(--pink)'}},
+    {{key:'jumps',title:'🦘 Sauts',suffix:'',color:'var(--green)'}},
+  ];
+  let h=`<div class="section" id="leaderboards"><div class="grid grid-3">`;
+  boards.forEach(b=>{{
+    const sorted=[...playerNames].sort((a,c)=>(PLAYERS_DATA[c][b.key]||0)-(PLAYERS_DATA[a][b.key]||0));
+    const maxVal=PLAYERS_DATA[sorted[0]][b.key]||1;
+    h+=`<div class="card"><h3>${{b.title}}</h3><ol class="leaderboard">`;
+    sorted.forEach((name,i)=>{{
+      const val=PLAYERS_DATA[name][b.key]||0;const w=pct(val,maxVal);const isRec=i===0&&val>0;
+      h+=`<li><span class="rank">${{i+1}}</span>
+        <span class="name"><span class="player-dot" style="background:${{PLAYER_COLORS_MAP[name]}}"></span>${{name}}${{isRec?'<span class="record-badge">RECORD</span>':''}}</span>
+        <span class="bar-bg"><span class="bar-fill" style="width:${{w}}%;background:${{b.color}}"></span></span>
+        <span class="val">${{typeof val==='number'&&val%1?val.toFixed(1):fmt(val)}}${{b.suffix}}</span></li>`;
+    }});
+    h+=`</ol></div>`;
+  }});
+  h+=`</div>
+    <div class="grid grid-2" style="margin-top:1rem">
+      <div class="card"><h3><span class="icon">💀</span> Causes de mort (tous)</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🚶</span> Distances par type</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+    </div></div>`;
+  return h;
+}}
+
+function renderLeaderboardCharts(){{
+  destroyChart('chart-deathcauses');
+  const da={{}};playerNames.forEach(n=>{{const kb=PLAYERS_DATA[n].killed_by||{{}};Object.entries(kb).forEach(([m,c])=>{{da[m]=(da[m]||0)+c}})}});
+  const ds=Object.entries(da).sort((a,b)=>b[1]-a[1]);
+  const dc=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
+  charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{{type:'doughnut',data:{{
+    labels:ds.map(d=>label(d[0])),datasets:[{{data:ds.map(d=>d[1]),backgroundColor:ds.map((_,i)=>dc[i%dc.length]+'cc'),borderColor:'#16161a',borderWidth:2}}]
+  }},options:{{responsive:true,maintainAspectRatio:false,plugins:{{legend:{{position:'right',labels:{{font:{{size:10}}}}}}}}}}}});
+
+  destroyChart('chart-dist-stacked');
+  const dt=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
+  const dco=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
+  const fp=playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>5);
+  charts['chart-dist-stacked']=new Chart(document.getElementById('chart-dist-stacked'),{{type:'bar',data:{{
+    labels:fp,datasets:dt.map((t,i)=>({{label:label(t),data:fp.map(n=>PLAYERS_DATA[n].distances?.[t]||0),backgroundColor:dco[i]+'aa',borderWidth:0}}))
+  }},options:{{responsive:true,maintainAspectRatio:false,
+    scales:{{x:{{stacked:true,grid:{{display:false}}}},y:{{stacked:true,title:{{display:true,text:'km'}},grid:{{color:'rgba(42,42,53,0.3)'}}}}}},
+    plugins:{{legend:{{position:'bottom',labels:{{font:{{size:9}}}}}}}}}}}});
+}}
+
+// ═══════════════════════════════════════
+// PLAYER SECTION
+// ═══════════════════════════════════════
+function buildPlayerSection(name){{
+  const p=PLAYERS_DATA[name];const color=PLAYER_COLORS_MAP[name];
+  const avatarUrl=`https://crafatar.com/avatars/${{p.uuid}}?size=64&overlay`;
+
+  const records=[];
+  ['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','player_kills','enchant_item','fish_caught','traded_with_villager','animals_bred','jumps'].forEach(key=>{{
+    const mx=Math.max(...playerNames.map(n=>PLAYERS_DATA[n][key]||0));
+    if((p[key]||0)===mx&&mx>0)records.push(key);
+  }});
+  const recBadges=records.length?`<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">${{records.map(r=>`<span class="record-badge">${{label(r).substring(0,20)}}</span>`).join('')}}</div>`:'';
+
+  const killedBy=Object.entries(p.killed_by||{{}}).sort((a,b)=>b[1]-a[1]);
+  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${{label(m)}}</span> <span style="color:var(--red);font-weight:600">${{c}}×</span></li>`).join(''):'<li style="color:var(--text-muted)">Aucune mort</li>';
+
+  const mkList=(entries,color)=>{{
+    if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
+    const mx=entries[0]?.[1]||1;
+    return entries.map(([k,v])=>{{const w=pct(v,mx);return `<li><span class="name">${{label(k)}}</span><span class="bar-bg"><span class="bar-fill" style="width:${{w}}%;background:${{color}}"></span></span><span class="val">${{fmt(v)}}</span></li>`}}).join('');
+  }};
+
+  const kd=p.deaths>0?(p.mob_kills/p.deaths).toFixed(1):'∞';
+  const mph=p.play_hours>0?Math.round(p.total_mined/p.play_hours):0;
+  const kph=p.play_hours>0?Math.round(p.mob_kills/p.play_hours):0;
+
+  return `
+  <div class="section" id="player-${{name}}">
+    <div class="profile-header" style="border-left:4px solid ${{color}}">
+      <img class="profile-avatar" src="${{avatarUrl}}" alt="${{name}}" onerror="this.style.display='none'">
+      <div class="profile-info"><h2 style="color:${{color}}">${{name}}</h2><div class="uuid">${{p.uuid}}</div>${{recBadges}}</div>
+      <div class="profile-stats">
+        <div class="profile-stat"><div class="pv">${{p.play_hours}}h</div><div class="pl">Temps de jeu</div></div>
+        <div class="profile-stat"><div class="pv" style="color:var(--red)">${{kd}}</div><div class="pl">K/D ratio</div></div>
+        <div class="profile-stat"><div class="pv" style="color:var(--green)">${{fmt(p.total_distance_km)}} km</div><div class="pl">Parcourus</div></div>
+      </div>
+    </div>
+    <div class="grid grid-4" style="margin-bottom:1rem">
+      <div class="stat-tile"><div class="value" style="color:var(--green)">${{fmt(p.total_mined)}}</div><div class="label">Blocs minés</div><div class="sub">${{fmt(mph)}}/h</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--red)">${{fmt(p.mob_kills)}}</div><div class="label">Mobs tués</div><div class="sub">${{fmt(kph)}}/h</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--orange)">${{p.deaths}}</div><div class="label">Morts</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--cyan)">${{fmt(p.total_crafted)}}</div><div class="label">Items craftés</div></div>
+    </div>
+    <div class="grid grid-4" style="margin-bottom:1rem">
+      <div class="stat-tile"><div class="value" style="color:var(--yellow)">${{fmt(p.enchant_item)}}</div><div class="label">Enchantements</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--blue)">${{fmt(p.open_chest)}}</div><div class="label">Coffres ouverts</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--teal)">${{fmt(p.fish_caught)}}</div><div class="label">Poissons pêchés</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--pink)">${{fmt(p.traded_with_villager)}}</div><div class="label">Échanges PNJ</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card"><h3><span class="icon">🚶</span> Distances parcourues</h3><div class="chart-wrap"><canvas id="chart-dist-${{name}}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">💀</span> Tué par</h3><ul class="leaderboard" style="font-size:.8rem">${{kbHtml}}</ul></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card"><h3><span class="icon">⛏</span> Top 15 blocs minés</h3><ol class="leaderboard">${{mkList(Object.entries(p.mined_top15||{{}}),color)}}</ol></div>
+      <div class="card"><h3><span class="icon">⚔</span> Top 10 mobs tués</h3><ol class="leaderboard">${{mkList(Object.entries(p.killed_top10||{{}}),'var(--red)')}}</ol></div>
+    </div>
+    <div class="card"><h3><span class="icon">🔨</span> Top 10 items craftés</h3><ol class="leaderboard">${{mkList(Object.entries(p.crafted_top15||{{}}).slice(0,10),'var(--cyan)')}}</ol></div>
+  </div>`;
+}}
+
+function renderPlayerCharts(name){{
+  const p=PLAYERS_DATA[name];const distId=`chart-dist-${{name}}`;
+  destroyChart(distId);
+  const dists=p.distances||{{}};
+  const de=Object.entries(dists).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(de.length&&document.getElementById(distId)){{
+    const dp=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#ef6a6a','#8b8b96','#5c5c68','#3a3a48','#222230'];
+    charts[distId]=new Chart(document.getElementById(distId),{{type:'bar',data:{{
+      labels:de.map(d=>label(d[0])),datasets:[{{data:de.map(d=>d[1]),
+        backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}}]
+    }},options:{{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{{legend:{{display:false}},tooltip:{{callbacks:{{label:ctx=>ctx.parsed.x.toFixed(2)+' km'}}}}}},
+      scales:{{x:{{title:{{display:true,text:'km'}},grid:{{color:'rgba(42,42,53,0.3)'}}}},y:{{grid:{{display:false}}}}}}}}}});
+  }}
+}}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+buildNav();buildAllSections();renderOverviewCharts();
+</script>
+</body>
+</html>'''
+
+
+# ═══════════════════════════════════════════════════════════
+# 4. MAIN
+# ═══════════════════════════════════════════════════════════
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Génère un dashboard HTML à partir des fichiers de stats Minecraft."
+    )
+    parser.add_argument(
+        "data_dir",
+        help="Chemin vers le dossier contenant les fichiers JSON de stats (ex: stats/serveur-2026/data)"
+    )
+    parser.add_argument(
+        "--title", "-t",
+        default=None,
+        help="Titre du serveur affiché dans le dashboard (défaut: nom du dossier parent)"
+    )
+    parser.add_argument(
+        "--output", "-o",
+        default=None,
+        help="Chemin du fichier HTML de sortie (défaut: <dossier_parent>/index.html)"
+    )
+    args = parser.parse_args()
+
+    data_dir = Path(args.data_dir)
+    if not data_dir.exists():
+        print(f"❌ Le dossier {data_dir} n'existe pas.")
+        sys.exit(1)
+
+    # Titre : argument ou nom du dossier parent formaté
+    if args.title:
+        title = args.title
+    else:
+        parent_name = data_dir.parent.name
+        title = parent_name.replace("-", " ").replace("_", " ").title()
+
+    # Fichier de sortie
+    if args.output:
+        output_path = Path(args.output)
+    else:
+        output_path = data_dir.parent / "index.html"
+
+    # Cache des UUIDs (persiste entre les exécutions)
+    cache_path = data_dir.parent / ".uuid_cache.json"
+
+    print(f"🎮 Génération du dashboard : {title}")
+    print(f"📁 Dossier data : {data_dir}")
+    print(f"📄 Sortie : {output_path}")
+    print()
+
+    # Trouver les fichiers JSON
+    json_files = sorted(data_dir.glob("*.json"))
+    if not json_files:
+        print("❌ Aucun fichier JSON trouvé dans le dossier.")
+        sys.exit(1)
+
+    print(f"📊 {len(json_files)} fichier(s) de stats trouvé(s)")
+
+    # Extraire les UUIDs
+    uuids = [f.stem for f in json_files]
+
+    # Résoudre les pseudos
+    print("\n🔍 Résolution des pseudos Mojang...")
+    uuid_to_name = resolve_all_uuids(uuids, cache_path)
+
+    # Traiter les stats
+    print("\n⚙ Traitement des statistiques...")
+    players_data = {}
+    for json_file in json_files:
+        uuid = json_file.stem
+        name = uuid_to_name[uuid]
+        player = process_player(uuid, name, str(json_file))
+        players_data[name] = player
+        print(f"  ✓ {name}: {player['play_hours']}h, {player['total_mined']} blocs, {player['mob_kills']} kills")
+
+    # Générer le HTML
+    print(f"\n🏗 Génération du HTML...")
+    html = generate_html(players_data, title)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"✅ Dashboard généré : {output_path} ({len(html):,} octets)")
+    print(f"   {len(players_data)} joueurs • {sum(p['play_hours'] for p in players_data.values()):.0f}h de jeu total")
+
+
+if __name__ == "__main__":
+    main()

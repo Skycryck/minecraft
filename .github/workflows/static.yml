@@ -6,6 +6,11 @@ on:
   push:
     branches: ["main"]
 
+  # Re-deploy after stats dashboard auto-update
+  workflow_run:
+    workflows: ["Update Minecraft Stats Dashboard"]
+    types: [completed]
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 

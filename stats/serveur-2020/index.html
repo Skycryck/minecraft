@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Serveur Confinement 2020</title>
+<title>Serveur 2020</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Reset & Variables ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0c0c0f;--bg-card:#16161a;--bg-card-alt:#1c1c22;--bg-hover:#222230;
@@ -30,19 +29,11 @@ body{
     radial-gradient(ellipse 60% 40% at 80% 100%,rgba(62,207,142,.04),transparent);
 }
 a{color:var(--accent-light);text-decoration:none}
-
-/* ── Scrollbar ── */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
-/* ── Layout ── */
 .app{max-width:1400px;margin:0 auto;padding:1rem}
-
-/* ── Header ── */
-.header{
-  text-align:center;padding:2.5rem 1rem 2rem;position:relative;
-}
+.header{text-align:center;padding:2.5rem 1rem 2rem;position:relative}
 .header h1{
   font-size:2.6rem;font-weight:700;letter-spacing:-.03em;
   background:linear-gradient(135deg,var(--accent-light),var(--green),var(--cyan));
@@ -50,17 +41,12 @@ a{color:var(--accent-light);text-decoration:none}
   background-clip:text;margin-bottom:.3rem;
 }
 .header p{color:var(--text-dim);font-size:.95rem;font-family:var(--font-mono)}
-.header .meta{
-  display:flex;gap:1.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;
-}
+.header .meta{display:flex;gap:1.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap}
 .header .meta span{
   font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted);
-  background:var(--bg-card);padding:.35rem .8rem;border-radius:20px;
-  border:1px solid var(--border);
+  background:var(--bg-card);padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
 }
 .header .meta span b{color:var(--accent-light);font-weight:600}
-
-/* ── Navigation ── */
 .nav{
   display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;
   padding:1rem 0;position:sticky;top:0;z-index:100;
@@ -70,20 +56,13 @@ a{color:var(--accent-light);text-decoration:none}
 .nav button{
   font-family:var(--font-mono);font-size:.78rem;
   padding:.5rem 1rem;border-radius:20px;border:1px solid var(--border);
-  background:var(--bg-card);color:var(--text-dim);cursor:pointer;
-  transition:all .2s;white-space:nowrap;
+  background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;
 }
 .nav button:hover{border-color:var(--accent);color:var(--text)}
-.nav button.active{
-  background:var(--accent);border-color:var(--accent);color:#fff;
-  box-shadow:0 0 20px rgba(124,106,239,.25);
-}
-
-/* ── Cards ── */
+.nav button.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(124,106,239,.25)}
 .card{
   background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:1.25rem;margin-bottom:1rem;
-  transition:border-color .2s;
+  padding:1.25rem;margin-bottom:1rem;transition:border-color .2s;
 }
 .card:hover{border-color:var(--border-light)}
 .card h3{
@@ -92,107 +71,55 @@ a{color:var(--accent-light);text-decoration:none}
   display:flex;align-items:center;gap:.5rem;
 }
 .card h3 .icon{font-size:1.1rem}
-
-/* ── Grid ── */
 .grid{display:grid;gap:1rem}
 .grid-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
 .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .grid-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-
-/* ── Stat Tiles ── */
 .stat-tile{
   background:var(--bg-card-alt);border-radius:var(--radius-sm);
-  padding:1rem;text-align:center;border:1px solid var(--border);
-  transition:transform .15s,border-color .15s;
+  padding:1rem;text-align:center;border:1px solid var(--border);transition:transform .15s,border-color .15s;
 }
 .stat-tile:hover{transform:translateY(-2px);border-color:var(--accent-dim)}
-.stat-tile .value{
-  font-size:1.8rem;font-weight:700;font-family:var(--font-mono);
-  line-height:1.1;margin-bottom:.2rem;
-}
+.stat-tile .value{font-size:1.8rem;font-weight:700;font-family:var(--font-mono);line-height:1.1;margin-bottom:.2rem}
 .stat-tile .label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-mono)}
 .stat-tile .sub{font-size:.7rem;color:var(--text-dim);margin-top:.15rem;font-family:var(--font-mono)}
-
-/* ── Leaderboard ── */
 .leaderboard{list-style:none}
 .leaderboard li{
   display:flex;align-items:center;gap:.75rem;
-  padding:.6rem .8rem;border-radius:var(--radius-sm);
-  transition:background .15s;font-family:var(--font-mono);font-size:.82rem;
+  padding:.6rem .8rem;border-radius:var(--radius-sm);transition:background .15s;font-family:var(--font-mono);font-size:.82rem;
 }
 .leaderboard li:hover{background:var(--bg-hover)}
 .leaderboard .rank{
-  width:1.6rem;height:1.6rem;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.7rem;font-weight:700;flex-shrink:0;
-  border:1px solid var(--border);color:var(--text-muted);
+  width:1.6rem;height:1.6rem;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;flex-shrink:0;border:1px solid var(--border);color:var(--text-muted);
 }
 .leaderboard li:nth-child(1) .rank{background:linear-gradient(135deg,#ffd700,#b8860b);color:#000;border:none}
 .leaderboard li:nth-child(2) .rank{background:linear-gradient(135deg,#c0c0c0,#808080);color:#000;border:none}
 .leaderboard li:nth-child(3) .rank{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;border:none}
 .leaderboard .name{flex:1;color:var(--text)}
 .leaderboard .val{color:var(--accent-light);font-weight:600}
-.leaderboard .bar-bg{
-  flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;min-width:60px;
-}
+.leaderboard .bar-bg{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;min-width:60px}
 .leaderboard .bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
-
-/* ── Chart Container ── */
 .chart-wrap{position:relative;width:100%;max-height:350px}
 .chart-wrap canvas{width:100%!important}
-
-/* ── Player Profile Header ── */
 .profile-header{
   display:flex;align-items:center;gap:1.5rem;padding:1.5rem;
-  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-  margin-bottom:1.5rem;flex-wrap:wrap;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem;flex-wrap:wrap;
 }
-.profile-avatar{
-  width:64px;height:64px;border-radius:var(--radius-sm);
-  image-rendering:pixelated;border:2px solid var(--accent-dim);
-  background:var(--bg);
-}
+.profile-avatar{width:64px;height:64px;border-radius:var(--radius-sm);image-rendering:pixelated;border:2px solid var(--accent-dim);background:var(--bg)}
 .profile-info h2{font-size:1.8rem;font-weight:700;letter-spacing:-.02em}
 .profile-info .uuid{font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted)}
-.profile-stats{
-  display:flex;gap:1.5rem;margin-left:auto;flex-wrap:wrap;
-}
+.profile-stats{display:flex;gap:1.5rem;margin-left:auto;flex-wrap:wrap}
 .profile-stat{text-align:center}
 .profile-stat .pv{font-size:1.4rem;font-weight:700;font-family:var(--font-mono);color:var(--accent-light)}
 .profile-stat .pl{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-mono)}
-
-/* ── Sections ── */
 .section{display:none}
 .section.active{display:block}
-
-/* ── Table ── */
-.stat-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.78rem}
-.stat-table th{
-  text-align:left;padding:.5rem .6rem;color:var(--text-muted);font-weight:600;
-  border-bottom:1px solid var(--border);text-transform:uppercase;font-size:.65rem;
-  letter-spacing:.06em;cursor:pointer;user-select:none;
-}
-.stat-table th:hover{color:var(--accent-light)}
-.stat-table td{padding:.45rem .6rem;border-bottom:1px solid rgba(42,42,53,.5)}
-.stat-table tr:hover td{background:var(--bg-hover)}
-.stat-table .num{text-align:right;font-weight:600;color:var(--accent-light)}
 .record-badge{
-  display:inline-block;padding:.1rem .4rem;border-radius:10px;font-size:.6rem;
-  font-weight:700;margin-left:.3rem;
+  display:inline-block;padding:.1rem .4rem;border-radius:10px;font-size:.6rem;font-weight:700;margin-left:.3rem;
   background:linear-gradient(135deg,#ffd700,#b8860b);color:#000;
 }
-
-/* ── Tab-pills inside cards ── */
-.pill-tabs{display:flex;gap:.3rem;margin-bottom:1rem;flex-wrap:wrap}
-.pill-tabs button{
-  font-family:var(--font-mono);font-size:.68rem;padding:.3rem .7rem;
-  border-radius:14px;border:1px solid var(--border);background:transparent;
-  color:var(--text-muted);cursor:pointer;transition:all .15s;
-}
-.pill-tabs button.active{background:var(--accent-dim);color:#fff;border-color:var(--accent-dim)}
-.pill-tabs button:hover{border-color:var(--accent);color:var(--text)}
-
-/* ── Responsive ── */
+.player-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 @media(max-width:768px){
   .header h1{font-size:1.6rem}
   .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
@@ -201,181 +128,141 @@ a{color:var(--accent-light);text-decoration:none}
   .stat-tile .value{font-size:1.3rem}
   .app{padding:.5rem}
 }
-
-/* ── Animations ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .card{animation:fadeUp .4s ease both}
 .card:nth-child(2){animation-delay:.05s}
 .card:nth-child(3){animation-delay:.1s}
 .card:nth-child(4){animation-delay:.15s}
-
-/* ── Color dots for players ── */
-.player-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 </style>
 </head>
 <body>
 <div class="app">
-
-<!-- Header -->
 <div class="header">
-  <h1>⛏ Serveur Confinement 2020</h1>
+  <h1>⛏ Serveur 2020</h1>
   <p>Dashboard de statistiques du serveur</p>
   <div class="meta" id="globalMeta"></div>
 </div>
-
-<!-- Navigation -->
 <div class="nav" id="nav"></div>
-
-<!-- Content sections rendered by JS -->
 <div id="content"></div>
-
 </div>
-
 <script>
-// ═══════════════════════════════════════════════════════
-// DATA - Embedded from server stats JSON files
-// UUIDs resolved via Mojang sessionserver API
-// Units: ticks → hours (÷72000), distances cm → km (÷100000)
-// ═══════════════════════════════════════════════════════
-const PLAYERS_DATA = {"xarmy7":{"uuid":"e1fcc94f-518c-4be2-b818-3cb2437c486b","play_hours":2.0,"play_ticks":147337,"deaths":10,"mob_kills":0,"player_kills":0,"jumps":990,"damage_dealt":753,"damage_taken":3270,"animals_bred":0,"fish_caught":0,"enchant_item":0,"open_chest":3,"sleep_in_bed":1,"traded_with_villager":0,"talked_to_villager":0,"distances":{"walk":6.3,"sprint":1.76,"swim":0.0,"fly":0.65,"climb":0.05,"crouch":0.01,"fall":0.23,"walk_on_water":0.34,"walk_under_water":0.13},"total_distance_km":9.47,"mined":{"white_bed":1,"grass_block":14,"red_mushroom":1,"grass":2,"sand":1,"dirt":6,"player_head":1},"mined_top15":{"grass_block":14,"dirt":6,"grass":2,"white_bed":1,"red_mushroom":1,"sand":1,"player_head":1},"total_mined":26,"killed":{},"killed_top10":{},"total_killed":0,"killed_by":{"player":7,"creeper":1},"crafted_top15":{"iron_pickaxe":1,"stone_sword":1},"total_crafted":2,"used_top10":{"dirt":30,"stone_sword":20,"egg":19,"diamond_shovel":18,"diamond_sword":18,"firework_rocket":16,"cobblestone":9,"bow":8,"cooked_porkchop":4,"salmon":3},"total_used":150,"picked_up_top10":{"cobblestone":2163,"dirt":774,"sugar_cane":342,"egg":172,"oak_planks":60,"sandstone":47,"scaffolding":42,"iron_ingot":39,"paper":32,"acacia_planks":32},"total_picked_up":4057,"dropped_top10":{"cobblestone":657,"sugar_cane":192,"paper":10,"andesite":4,"diamond_sword":2,"diamond_shovel":1,"stick":1,"arrow":1},"total_dropped":868,"broken":{}},"bareme":{"uuid":"710b461a-a914-4236-af16-34e5faefcb3f","play_hours":60.4,"play_ticks":4348616,"deaths":14,"mob_kills":14913,"player_kills":2,"jumps":62377,"damage_dealt":566109,"damage_taken":35532,"animals_bred":237,"fish_caught":25,"enchant_item":137,"open_chest":5262,"sleep_in_bed":139,"traded_with_villager":176,"talked_to_villager":205,"distances":{"walk":125.95,"sprint":55.04,"swim":7.35,"fly":126.85,"aviate":69.75,"boat":0.24,"horse":0.15,"climb":1.57,"crouch":7.07,"fall":11.76,"walk_on_water":5.08,"walk_under_water":4.9},"total_distance_km":415.71,"mined_top15":{"stone":21672,"netherrack":6288,"coal_ore":5190,"iron_ore":1781,"grass_block":1528,"oak_log":1507,"wheat":1402,"packed_ice":1393,"andesite":1350,"diorite":1037,"dirt":987,"sand":982,"oak_leaves":960,"sugar_cane":953,"redstone_ore":899},"total_mined":56372,"killed_top10":{"enderman":12674,"magma_cube":373,"zombie":251,"wither_skeleton":197,"blaze":170,"skeleton":167,"zombified_piglin":116,"cow":75,"spider":55,"creeper":47},"total_killed":14454,"killed_by":{"creeper":4,"player":1,"skeleton":5},"crafted_top15":{"oak_planks":2064,"iron_ingot":1915,"paper":1680,"torch":1680,"bone_meal":867,"stick":756,"coal_block":563,"gold_ingot":519,"spruce_planks":488,"redstone_block":461,"coal":450,"lapis_lazuli":360,"birch_planks":288,"stone_bricks":284,"bread":265},"total_crafted":17576,"total_used":73218,"total_picked_up":70627,"total_dropped":6209,"broken":{"golden_sword":3,"diamond_pickaxe":2,"iron_sword":2,"fishing_rod":1,"iron_hoe":1,"iron_axe":4,"iron_pickaxe":46,"stone_pickaxe":7,"diamond_sword":1}},"Martel0w":{"uuid":"f72e3e6e-ce64-4c4c-aebc-5582eed2e8db","play_hours":31.2,"play_ticks":2246264,"deaths":27,"mob_kills":12094,"player_kills":2,"jumps":21821,"damage_dealt":267535,"damage_taken":19611,"animals_bred":0,"fish_caught":45,"enchant_item":189,"open_chest":409,"sleep_in_bed":39,"traded_with_villager":176,"talked_to_villager":100,"distances":{"walk":72.58,"sprint":57.68,"swim":0.65,"fly":74.58,"aviate":0.4,"climb":1.59,"crouch":0.81,"fall":3.19,"walk_on_water":1.98,"walk_under_water":0.55},"total_distance_km":214.01,"mined_top15":{"netherrack":15877,"stone":7395,"sand":1106,"nether_quartz_ore":1088,"sugar_cane":1057,"sandstone":658,"coal_ore":598,"andesite":507,"diorite":426,"iron_ore":418,"dirt":305,"granite":292,"gravel":268,"redstone_ore":201,"nether_gold_ore":169},"total_mined":32072,"killed_top10":{"enderman":10666,"husk":45,"zombie":39,"cow":33,"skeleton":27,"spider":17,"shulker":8,"creeper":8,"sheep":6,"hoglin":6},"total_killed":10886,"killed_by":{"creeper":4,"zoglin":1,"endermite":3,"player":6,"enderman":2,"skeleton":6,"phantom":1},"crafted_top15":{"paper":2954,"sandstone":477,"lapis_lazuli":406,"torch":348,"stick":312,"nether_brick":295,"iron_ingot":281,"quartz_block":255,"sandstone_stairs":228,"emerald":195,"gold_ingot":191,"oak_planks":176,"spruce_planks":152,"cut_sandstone":112,"clay":89},"total_crafted":7869,"total_used":41080,"total_picked_up":32982,"total_dropped":12712,"broken":{"iron_shovel":2,"stone_pickaxe":3,"diamond_pickaxe":2,"fishing_rod":1,"wooden_pickaxe":1,"iron_pickaxe":6}},"Skycryck":{"uuid":"26942d72-b481-468d-a5e3-421cc4c78fe7","play_hours":197.4,"play_ticks":14210354,"deaths":14,"mob_kills":47039,"player_kills":16,"jumps":74313,"damage_dealt":1495062,"damage_taken":70215,"animals_bred":5,"fish_caught":127,"enchant_item":246,"open_chest":4681,"sleep_in_bed":321,"traded_with_villager":2765,"talked_to_villager":709,"distances":{"walk":311.33,"sprint":310.48,"swim":28.4,"fly":337.46,"aviate":830.16,"boat":9.73,"horse":0.06,"minecart":0.04,"climb":9.31,"crouch":11.61,"fall":15.25,"walk_on_water":18.17,"walk_under_water":23.01},"total_distance_km":1905.01,"mined_top15":{"stone":27481,"sand":24575,"netherrack":16237,"grass_block":10424,"dirt":7833,"sandstone":6689,"gravel":6054,"spruce_log":3024,"packed_ice":1308,"andesite":1287,"iron_ore":1286,"diorite":1262,"coal_ore":1199,"white_concrete":1187,"granite":996},"total_mined":129246,"killed_top10":{"enderman":43212,"wither_skeleton":552,"magma_cube":437,"zombie":223,"blaze":203,"skeleton":200,"creeper":122,"pillager":109,"husk":104,"shulker":99},"total_killed":46071,"killed_by":{"vindicator":1,"shulker":1,"player":4,"iron_golem":2},"crafted_top15":{"bone_meal":19383,"paper":12798,"glass":5328,"spruce_planks":4256,"emerald":2586,"firework_rocket":2388,"stone":2374,"iron_ingot":2311,"gold_nugget":1908,"bone_block":1789,"coal":1584,"white_concrete_powder":1536,"sandstone":1440,"stick":1137,"stone_bricks":1104},"total_crafted":82602,"total_used":265313,"total_picked_up":193812,"total_dropped":34261,"broken":{"shears":4,"iron_pickaxe":4,"stone_pickaxe":1,"diamond_hoe":1,"golden_boots":1}},"Urukrode":{"uuid":"7caeab5c-b0f6-4644-b079-2568ec529f8f","play_hours":69.9,"play_ticks":5033420,"deaths":25,"mob_kills":23481,"player_kills":0,"jumps":46829,"damage_dealt":983630,"damage_taken":35559,"animals_bred":284,"fish_caught":139,"enchant_item":431,"open_chest":1909,"sleep_in_bed":113,"traded_with_villager":820,"talked_to_villager":434,"distances":{"walk":106.89,"sprint":123.1,"swim":6.57,"fly":139.34,"aviate":258.76,"boat":1.22,"horse":19.9,"minecart":0.05,"climb":3.35,"crouch":1.82,"fall":12.14,"walk_on_water":3.87,"walk_under_water":2.65},"total_distance_km":679.66,"mined_top15":{"netherrack":14941,"stone":12837,"sugar_cane":5610,"sand":2490,"end_stone":1427,"coal_ore":1043,"beetroots":995,"iron_ore":890,"wheat":886,"andesite":883,"granite":852,"cobblestone":677,"grass":672,"diorite":670,"redstone_ore":497},"total_mined":54153,"killed_top10":{"enderman":21214,"shulker":122,"cow":76,"zombie":36,"husk":24,"spider":17,"piglin":13,"pig":13,"sheep":12,"skeleton":11},"total_killed":21601,"killed_by":{"zombie":1,"husk":2,"creeper":3,"piglin":2,"enderman":3,"hoglin":5},"crafted_top15":{"paper":11085,"green_dye":1995,"glass_pane":1856,"torch":1504,"firework_rocket":1293,"oak_planks":1208,"iron_ingot":1035,"stick":1002,"glass":931,"spruce_planks":848,"emerald":746,"acacia_planks":608,"birch_planks":472,"redstone":450,"coal":279},"total_crafted":28504,"total_used":77501,"total_picked_up":65487,"total_dropped":11749,"broken":{"iron_sword":2,"fishing_rod":2,"wooden_pickaxe":2,"iron_axe":5,"iron_pickaxe":33,"wooden_hoe":1,"golden_helmet":1,"iron_shovel":2,"stone_pickaxe":5,"chainmail_chestplate":1,"stone_axe":4,"diamond_sword":1,"golden_hoe":1}},"Idhemter":{"uuid":"d78629d3-b11c-4b70-801a-87169825064e","play_hours":2.2,"play_ticks":157349,"deaths":1,"mob_kills":52,"player_kills":0,"jumps":1782,"damage_dealt":10045,"damage_taken":1748,"animals_bred":0,"fish_caught":3,"enchant_item":0,"open_chest":156,"sleep_in_bed":3,"traded_with_villager":0,"talked_to_villager":0,"distances":{"walk":6.37,"sprint":3.4,"fly":2.0,"climb":0.26,"crouch":0.0,"fall":0.3,"walk_on_water":0.05,"walk_under_water":0.01},"total_distance_km":12.39,"mined_top15":{"stone":841,"grass_block":604,"dirt":259,"sand":87,"redstone_ore":72,"oak_log":71,"iron_ore":62,"coal_ore":59,"diorite":45,"andesite":33,"grass":33,"granite":29,"cobblestone":20,"obsidian":14,"lapis_ore":14},"total_mined":2294,"killed_top10":{"piglin":14,"zombie":13,"spider":7,"hoglin":6,"cow":5,"husk":4,"pig":2,"sheep":1},"total_killed":52,"killed_by":{"zombie":1},"crafted_top15":{"oak_planks":184,"torch":72,"iron_ingot":62,"stick":52,"cooked_mutton":31,"oak_fence":24,"cooked_porkchop":21,"charcoal":12,"chest":6,"iron_shovel":4,"shield":3,"furnace":2,"wooden_shovel":1,"stone_shovel":1,"diamond_sword":1},"total_crafted":491,"total_used":2741,"total_picked_up":3442,"total_dropped":16,"broken":{"shield":1,"iron_shovel":3,"wooden_shovel":1,"stone_shovel":1}},"Industh":{"uuid":"7d11ef06-7020-438d-8063-199ad23c1a47","play_hours":95.4,"play_ticks":6868215,"deaths":7,"mob_kills":7526,"player_kills":22,"jumps":54847,"damage_dealt":589393,"damage_taken":55765,"animals_bred":1030,"fish_caught":46,"enchant_item":111,"open_chest":4579,"sleep_in_bed":96,"traded_with_villager":3407,"talked_to_villager":700,"distances":{"walk":204.9,"sprint":151.7,"swim":2.73,"fly":161.55,"aviate":465.39,"boat":5.62,"horse":1.0,"climb":1.72,"crouch":6.12,"fall":16.92,"walk_on_water":6.07,"walk_under_water":6.25},"total_distance_km":1029.97,"mined_top15":{"stone":22233,"netherrack":20548,"sand":13433,"sandstone":10622,"sugar_cane":6854,"grass_block":4909,"dirt":3145,"melon":2844,"coal_ore":1969,"oak_leaves":1738,"andesite":1516,"oak_log":1485,"wheat":1358,"diorite":1263,"granite":1180},"total_mined":108044,"killed_top10":{"enderman":3113,"cow":534,"squid":292,"wither_skeleton":181,"skeleton":171,"zombie":145,"husk":132,"creeper":120,"sheep":119,"slime":98},"total_killed":5628,"killed_by":{"husk":1,"creeper":3,"player":1,"enderman":1},"crafted_top15":{"paper":19657,"oak_planks":5256,"glass_pane":4176,"emerald":3301,"cut_sandstone":3012,"stick":2078,"glass":1933,"dark_oak_planks":1716,"firework_rocket":1599,"iron_ingot":1520,"sandstone":1465,"spruce_planks":1428,"oak_fence":1198,"wheat":1098,"sandstone_stairs":928},"total_crafted":65883,"total_used":149940,"total_picked_up":141855,"total_dropped":28889,"broken":{"diamond_helmet":1,"shears":8,"diamond_pickaxe":1,"stone_sword":1,"iron_pickaxe":18,"iron_helmet":1,"golden_helmet":1,"iron_shovel":1,"stone_pickaxe":3}},"Ryukraft":{"uuid":"eea18607-ab64-489e-b036-462636f165d5","play_hours":40.5,"play_ticks":2916791,"deaths":7,"mob_kills":10604,"player_kills":1,"jumps":22145,"damage_dealt":314610,"damage_taken":23136,"animals_bred":0,"fish_caught":2,"enchant_item":99,"open_chest":1074,"sleep_in_bed":14,"traded_with_villager":145,"talked_to_villager":173,"distances":{"walk":37.15,"sprint":56.57,"swim":3.84,"fly":58.46,"aviate":137.36,"boat":4.33,"horse":0.08,"climb":2.44,"crouch":1.87,"fall":4.19,"walk_on_water":1.46,"walk_under_water":1.38},"total_distance_km":309.13,"mined_top15":{"netherrack":23609,"stone":9453,"dirt":5730,"nether_quartz_ore":2335,"sugar_cane":1196,"grass_block":967,"andesite":533,"coal_ore":523,"nether_gold_ore":490,"diorite":473,"granite":435,"sand":204,"hay_block":171,"iron_block":164,"diamond_ore":159},"total_mined":47964,"killed_top10":{"enderman":9899,"squid":130,"cow":72,"sheep":40,"hoglin":35,"blaze":34,"horse":33,"skeleton":32,"zombie":19,"ghast":17},"total_killed":10417,"killed_by":{"player":1,"enderman":1,"ender_dragon":1,"hoglin":1},"crafted_top15":{"stone":1546,"stone_button":1535,"paper":1254,"firework_rocket":768,"quartz_block":547,"glass_pane":512,"stick":440,"gold_ingot":298,"dark_oak_planks":222,"ladder":129,"torch":124,"emerald":106,"book":102,"iron_ingot":98,"oak_planks":76},"total_crafted":8371,"total_used":57357,"total_picked_up":34183,"total_dropped":8042,"broken":{"golden_boots":1,"diamond_helmet":1,"stone_pickaxe":3,"diamond_pickaxe":2,"stone_shovel":1,"golden_chestplate":1,"iron_pickaxe":14}},"lobby_du_lait":{"uuid":"a6a26249-2cbc-4064-89fa-bef9191e1ee7","play_hours":71.8,"play_ticks":5168587,"deaths":130,"mob_kills":24924,"player_kills":9,"jumps":54903,"damage_dealt":933930,"damage_taken":77255,"animals_bred":66,"fish_caught":8,"enchant_item":296,"open_chest":1652,"sleep_in_bed":115,"traded_with_villager":195,"talked_to_villager":422,"distances":{"walk":157.03,"sprint":145.76,"swim":16.76,"fly":177.27,"aviate":32.25,"boat":4.45,"horse":3.25,"minecart":0.01,"climb":6.55,"crouch":5.55,"fall":13.79,"walk_on_water":9.43,"walk_under_water":6.12},"total_distance_km":578.22,"mined_top15":{"stone":19243,"netherrack":15191,"sand":11496,"grass_block":9508,"dirt":4539,"oak_leaves":834,"spruce_log":799,"stone_bricks":796,"oak_planks":786,"oak_log":682,"birch_planks":566,"coal_ore":539,"andesite":535,"wheat":532,"diorite":409},"total_mined":74012,"killed_top10":{"enderman":21685,"zombie":185,"skeleton":156,"creeper":98,"spider":79,"husk":70,"cow":53,"drowned":32,"chicken":27,"sheep":26},"total_killed":22594,"killed_by":{"pillager":1,"ravager":1,"zombie":7,"vex":2,"shulker":1,"creeper":6,"piglin":4,"witch":1,"endermite":1,"player":33,"spider":1,"enderman":4,"hoglin":4,"skeleton":14},"crafted_top15":{"oak_planks":2960,"stone_bricks":2536,"spruce_planks":2348,"paper":1869,"stone":1852,"birch_planks":1476,"bone_meal":1368,"acacia_planks":1268,"dark_oak_planks":784,"spruce_stairs":692,"spruce_slab":600,"stick":523,"smooth_stone_slab":351,"iron_ingot":281,"oak_slab":280},"total_crafted":24456,"total_used":119174,"total_picked_up":89227,"total_dropped":11480,"broken":{"wooden_shovel":2,"shears":2,"iron_boots":1,"iron_chestplate":1,"iron_leggings":1,"golden_sword":1,"iron_sword":1,"fishing_rod":1,"bow":3,"leather_helmet":1,"wooden_pickaxe":1,"iron_axe":15,"iron_pickaxe":4,"iron_helmet":1,"golden_helmet":1,"stone_pickaxe":15,"stone_axe":10,"wooden_axe":4,"stone_shovel":6,"leather_boots":2}}};
+// ═══════════════════════════════════════
+// DATA — auto-generated by generate.py
+// ═══════════════════════════════════════
+const PLAYERS_DATA = {"Skycryck":{"uuid":"26942d72-b481-468d-a5e3-421cc4c78fe7","play_hours":197.4,"play_ticks":14210354,"deaths":14,"mob_kills":47039,"player_kills":16,"jumps":74313,"damage_dealt":1495062,"damage_taken":70215,"animals_bred":5,"fish_caught":127,"enchant_item":246,"open_chest":4681,"sleep_in_bed":321,"traded_with_villager":2765,"talked_to_villager":709,"distances":{"walk":311.33,"sprint":310.48,"swim":28.4,"fly":337.46,"aviate":830.16,"boat":9.73,"horse":0.06,"minecart":0.04,"climb":9.31,"crouch":11.61,"fall":15.25,"walk_on_water":18.17,"walk_under_water":23.01},"total_distance_km":1905.01,"mined_top15":{"stone":27481,"sand":24575,"netherrack":16237,"grass_block":10424,"dirt":7833,"sandstone":6689,"gravel":6054,"spruce_log":3024,"packed_ice":1308,"andesite":1287,"iron_ore":1286,"diorite":1262,"coal_ore":1199,"white_concrete":1187,"granite":996},"total_mined":129246,"killed_top10":{"enderman":43212,"wither_skeleton":552,"magma_cube":437,"zombie":223,"blaze":203,"skeleton":200,"creeper":122,"pillager":109,"husk":104,"shulker":99},"total_killed":46071,"killed_by":{"vindicator":1,"shulker":1,"player":4,"iron_golem":2},"crafted_top15":{"bone_meal":19383,"paper":12798,"glass":5328,"spruce_planks":4256,"emerald":2586,"firework_rocket":2388,"stone":2374,"iron_ingot":2311,"gold_nugget":1908,"bone_block":1789,"coal":1584,"white_concrete_powder":1536,"sandstone":1440,"stick":1137,"stone_bricks":1104},"total_crafted":82602,"total_used":265313,"total_picked_up":193812,"total_dropped":34261,"broken":{"shears":4,"iron_pickaxe":4,"stone_pickaxe":1,"diamond_hoe":1,"golden_boots":1}},"bareme":{"uuid":"710b461a-a914-4236-af16-34e5faefcb3f","play_hours":60.4,"play_ticks":4348616,"deaths":14,"mob_kills":14913,"player_kills":2,"jumps":62377,"damage_dealt":566109,"damage_taken":35532,"animals_bred":237,"fish_caught":25,"enchant_item":137,"open_chest":5262,"sleep_in_bed":139,"traded_with_villager":176,"talked_to_villager":205,"distances":{"walk":125.95,"sprint":55.04,"swim":7.35,"fly":126.85,"aviate":69.75,"boat":0.24,"horse":0.15,"climb":1.57,"crouch":7.07,"fall":11.76,"walk_on_water":5.08,"walk_under_water":4.9},"total_distance_km":415.71,"mined_top15":{"stone":21672,"netherrack":6288,"coal_ore":5190,"iron_ore":1781,"grass_block":1528,"oak_log":1507,"wheat":1402,"packed_ice":1393,"andesite":1350,"diorite":1037,"dirt":987,"sand":982,"oak_leaves":960,"sugar_cane":953,"redstone_ore":899},"total_mined":56372,"killed_top10":{"enderman":12674,"magma_cube":373,"zombie":251,"wither_skeleton":197,"blaze":170,"skeleton":167,"zombified_piglin":116,"cow":75,"spider":55,"creeper":47},"total_killed":14454,"killed_by":{"creeper":4,"player":1,"skeleton":5},"crafted_top15":{"oak_planks":2064,"iron_ingot":1915,"paper":1680,"torch":1680,"bone_meal":867,"stick":756,"coal_block":563,"gold_ingot":519,"spruce_planks":488,"redstone_block":461,"coal":450,"lapis_lazuli":360,"birch_planks":288,"stone_bricks":284,"bread":265},"total_crafted":17576,"total_used":73218,"total_picked_up":70627,"total_dropped":6209,"broken":{"golden_sword":3,"diamond_pickaxe":2,"iron_sword":2,"fishing_rod":1,"iron_hoe":1,"iron_axe":4,"iron_pickaxe":46,"stone_pickaxe":7,"diamond_sword":1}},"Urukrode":{"uuid":"7caeab5c-b0f6-4644-b079-2568ec529f8f","play_hours":69.9,"play_ticks":5033420,"deaths":25,"mob_kills":23481,"player_kills":0,"jumps":46829,"damage_dealt":983630,"damage_taken":35559,"animals_bred":284,"fish_caught":139,"enchant_item":431,"open_chest":1909,"sleep_in_bed":113,"traded_with_villager":820,"talked_to_villager":434,"distances":{"walk":106.89,"sprint":123.1,"swim":6.57,"fly":139.34,"aviate":258.76,"boat":1.22,"horse":19.9,"minecart":0.05,"climb":3.35,"crouch":1.82,"fall":12.14,"walk_on_water":3.87,"walk_under_water":2.65},"total_distance_km":679.66,"mined_top15":{"netherrack":14941,"stone":12837,"sugar_cane":5610,"sand":2490,"end_stone":1427,"coal_ore":1043,"beetroots":995,"iron_ore":890,"wheat":886,"andesite":883,"granite":852,"cobblestone":677,"grass":672,"diorite":670,"redstone_ore":497},"total_mined":54153,"killed_top10":{"enderman":21214,"shulker":122,"cow":76,"zombie":36,"husk":24,"spider":17,"piglin":13,"pig":13,"sheep":12,"skeleton":11},"total_killed":21601,"killed_by":{"zombie":1,"husk":2,"creeper":3,"piglin":2,"enderman":3,"hoglin":5},"crafted_top15":{"paper":11085,"green_dye":1995,"glass_pane":1856,"torch":1504,"firework_rocket":1293,"oak_planks":1208,"iron_ingot":1035,"stick":1002,"glass":931,"spruce_planks":848,"emerald":746,"acacia_planks":608,"birch_planks":472,"redstone":450,"coal":279},"total_crafted":28504,"total_used":77501,"total_picked_up":65487,"total_dropped":11749,"broken":{"iron_sword":2,"fishing_rod":2,"wooden_pickaxe":2,"iron_axe":5,"iron_pickaxe":33,"wooden_hoe":1,"golden_helmet":1,"iron_shovel":2,"stone_pickaxe":5,"chainmail_chestplate":1,"stone_axe":4,"diamond_sword":1,"golden_hoe":1}},"Industh":{"uuid":"7d11ef06-7020-438d-8063-199ad23c1a47","play_hours":95.4,"play_ticks":6868215,"deaths":7,"mob_kills":7526,"player_kills":22,"jumps":54847,"damage_dealt":589393,"damage_taken":55765,"animals_bred":1030,"fish_caught":46,"enchant_item":111,"open_chest":4579,"sleep_in_bed":96,"traded_with_villager":3407,"talked_to_villager":700,"distances":{"walk":204.9,"sprint":151.7,"swim":2.73,"fly":161.55,"aviate":465.39,"boat":5.62,"horse":1.0,"climb":1.72,"crouch":6.12,"fall":16.92,"walk_on_water":6.07,"walk_under_water":6.25},"total_distance_km":1029.97,"mined_top15":{"stone":22233,"netherrack":20548,"sand":13433,"sandstone":10622,"sugar_cane":6854,"grass_block":4909,"dirt":3145,"melon":2844,"coal_ore":1969,"oak_leaves":1738,"andesite":1516,"oak_log":1485,"wheat":1358,"diorite":1263,"granite":1180},"total_mined":108044,"killed_top10":{"enderman":3113,"cow":534,"squid":292,"wither_skeleton":181,"skeleton":171,"zombie":145,"husk":132,"creeper":120,"sheep":119,"slime":98},"total_killed":5628,"killed_by":{"husk":1,"creeper":3,"player":1,"enderman":1},"crafted_top15":{"paper":19657,"oak_planks":5256,"glass_pane":4176,"emerald":3301,"cut_sandstone":3012,"stick":2078,"glass":1933,"dark_oak_planks":1716,"firework_rocket":1599,"iron_ingot":1520,"sandstone":1465,"spruce_planks":1428,"oak_fence":1198,"wheat":1098,"sandstone_stairs":928},"total_crafted":65883,"total_used":149940,"total_picked_up":141855,"total_dropped":28889,"broken":{"diamond_helmet":1,"shears":8,"diamond_pickaxe":1,"stone_sword":1,"iron_pickaxe":18,"iron_helmet":1,"golden_helmet":1,"iron_shovel":1,"stone_pickaxe":3}},"lobby_du_lait":{"uuid":"a6a26249-2cbc-4064-89fa-bef9191e1ee7","play_hours":71.8,"play_ticks":5168587,"deaths":130,"mob_kills":24924,"player_kills":9,"jumps":54903,"damage_dealt":933930,"damage_taken":77255,"animals_bred":66,"fish_caught":8,"enchant_item":296,"open_chest":1652,"sleep_in_bed":115,"traded_with_villager":195,"talked_to_villager":422,"distances":{"walk":157.03,"sprint":145.76,"swim":16.76,"fly":177.27,"aviate":32.25,"boat":4.45,"horse":3.25,"minecart":0.01,"climb":6.55,"crouch":5.55,"fall":13.79,"walk_on_water":9.43,"walk_under_water":6.12},"total_distance_km":578.22,"mined_top15":{"stone":19243,"netherrack":15191,"sand":11496,"grass_block":9508,"dirt":4539,"oak_leaves":834,"spruce_log":799,"stone_bricks":796,"oak_planks":786,"oak_log":682,"birch_planks":566,"coal_ore":539,"andesite":535,"wheat":532,"diorite":409},"total_mined":74012,"killed_top10":{"enderman":21685,"zombie":185,"skeleton":156,"creeper":98,"spider":79,"husk":70,"cow":53,"drowned":32,"chicken":27,"sheep":26},"total_killed":22594,"killed_by":{"pillager":1,"ravager":1,"zombie":7,"vex":2,"shulker":1,"creeper":6,"piglin":4,"witch":1,"endermite":1,"player":33,"spider":1,"enderman":4,"hoglin":4,"skeleton":14},"crafted_top15":{"oak_planks":2960,"stone_bricks":2536,"spruce_planks":2348,"paper":1869,"stone":1852,"birch_planks":1476,"bone_meal":1368,"acacia_planks":1268,"dark_oak_planks":784,"spruce_stairs":692,"spruce_slab":600,"stick":523,"smooth_stone_slab":351,"iron_ingot":281,"oak_slab":280},"total_crafted":24456,"total_used":119174,"total_picked_up":89227,"total_dropped":11480,"broken":{"wooden_shovel":2,"shears":2,"iron_boots":1,"iron_chestplate":1,"iron_leggings":1,"golden_sword":1,"iron_sword":1,"fishing_rod":1,"bow":3,"leather_helmet":1,"wooden_pickaxe":1,"iron_axe":15,"iron_pickaxe":4,"iron_helmet":1,"golden_helmet":1,"stone_pickaxe":15,"stone_axe":10,"wooden_axe":4,"stone_shovel":6,"leather_boots":2}},"Idhemter":{"uuid":"d78629d3-b11c-4b70-801a-87169825064e","play_hours":2.2,"play_ticks":157349,"deaths":1,"mob_kills":52,"player_kills":0,"jumps":1782,"damage_dealt":10045,"damage_taken":1748,"animals_bred":0,"fish_caught":3,"enchant_item":0,"open_chest":156,"sleep_in_bed":3,"traded_with_villager":0,"talked_to_villager":0,"distances":{"walk":6.37,"sprint":3.4,"fly":2.0,"climb":0.26,"crouch":0.0,"fall":0.3,"walk_on_water":0.05,"walk_under_water":0.01},"total_distance_km":12.39,"mined_top15":{"stone":841,"grass_block":604,"dirt":259,"sand":87,"redstone_ore":72,"oak_log":71,"iron_ore":62,"coal_ore":59,"diorite":45,"andesite":33,"grass":33,"granite":29,"cobblestone":20,"obsidian":14,"lapis_ore":14},"total_mined":2294,"killed_top10":{"piglin":14,"zombie":13,"spider":7,"hoglin":6,"cow":5,"husk":4,"pig":2,"sheep":1},"total_killed":52,"killed_by":{"zombie":1},"crafted_top15":{"oak_planks":184,"torch":72,"iron_ingot":62,"stick":52,"cooked_mutton":31,"oak_fence":24,"cooked_porkchop":21,"charcoal":12,"chest":6,"iron_shovel":4,"shield":3,"furnace":2,"wooden_shovel":1,"stone_shovel":1,"diamond_sword":1},"total_crafted":491,"total_used":2741,"total_picked_up":3442,"total_dropped":16,"broken":{"shield":1,"iron_shovel":3,"wooden_shovel":1,"stone_shovel":1}},"xarmy7":{"uuid":"e1fcc94f-518c-4be2-b818-3cb2437c486b","play_hours":2.0,"play_ticks":147337,"deaths":10,"mob_kills":0,"player_kills":0,"jumps":990,"damage_dealt":753,"damage_taken":3270,"animals_bred":0,"fish_caught":0,"enchant_item":0,"open_chest":3,"sleep_in_bed":1,"traded_with_villager":0,"talked_to_villager":0,"distances":{"walk":6.3,"sprint":1.76,"swim":0.0,"fly":0.65,"climb":0.05,"crouch":0.01,"fall":0.23,"walk_on_water":0.34,"walk_under_water":0.13},"total_distance_km":9.47,"mined_top15":{"grass_block":14,"dirt":6,"grass":2,"white_bed":1,"red_mushroom":1,"sand":1,"player_head":1},"total_mined":26,"killed_top10":{},"total_killed":0,"killed_by":{"player":7,"creeper":1},"crafted_top15":{"iron_pickaxe":1,"stone_sword":1},"total_crafted":2,"total_used":150,"total_picked_up":4057,"total_dropped":868,"broken":{}},"Ryukraft":{"uuid":"eea18607-ab64-489e-b036-462636f165d5","play_hours":40.5,"play_ticks":2916791,"deaths":7,"mob_kills":10604,"player_kills":1,"jumps":22145,"damage_dealt":314610,"damage_taken":23136,"animals_bred":0,"fish_caught":2,"enchant_item":99,"open_chest":1074,"sleep_in_bed":14,"traded_with_villager":145,"talked_to_villager":173,"distances":{"walk":37.15,"sprint":56.57,"swim":3.84,"fly":58.46,"aviate":137.36,"boat":4.33,"horse":0.08,"climb":2.44,"crouch":1.87,"fall":4.19,"walk_on_water":1.46,"walk_under_water":1.38},"total_distance_km":309.13,"mined_top15":{"netherrack":23609,"stone":9453,"dirt":5730,"nether_quartz_ore":2335,"sugar_cane":1196,"grass_block":967,"andesite":533,"coal_ore":523,"nether_gold_ore":490,"diorite":473,"granite":435,"sand":204,"hay_block":171,"iron_block":164,"diamond_ore":159},"total_mined":47964,"killed_top10":{"enderman":9899,"squid":130,"cow":72,"sheep":40,"hoglin":35,"blaze":34,"horse":33,"skeleton":32,"zombie":19,"ghast":17},"total_killed":10417,"killed_by":{"player":1,"enderman":1,"ender_dragon":1,"hoglin":1},"crafted_top15":{"stone":1546,"stone_button":1535,"paper":1254,"firework_rocket":768,"quartz_block":547,"glass_pane":512,"stick":440,"gold_ingot":298,"dark_oak_planks":222,"ladder":129,"torch":124,"emerald":106,"book":102,"iron_ingot":98,"oak_planks":76},"total_crafted":8371,"total_used":57357,"total_picked_up":34183,"total_dropped":8042,"broken":{"golden_boots":1,"diamond_helmet":1,"stone_pickaxe":3,"diamond_pickaxe":2,"stone_shovel":1,"golden_chestplate":1,"iron_pickaxe":14}},"Martel0w":{"uuid":"f72e3e6e-ce64-4c4c-aebc-5582eed2e8db","play_hours":31.2,"play_ticks":2246264,"deaths":27,"mob_kills":12094,"player_kills":2,"jumps":21821,"damage_dealt":267535,"damage_taken":19611,"animals_bred":0,"fish_caught":45,"enchant_item":189,"open_chest":409,"sleep_in_bed":39,"traded_with_villager":176,"talked_to_villager":100,"distances":{"walk":72.58,"sprint":57.68,"swim":0.65,"fly":74.58,"aviate":0.4,"climb":1.59,"crouch":0.81,"fall":3.19,"walk_on_water":1.98,"walk_under_water":0.55},"total_distance_km":214.01,"mined_top15":{"netherrack":15877,"stone":7395,"sand":1106,"nether_quartz_ore":1088,"sugar_cane":1057,"sandstone":658,"coal_ore":598,"andesite":507,"diorite":426,"iron_ore":418,"dirt":305,"granite":292,"gravel":268,"redstone_ore":201,"nether_gold_ore":169},"total_mined":32072,"killed_top10":{"enderman":10666,"husk":45,"zombie":39,"cow":33,"skeleton":27,"spider":17,"shulker":8,"creeper":8,"sheep":6,"hoglin":6},"total_killed":10886,"killed_by":{"creeper":4,"zoglin":1,"endermite":3,"player":6,"enderman":2,"skeleton":6,"phantom":1},"crafted_top15":{"paper":2954,"sandstone":477,"lapis_lazuli":406,"torch":348,"stick":312,"nether_brick":295,"iron_ingot":281,"quartz_block":255,"sandstone_stairs":228,"emerald":195,"gold_ingot":191,"oak_planks":176,"spruce_planks":152,"cut_sandstone":112,"clay":89},"total_crafted":7869,"total_used":41080,"total_picked_up":32982,"total_dropped":12712,"broken":{"iron_shovel":2,"stone_pickaxe":3,"diamond_pickaxe":2,"fishing_rod":1,"wooden_pickaxe":1,"iron_pickaxe":6}}};
 
-// ═══════════════════════════════════════════════════════
-// CONFIGURATION & HELPERS
-// ═══════════════════════════════════════════════════════
-
-// Couleurs assignées par joueur (ordre par temps de jeu décroissant)
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+const PALETTE = ['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
 const PLAYER_COLORS_MAP = {};
-const PALETTE = [
-  '#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef',
-  '#ef6ac0','#6aefd9','#efd96a','#a86aef'
-];
-const playerNames = Object.keys(PLAYERS_DATA)
-  .sort((a,b) => PLAYERS_DATA[b].play_hours - PLAYERS_DATA[a].play_hours);
-playerNames.forEach((n,i) => PLAYER_COLORS_MAP[n] = PALETTE[i % PALETTE.length]);
+const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
+playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
 
-// Labels lisibles pour les stats Minecraft
 const LABELS = {
-  stone:'Pierre',netherrack:'Netherrack',sand:'Sable',grass_block:'Herbe',
-  dirt:'Terre',sandstone:'Grès',gravel:'Gravier',spruce_log:'Bûche sapin',
-  coal_ore:'Charbon',iron_ore:'Fer',oak_log:'Bûche chêne',wheat:'Blé',
-  packed_ice:'Glace compacte',andesite:'Andésite',diorite:'Diorite',
-  granite:'Granite',sugar_cane:'Canne à sucre',oak_leaves:'Feuilles chêne',
-  redstone_ore:'Redstone',cobblestone:'Pavé',nether_quartz_ore:'Quartz du Nether',
-  nether_gold_ore:'Or du Nether',diamond_ore:'Diamant',oak_planks:'Planches chêne',
-  birch_planks:'Planches bouleau',spruce_planks:'Planches sapin',
-  white_concrete:'Béton blanc',end_stone:'Pierre de l\'End',beetroots:'Betteraves',
-  melon:'Melon',stone_bricks:'Briques pierre',birch_log:'Bûche bouleau',
-  dark_oak_log:'Bûche chêne noir',acacia_log:'Bûche acacia',
-  enderman:'Enderman',zombie:'Zombie',skeleton:'Squelette',creeper:'Creeper',
-  spider:'Araignée',husk:'Husk',cow:'Vache',sheep:'Mouton',pig:'Cochon',
-  blaze:'Blaze',wither_skeleton:'Wither Squelette',magma_cube:'Cube de magma',
-  shulker:'Shulker',pillager:'Pillard',hoglin:'Hoglin',squid:'Poulpe',
-  drowned:'Noyé',chicken:'Poulet',slime:'Slime',zombified_piglin:'Piglin zombifié',
-  player:'Joueur',iron_golem:'Golem de fer',vindicator:'Vindicateur',
-  phantom:'Phantom',piglin:'Piglin',ghast:'Ghast',ravager:'Ravageur',
-  witch:'Sorcière',vex:'Vex',endermite:'Endermite',ender_dragon:'Ender Dragon',
-  zoglin:'Zoglin',
-  walk:'Marche',sprint:'Sprint',swim:'Nage',fly:'Vol créatif',
-  aviate:'Élytre',boat:'Bateau',horse:'Cheval',minecart:'Wagon',
-  climb:'Escalade',crouch:'Accroupi',fall:'Chute',
-  walk_on_water:'Sur l\'eau',walk_under_water:'Sous l\'eau',
-  paper:'Papier',bone_meal:'Poudre d\'os',glass:'Verre',glass_pane:'Vitre',
-  torch:'Torche',stick:'Bâton',iron_ingot:'Lingot fer',gold_ingot:'Lingot or',
-  emerald:'Émeraude',firework_rocket:'Fusée',oak_fence:'Barrière chêne',
-  coal:'Charbon',coal_block:'Bloc charbon',redstone_block:'Bloc redstone',
-  lapis_lazuli:'Lapis-lazuli',bread:'Pain',stone_bricks_craft:'Briques pierre',
-  green_dye:'Teinture verte',cut_sandstone:'Grès taillé',dark_oak_planks:'Planches chêne noir',
-  acacia_planks:'Planches acacia',redstone:'Redstone',quartz_block:'Bloc quartz',
-  stone_button:'Bouton pierre',gold_nugget:'Pépite or',sandstone_stairs:'Escalier grès',
-  nether_brick:'Brique du Nether',clay:'Argile',bone_block:'Bloc d\'os',
-  white_concrete_powder:'Poudre béton blanc'
+  stone:'Pierre',netherrack:'Netherrack',sand:'Sable',grass_block:'Herbe',dirt:'Terre',
+  sandstone:'Grès',gravel:'Gravier',spruce_log:'Bûche sapin',coal_ore:'Charbon',iron_ore:'Fer',
+  oak_log:'Bûche chêne',wheat:'Blé',packed_ice:'Glace compacte',andesite:'Andésite',diorite:'Diorite',
+  granite:'Granite',sugar_cane:'Canne à sucre',oak_leaves:'Feuilles chêne',redstone_ore:'Redstone',
+  cobblestone:'Pavé',nether_quartz_ore:'Quartz Nether',nether_gold_ore:'Or Nether',diamond_ore:'Diamant',
+  oak_planks:'Planches chêne',birch_planks:'Planches bouleau',spruce_planks:'Planches sapin',
+  white_concrete:'Béton blanc',end_stone:'Pierre End',beetroots:'Betteraves',melon:'Melon',
+  stone_bricks:'Briques pierre',birch_log:'Bûche bouleau',dark_oak_log:'Bûche chêne noir',
+  acacia_log:'Bûche acacia',deepslate:'Ardoise abîmes',short_grass:'Herbe courte',
+  cherry_log:'Bûche cerisier',tuff:'Tuf',copper_ore:'Cuivre',
+  enderman:'Enderman',zombie:'Zombie',skeleton:'Squelette',creeper:'Creeper',spider:'Araignée',
+  husk:'Husk',cow:'Vache',sheep:'Mouton',pig:'Cochon',blaze:'Blaze',
+  wither_skeleton:'Wither Squelette',magma_cube:'Cube magma',shulker:'Shulker',pillager:'Pillard',
+  hoglin:'Hoglin',squid:'Poulpe',drowned:'Noyé',chicken:'Poulet',slime:'Slime',
+  zombified_piglin:'Piglin zombifié',player:'Joueur',iron_golem:'Golem fer',vindicator:'Vindicateur',
+  phantom:'Phantom',piglin:'Piglin',piglin_brute:'Brute piglin',ghast:'Ghast',ravager:'Ravageur',
+  witch:'Sorcière',vex:'Vex',endermite:'Endermite',ender_dragon:'Ender Dragon',zoglin:'Zoglin',
+  mooshroom:'Champimeuh',breeze:'Breeze',bogged:'Bogged',warden:'Warden',salmon:'Saumon',
+  walk:'Marche',sprint:'Sprint',swim:'Nage',fly:'Vol créatif',aviate:'Élytre',boat:'Bateau',
+  horse:'Cheval',minecart:'Wagon',climb:'Escalade',crouch:'Accroupi',fall:'Chute',
+  walk_on_water:"Sur l'eau",walk_under_water:"Sous l'eau",
+  paper:'Papier',bone_meal:"Poudre d'os",glass:'Verre',glass_pane:'Vitre',torch:'Torche',
+  stick:'Bâton',iron_ingot:'Lingot fer',gold_ingot:'Lingot or',emerald:'Émeraude',
+  firework_rocket:'Fusée',coal:'Charbon',coal_block:'Bloc charbon',redstone_block:'Bloc redstone',
+  lapis_lazuli:'Lapis-lazuli',bread:'Pain',green_dye:'Teinture verte',cut_sandstone:'Grès taillé',
+  dark_oak_planks:'Planches chêne noir',acacia_planks:'Planches acacia',redstone:'Redstone',
+  quartz_block:'Bloc quartz',stone_button:'Bouton pierre',gold_nugget:'Pépite or',
+  sandstone_stairs:'Escalier grès',nether_brick:'Brique Nether',clay:'Argile',
+  bone_block:"Bloc d'os",white_concrete_powder:'Poudre béton blanc',oak_fence:'Barrière chêne'
 };
 
-function label(key) {
-  return LABELS[key] || key.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-}
-function fmt(n) {
-  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1)+'k';
-  return n.toLocaleString('fr-FR');
-}
-function pct(v,max) { return max ? Math.round(v/max*100) : 0; }
+function label(k){return LABELS[k]||k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString('fr-FR')}
+function pct(v,m){return m?Math.round(v/m*100):0}
 
-// Chart.js defaults
-Chart.defaults.color = '#8b8b96';
-Chart.defaults.borderColor = 'rgba(42,42,53,0.5)';
-Chart.defaults.font.family = "'JetBrains Mono',monospace";
-Chart.defaults.font.size = 11;
-Chart.defaults.plugins.legend.labels.boxWidth = 12;
-Chart.defaults.plugins.legend.labels.padding = 12;
+Chart.defaults.color='#8b8b96';
+Chart.defaults.borderColor='rgba(42,42,53,0.5)';
+Chart.defaults.font.family="'JetBrains Mono',monospace";
+Chart.defaults.font.size=11;
+Chart.defaults.plugins.legend.labels.boxWidth=12;
+Chart.defaults.plugins.legend.labels.padding=12;
 
-// Chart instances registry
-const charts = {};
-function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+const charts={};
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
 
-// ═══════════════════════════════════════════════════════
-// GLOBAL STATS
-// ═══════════════════════════════════════════════════════
-const totalHours = playerNames.reduce((s,n) => s + PLAYERS_DATA[n].play_hours, 0);
-const totalMined = playerNames.reduce((s,n) => s + PLAYERS_DATA[n].total_mined, 0);
-const totalKills = playerNames.reduce((s,n) => s + PLAYERS_DATA[n].mob_kills, 0);
-const totalDeaths = playerNames.reduce((s,n) => s + PLAYERS_DATA[n].deaths, 0);
-const totalDist = playerNames.reduce((s,n) => s + PLAYERS_DATA[n].total_distance_km, 0);
-const totalCrafted = playerNames.reduce((s,n) => s + PLAYERS_DATA[n].total_crafted, 0);
+// ═══════════════════════════════════════
+// GLOBAL AGGREGATION
+// ═══════════════════════════════════════
+const totalHours=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].play_hours,0);
+const totalMined=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_mined,0);
+const totalKills=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].mob_kills,0);
+const totalDeaths=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].deaths,0);
+const totalDist=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_distance_km,0);
+const totalCrafted=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_crafted,0);
 
-document.getElementById('globalMeta').innerHTML = `
+document.getElementById('globalMeta').innerHTML=`
   <span><b>${playerNames.length}</b> joueurs</span>
   <span><b>${totalHours.toFixed(0)}</b>h de jeu</span>
   <span><b>${fmt(totalMined)}</b> blocs minés</span>
-  <span><b>${fmt(totalKills)}</b> mobs tués</span>
-`;
+  <span><b>${fmt(totalKills)}</b> mobs tués</span>`;
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // NAVIGATION
-// ═══════════════════════════════════════════════════════
-const navEl = document.getElementById('nav');
-const contentEl = document.getElementById('content');
+// ═══════════════════════════════════════
+const navEl=document.getElementById('nav');
+const contentEl=document.getElementById('content');
 
-function buildNav() {
-  let html = `<button class="active" data-section="overview">📊 Vue globale</button>`;
-  html += `<button data-section="leaderboards">🏆 Classements</button>`;
-  playerNames.forEach(name => {
-    const dot = `<span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>`;
-    html += `<button data-section="player-${name}">${dot}${name}</button>`;
+function buildNav(){
+  let h=`<button class="active" data-section="overview">📊 Vue globale</button>`;
+  h+=`<button data-section="leaderboards">🏆 Classements</button>`;
+  playerNames.forEach(name=>{
+    const dot=`<span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>`;
+    h+=`<button data-section="player-${name}">${dot}${name}</button>`;
   });
-  navEl.innerHTML = html;
-  navEl.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      navEl.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  navEl.innerHTML=h;
+  navEl.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      navEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       showSection(btn.dataset.section);
     });
   });
 }
 
-function showSection(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(id);
-  if (el) { el.classList.add('active'); }
-  // Render charts lazily
-  if (id === 'overview') renderOverviewCharts();
-  if (id === 'leaderboards') renderLeaderboardCharts();
-  if (id.startsWith('player-')) renderPlayerCharts(id.replace('player-',''));
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el)el.classList.add('active');
+  if(id==='overview')renderOverviewCharts();
+  if(id==='leaderboards')renderLeaderboardCharts();
+  if(id.startsWith('player-'))renderPlayerCharts(id.replace('player-',''));
 }
 
-// ═══════════════════════════════════════════════════════
-// BUILD SECTIONS
-// ═══════════════════════════════════════════════════════
-function buildAllSections() {
-  let html = '';
-  html += buildOverview();
-  html += buildLeaderboards();
-  playerNames.forEach(name => { html += buildPlayerSection(name); });
-  contentEl.innerHTML = html;
+function buildAllSections(){
+  let h='';h+=buildOverview();h+=buildLeaderboards();
+  playerNames.forEach(name=>{h+=buildPlayerSection(name)});
+  contentEl.innerHTML=h;
 }
 
-// ── Overview ──
-function buildOverview() {
+// ═══════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════
+function buildOverview(){
   return `
   <div class="section active" id="overview">
     <div class="grid grid-4" style="margin-bottom:1rem">
@@ -385,373 +272,192 @@ function buildOverview() {
       <div class="stat-tile"><div class="value" style="color:var(--orange)">${fmt(totalCrafted)}</div><div class="label">Items craftés</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card">
-        <h3><span class="icon">⏱</span> Temps de jeu par joueur</h3>
-        <div class="chart-wrap"><canvas id="chart-playtime"></canvas></div>
-      </div>
-      <div class="card">
-        <h3><span class="icon">🗺</span> Distance totale (km)</h3>
-        <div class="chart-wrap"><canvas id="chart-distance"></canvas></div>
-      </div>
-      <div class="card">
-        <h3><span class="icon">⛏</span> Blocs minés par joueur</h3>
-        <div class="chart-wrap"><canvas id="chart-mined"></canvas></div>
-      </div>
-      <div class="card">
-        <h3><span class="icon">⚔</span> Mobs tués par joueur</h3>
-        <div class="chart-wrap"><canvas id="chart-kills"></canvas></div>
-      </div>
+      <div class="card"><h3><span class="icon">⏱</span> Temps de jeu par joueur</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🗺</span> Distance totale (km)</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⛏</span> Blocs minés par joueur</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⚔</span> Mobs tués par joueur</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
     </div>
-    <div class="card">
-      <h3><span class="icon">📈</span> Comparaison multi-stats</h3>
+    <div class="card"><h3><span class="icon">📈</span> Comparaison multi-stats</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
     </div>
   </div>`;
 }
 
-function renderOverviewCharts() {
-  // Playtime bar
-  destroyChart('chart-playtime');
-  charts['chart-playtime'] = new Chart(document.getElementById('chart-playtime'), {
-    type:'bar', data:{
-      labels: playerNames, datasets:[{
-        data: playerNames.map(n => PLAYERS_DATA[n].play_hours),
-        backgroundColor: playerNames.map(n => PLAYER_COLORS_MAP[n]+'cc'),
-        borderColor: playerNames.map(n => PLAYER_COLORS_MAP[n]),
-        borderWidth:1, borderRadius:4
-      }]
-    }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'h'}}},
-      scales:{y:{title:{display:true,text:'Heures'},grid:{color:'rgba(42,42,53,0.3)'}},
-        x:{grid:{display:false}}}}
-  });
+function renderOverviewCharts(){
+  const barOpts=(lbl)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:lbl},grid:{color:'rgba(42,42,53,0.3)'}},x:{grid:{display:false}}}});
+  const mkBar=(id,data,tooltipSuffix,yLabel)=>{
+    destroyChart(id);
+    charts[id]=new Chart(document.getElementById(id),{type:'bar',data:{
+      labels:playerNames,datasets:[{data,backgroundColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]+'cc'),
+        borderColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]),borderWidth:1,borderRadius:4}]
+    },options:{...barOpts(yLabel),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+(tooltipSuffix||'')}}}}});
+  };
+  mkBar('chart-playtime',playerNames.map(n=>PLAYERS_DATA[n].play_hours),'h','Heures');
+  mkBar('chart-distance',playerNames.map(n=>PLAYERS_DATA[n].total_distance_km),' km','km');
+  mkBar('chart-mined',playerNames.map(n=>PLAYERS_DATA[n].total_mined),' blocs','Blocs');
+  mkBar('chart-kills',playerNames.map(n=>PLAYERS_DATA[n].mob_kills),' kills','Kills');
 
-  // Distance bar
-  destroyChart('chart-distance');
-  charts['chart-distance'] = new Chart(document.getElementById('chart-distance'), {
-    type:'bar', data:{
-      labels: playerNames, datasets:[{
-        data: playerNames.map(n => PLAYERS_DATA[n].total_distance_km),
-        backgroundColor: playerNames.map(n => PLAYER_COLORS_MAP[n]+'cc'),
-        borderColor: playerNames.map(n => PLAYER_COLORS_MAP[n]),
-        borderWidth:1, borderRadius:4
-      }]
-    }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>ctx.parsed.y.toFixed(1)+' km'}}},
-      scales:{y:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},
-        x:{grid:{display:false}}}}
-  });
-
-  // Mined bar
-  destroyChart('chart-mined');
-  charts['chart-mined'] = new Chart(document.getElementById('chart-mined'), {
-    type:'bar', data:{
-      labels: playerNames, datasets:[{
-        data: playerNames.map(n => PLAYERS_DATA[n].total_mined),
-        backgroundColor: playerNames.map(n => PLAYER_COLORS_MAP[n]+'cc'),
-        borderColor: playerNames.map(n => PLAYER_COLORS_MAP[n]),
-        borderWidth:1, borderRadius:4
-      }]
-    }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>fmt(ctx.parsed.y)+' blocs'}}},
-      scales:{y:{title:{display:true,text:'Blocs'},grid:{color:'rgba(42,42,53,0.3)'}},
-        x:{grid:{display:false}}}}
-  });
-
-  // Kills bar
-  destroyChart('chart-kills');
-  charts['chart-kills'] = new Chart(document.getElementById('chart-kills'), {
-    type:'bar', data:{
-      labels: playerNames, datasets:[{
-        data: playerNames.map(n => PLAYERS_DATA[n].mob_kills),
-        backgroundColor: playerNames.map(n => PLAYER_COLORS_MAP[n]+'cc'),
-        borderColor: playerNames.map(n => PLAYER_COLORS_MAP[n]),
-        borderWidth:1, borderRadius:4
-      }]
-    }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>fmt(ctx.parsed.y)+' kills'}}},
-      scales:{y:{title:{display:true,text:'Kills'},grid:{color:'rgba(42,42,53,0.3)'}},
-        x:{grid:{display:false}}}}
-  });
-
-  // Radar chart - top 5 players only for clarity
   destroyChart('chart-radar');
-  const top5 = playerNames.slice(0,5);
-  const radarMetrics = ['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','deaths'];
-  const radarLabels = ['Temps de jeu','Blocs minés','Mobs tués','Distance','Items craftés','Morts'];
-  const maxVals = radarMetrics.map(m => Math.max(...playerNames.map(n=>PLAYERS_DATA[n][m]||0)));
-  charts['chart-radar'] = new Chart(document.getElementById('chart-radar'), {
-    type:'radar', data:{
-      labels: radarLabels,
-      datasets: top5.map(name => ({
-        label: name,
-        data: radarMetrics.map((m,i) => maxVals[i] ? ((PLAYERS_DATA[name][m]||0)/maxVals[i]*100) : 0),
-        borderColor: PLAYER_COLORS_MAP[name],
-        backgroundColor: PLAYER_COLORS_MAP[name]+'22',
-        borderWidth:2, pointRadius:3, pointBackgroundColor: PLAYER_COLORS_MAP[name]
-      }))
-    }, options:{responsive:true,maintainAspectRatio:false,
-      scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},
-        ticks:{display:false},pointLabels:{font:{size:12}}}},
-      plugins:{tooltip:{callbacks:{label:ctx=>{
-        const idx = ctx.dataIndex;const name = ctx.dataset.label;
-        const raw = PLAYERS_DATA[name][radarMetrics[idx]]||0;
-        return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(raw)}`;
-      }}}}}
-  });
+  const top5=playerNames.slice(0,5);
+  const rm=['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','deaths'];
+  const rl=['Temps de jeu','Blocs minés','Mobs tués','Distance','Items craftés','Morts'];
+  const mx=rm.map(m=>Math.max(...playerNames.map(n=>PLAYERS_DATA[n][m]||0)));
+  charts['chart-radar']=new Chart(document.getElementById('chart-radar'),{type:'radar',data:{
+    labels:rl,datasets:top5.map(name=>({label:name,
+      data:rm.map((m,i)=>mx[i]?((PLAYERS_DATA[name][m]||0)/mx[i]*100):0),
+      borderColor:PLAYER_COLORS_MAP[name],backgroundColor:PLAYER_COLORS_MAP[name]+'22',
+      borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[name]}))
+  },options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},ticks:{display:false},pointLabels:{font:{size:12}}}},
+    plugins:{tooltip:{callbacks:{label:ctx=>{
+      const idx=ctx.dataIndex;const name=ctx.dataset.label;const raw=PLAYERS_DATA[name][rm[idx]]||0;
+      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(raw)}`;
+    }}}}}});
 }
 
-// ── Leaderboards ──
-function buildLeaderboards() {
-  const boards = [
+// ═══════════════════════════════════════
+// LEADERBOARDS
+// ═══════════════════════════════════════
+function buildLeaderboards(){
+  const boards=[
     {key:'play_hours',title:'⏱ Temps de jeu',suffix:'h',color:'var(--accent-light)'},
     {key:'total_mined',title:'⛏ Blocs minés',suffix:'',color:'var(--green)'},
     {key:'mob_kills',title:'⚔ Mobs tués',suffix:'',color:'var(--red)'},
     {key:'deaths',title:'💀 Morts',suffix:'',color:'var(--orange)'},
-    {key:'total_distance_km',title:'🗺 Distance parcourue',suffix:' km',color:'var(--blue)'},
+    {key:'total_distance_km',title:'🗺 Distance',suffix:' km',color:'var(--blue)'},
     {key:'total_crafted',title:'🔨 Items craftés',suffix:'',color:'var(--cyan)'},
-    {key:'player_kills',title:'🗡 Joueurs tués',suffix:'',color:'var(--pink)'},
+    {key:'player_kills',title:'🗡 PvP Kills',suffix:'',color:'var(--pink)'},
     {key:'enchant_item',title:'✨ Enchantements',suffix:'',color:'var(--yellow)'},
-    {key:'fish_caught',title:'🐟 Poissons pêchés',suffix:'',color:'var(--teal)'},
-    {key:'traded_with_villager',title:'🤝 Échanges villageois',suffix:'',color:'var(--accent-light)'},
-    {key:'animals_bred',title:'💕 Animaux élevés',suffix:'',color:'var(--pink)'},
+    {key:'fish_caught',title:'🐟 Poissons',suffix:'',color:'var(--teal)'},
+    {key:'traded_with_villager',title:'🤝 Échanges PNJ',suffix:'',color:'var(--accent-light)'},
+    {key:'animals_bred',title:'💕 Élevage',suffix:'',color:'var(--pink)'},
     {key:'jumps',title:'🦘 Sauts',suffix:'',color:'var(--green)'},
   ];
-
-  let html = `<div class="section" id="leaderboards"><div class="grid grid-3">`;
-  boards.forEach(b => {
-    const sorted = [...playerNames].sort((a,c) => (PLAYERS_DATA[c][b.key]||0) - (PLAYERS_DATA[a][b.key]||0));
-    const maxVal = PLAYERS_DATA[sorted[0]][b.key] || 1;
-    html += `<div class="card"><h3>${b.title}</h3><ol class="leaderboard">`;
-    sorted.forEach((name,i) => {
-      const val = PLAYERS_DATA[name][b.key] || 0;
-      const w = pct(val,maxVal);
-      const isRecord = i===0 && val > 0;
-      html += `<li>
-        <span class="rank">${i+1}</span>
-        <span class="name"><span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>${name}${isRecord?'<span class="record-badge">RECORD</span>':''}</span>
+  let h=`<div class="section" id="leaderboards"><div class="grid grid-3">`;
+  boards.forEach(b=>{
+    const sorted=[...playerNames].sort((a,c)=>(PLAYERS_DATA[c][b.key]||0)-(PLAYERS_DATA[a][b.key]||0));
+    const maxVal=PLAYERS_DATA[sorted[0]][b.key]||1;
+    h+=`<div class="card"><h3>${b.title}</h3><ol class="leaderboard">`;
+    sorted.forEach((name,i)=>{
+      const val=PLAYERS_DATA[name][b.key]||0;const w=pct(val,maxVal);const isRec=i===0&&val>0;
+      h+=`<li><span class="rank">${i+1}</span>
+        <span class="name"><span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>${name}${isRec?'<span class="record-badge">RECORD</span>':''}</span>
         <span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${b.color}"></span></span>
-        <span class="val">${typeof val==='number'&&val%1?val.toFixed(1):fmt(val)}${b.suffix}</span>
-      </li>`;
+        <span class="val">${typeof val==='number'&&val%1?val.toFixed(1):fmt(val)}${b.suffix}</span></li>`;
     });
-    html += `</ol></div>`;
+    h+=`</ol></div>`;
   });
-  html += `</div>
+  h+=`</div>
     <div class="grid grid-2" style="margin-top:1rem">
-      <div class="card">
-        <h3><span class="icon">💀</span> Causes de mort (tous joueurs)</h3>
-        <div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div>
-      </div>
-      <div class="card">
-        <h3><span class="icon">🚶</span> Répartition des distances</h3>
-        <div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div>
-      </div>
-    </div>
-  </div>`;
-  return html;
+      <div class="card"><h3><span class="icon">💀</span> Causes de mort (tous)</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🚶</span> Distances par type</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+    </div></div>`;
+  return h;
 }
 
-function renderLeaderboardCharts() {
-  // Death causes aggregation
+function renderLeaderboardCharts(){
   destroyChart('chart-deathcauses');
-  const deathAgg = {};
-  playerNames.forEach(n => {
-    const kb = PLAYERS_DATA[n].killed_by || {};
-    Object.entries(kb).forEach(([mob,count]) => {
-      deathAgg[mob] = (deathAgg[mob]||0) + count;
-    });
-  });
-  const deathSorted = Object.entries(deathAgg).sort((a,b)=>b[1]-a[1]);
-  const deathColors = ['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
-  charts['chart-deathcauses'] = new Chart(document.getElementById('chart-deathcauses'), {
-    type:'doughnut', data:{
-      labels: deathSorted.map(d=>label(d[0])),
-      datasets:[{data:deathSorted.map(d=>d[1]),
-        backgroundColor:deathSorted.map((_,i)=>deathColors[i%deathColors.length]+'cc'),
-        borderColor:'#16161a',borderWidth:2}]
-    }, options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'right',labels:{font:{size:10}}}}}
-  });
+  const da={};playerNames.forEach(n=>{const kb=PLAYERS_DATA[n].killed_by||{};Object.entries(kb).forEach(([m,c])=>{da[m]=(da[m]||0)+c})});
+  const ds=Object.entries(da).sort((a,b)=>b[1]-a[1]);
+  const dc=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
+  charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{type:'doughnut',data:{
+    labels:ds.map(d=>label(d[0])),datasets:[{data:ds.map(d=>d[1]),backgroundColor:ds.map((_,i)=>dc[i%dc.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
 
-  // Stacked distance bar
   destroyChart('chart-dist-stacked');
-  const distTypes = ['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
-  const distColors = ['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
-  charts['chart-dist-stacked'] = new Chart(document.getElementById('chart-dist-stacked'), {
-    type:'bar', data:{
-      labels: playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>20),
-      datasets: distTypes.map((dt,i) => ({
-        label: label(dt),
-        data: playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>20).map(n => PLAYERS_DATA[n].distances?.[dt]||0),
-        backgroundColor: distColors[i]+'aa',
-        borderWidth:0
-      }))
-    }, options:{responsive:true,maintainAspectRatio:false,
-      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}},
-      plugins:{legend:{position:'bottom',labels:{font:{size:9}}}}}
-  });
+  const dt=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
+  const dco=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
+  const fp=playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>5);
+  charts['chart-dist-stacked']=new Chart(document.getElementById('chart-dist-stacked'),{type:'bar',data:{
+    labels:fp,datasets:dt.map((t,i)=>({label:label(t),data:fp.map(n=>PLAYERS_DATA[n].distances?.[t]||0),backgroundColor:dco[i]+'aa',borderWidth:0}))
+  },options:{responsive:true,maintainAspectRatio:false,
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}},
+    plugins:{legend:{position:'bottom',labels:{font:{size:9}}}}}});
 }
 
-// ── Player Section ──
-function buildPlayerSection(name) {
-  const p = PLAYERS_DATA[name];
-  const color = PLAYER_COLORS_MAP[name];
-  const avatarUrl = `https://crafatar.com/avatars/${p.uuid}?size=64&overlay`;
+// ═══════════════════════════════════════
+// PLAYER SECTION
+// ═══════════════════════════════════════
+function buildPlayerSection(name){
+  const p=PLAYERS_DATA[name];const color=PLAYER_COLORS_MAP[name];
+  const avatarUrl=`https://crafatar.com/avatars/${p.uuid}?size=64&overlay`;
 
-  // Find records
-  const records = [];
-  ['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','player_kills','enchant_item','fish_caught','traded_with_villager','animals_bred','jumps'].forEach(key => {
-    const max = Math.max(...playerNames.map(n=>PLAYERS_DATA[n][key]||0));
-    if ((p[key]||0) === max && max > 0) records.push(key);
+  const records=[];
+  ['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','player_kills','enchant_item','fish_caught','traded_with_villager','animals_bred','jumps'].forEach(key=>{
+    const mx=Math.max(...playerNames.map(n=>PLAYERS_DATA[n][key]||0));
+    if((p[key]||0)===mx&&mx>0)records.push(key);
   });
+  const recBadges=records.length?`<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">${records.map(r=>`<span class="record-badge">${label(r).substring(0,20)}</span>`).join('')}</div>`:'';
 
-  let recordBadges = records.length ? `<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">${records.map(r=>`<span class="record-badge">${label(r).substring(0,20)}</span>`).join('')}</div>` : '';
+  const killedBy=Object.entries(p.killed_by||{}).sort((a,b)=>b[1]-a[1]);
+  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--red);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">Aucune mort</li>';
 
-  // Killed by table
-  const killedBy = Object.entries(p.killed_by || {}).sort((a,b)=>b[1]-a[1]);
-  let killedByHtml = killedBy.length ? killedBy.map(([mob,c])=>`<li><span style="color:var(--text)">${label(mob)}</span> <span style="color:var(--red);font-weight:600">${c}×</span></li>`).join('') : '<li style="color:var(--text-muted)">Aucune mort enregistrée</li>';
+  const mkList=(entries,color)=>{
+    if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
+    const mx=entries[0]?.[1]||1;
+    return entries.map(([k,v])=>{const w=pct(v,mx);return `<li><span class="name">${label(k)}</span><span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span><span class="val">${fmt(v)}</span></li>`}).join('');
+  };
 
-  // Top mined table
-  const minedEntries = Object.entries(p.mined_top15 || {});
-  let minedHtml = '';
-  if (minedEntries.length) {
-    const maxM = minedEntries[0]?.[1] || 1;
-    minedHtml = minedEntries.map(([block,count]) => {
-      const w = pct(count,maxM);
-      return `<li>
-        <span class="name">${label(block)}</span>
-        <span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span>
-        <span class="val">${fmt(count)}</span>
-      </li>`;
-    }).join('');
-  }
-
-  // Top killed table
-  const killedEntries = Object.entries(p.killed_top10 || {});
-  let killedHtml = '';
-  if (killedEntries.length) {
-    const maxK = killedEntries[0]?.[1] || 1;
-    killedHtml = killedEntries.map(([mob,count]) => {
-      const w = pct(count,maxK);
-      return `<li>
-        <span class="name">${label(mob)}</span>
-        <span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:var(--red)"></span></span>
-        <span class="val">${fmt(count)}</span>
-      </li>`;
-    }).join('');
-  }
-
-  // Top crafted table
-  const craftedEntries = Object.entries(p.crafted_top15 || {});
-  let craftedHtml = '';
-  if (craftedEntries.length) {
-    const maxC = craftedEntries[0]?.[1] || 1;
-    craftedHtml = craftedEntries.slice(0,10).map(([item,count]) => {
-      const w = pct(count,maxC);
-      return `<li>
-        <span class="name">${label(item)}</span>
-        <span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:var(--cyan)"></span></span>
-        <span class="val">${fmt(count)}</span>
-      </li>`;
-    }).join('');
-  }
-
-  const kd = p.deaths > 0 ? (p.mob_kills / p.deaths).toFixed(1) : '∞';
-  const minedPerHour = p.play_hours > 0 ? Math.round(p.total_mined / p.play_hours) : 0;
-  const killsPerHour = p.play_hours > 0 ? Math.round(p.mob_kills / p.play_hours) : 0;
+  const kd=p.deaths>0?(p.mob_kills/p.deaths).toFixed(1):'∞';
+  const mph=p.play_hours>0?Math.round(p.total_mined/p.play_hours):0;
+  const kph=p.play_hours>0?Math.round(p.mob_kills/p.play_hours):0;
 
   return `
   <div class="section" id="player-${name}">
     <div class="profile-header" style="border-left:4px solid ${color}">
       <img class="profile-avatar" src="${avatarUrl}" alt="${name}" onerror="this.style.display='none'">
-      <div class="profile-info">
-        <h2 style="color:${color}">${name}</h2>
-        <div class="uuid">${p.uuid}</div>
-        ${recordBadges}
-      </div>
+      <div class="profile-info"><h2 style="color:${color}">${name}</h2><div class="uuid">${p.uuid}</div>${recBadges}</div>
       <div class="profile-stats">
         <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">Temps de jeu</div></div>
         <div class="profile-stat"><div class="pv" style="color:var(--red)">${kd}</div><div class="pl">K/D ratio</div></div>
         <div class="profile-stat"><div class="pv" style="color:var(--green)">${fmt(p.total_distance_km)} km</div><div class="pl">Parcourus</div></div>
       </div>
     </div>
-
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--green)">${fmt(p.total_mined)}</div><div class="label">Blocs minés</div><div class="sub">${fmt(minedPerHour)}/h</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--red)">${fmt(p.mob_kills)}</div><div class="label">Mobs tués</div><div class="sub">${fmt(killsPerHour)}/h</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--green)">${fmt(p.total_mined)}</div><div class="label">Blocs minés</div><div class="sub">${fmt(mph)}/h</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--red)">${fmt(p.mob_kills)}</div><div class="label">Mobs tués</div><div class="sub">${fmt(kph)}/h</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--orange)">${p.deaths}</div><div class="label">Morts</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--cyan)">${fmt(p.total_crafted)}</div><div class="label">Items craftés</div></div>
     </div>
-
     <div class="grid grid-4" style="margin-bottom:1rem">
       <div class="stat-tile"><div class="value" style="color:var(--yellow)">${fmt(p.enchant_item)}</div><div class="label">Enchantements</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--blue)">${fmt(p.open_chest)}</div><div class="label">Coffres ouverts</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--teal)">${fmt(p.fish_caught)}</div><div class="label">Poissons pêchés</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--pink)">${fmt(p.traded_with_villager)}</div><div class="label">Échanges PNJ</div></div>
     </div>
-
     <div class="grid grid-2">
-      <div class="card">
-        <h3><span class="icon">🚶</span> Distances parcourues</h3>
-        <div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div>
-      </div>
-      <div class="card">
-        <h3><span class="icon">💀</span> Tué par</h3>
-        <ul class="leaderboard" style="font-size:.8rem">${killedByHtml}</ul>
-      </div>
+      <div class="card"><h3><span class="icon">🚶</span> Distances parcourues</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">💀</span> Tué par</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
-
     <div class="grid grid-2">
-      <div class="card">
-        <h3><span class="icon">⛏</span> Top 15 blocs minés</h3>
-        <ol class="leaderboard">${minedHtml || '<li style="color:var(--text-muted)">Aucun bloc miné</li>'}</ol>
-      </div>
-      <div class="card">
-        <h3><span class="icon">⚔</span> Top 10 mobs tués</h3>
-        <ol class="leaderboard">${killedHtml || '<li style="color:var(--text-muted)">Aucun mob tué</li>'}</ol>
-      </div>
+      <div class="card"><h3><span class="icon">⛏</span> Top 15 blocs minés</h3><ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol></div>
+      <div class="card"><h3><span class="icon">⚔</span> Top 10 mobs tués</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>
     </div>
-
-    <div class="card">
-      <h3><span class="icon">🔨</span> Top 10 items craftés</h3>
-      <ol class="leaderboard">${craftedHtml || '<li style="color:var(--text-muted)">Rien de crafté</li>'}</ol>
-    </div>
+    <div class="card"><h3><span class="icon">🔨</span> Top 10 items craftés</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--cyan)')}</ol></div>
   </div>`;
 }
 
-function renderPlayerCharts(name) {
-  const p = PLAYERS_DATA[name];
-  const color = PLAYER_COLORS_MAP[name];
-
-  // Distance polar
-  const distId = `chart-dist-${name}`;
+function renderPlayerCharts(name){
+  const p=PLAYERS_DATA[name];const distId=`chart-dist-${name}`;
   destroyChart(distId);
-  const dists = p.distances || {};
-  const distEntries = Object.entries(dists).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-  if (distEntries.length && document.getElementById(distId)) {
-    const distPalette = ['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#ef6a6a','#8b8b96','#5c5c68','#3a3a48','#222230'];
-    charts[distId] = new Chart(document.getElementById(distId), {
-      type:'bar', data:{
-        labels: distEntries.map(d=>label(d[0])),
-        datasets:[{
-          data: distEntries.map(d=>d[1]),
-          backgroundColor: distEntries.map((_,i)=>distPalette[i%distPalette.length]+'cc'),
-          borderColor: distEntries.map((_,i)=>distPalette[i%distPalette.length]),
-          borderWidth:1, borderRadius:4
-        }]
-      }, options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toFixed(2)+' km'}}},
-        scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}
-    });
+  const dists=p.distances||{};
+  const de=Object.entries(dists).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(de.length&&document.getElementById(distId)){
+    const dp=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#ef6a6a','#8b8b96','#5c5c68','#3a3a48','#222230'];
+    charts[distId]=new Chart(document.getElementById(distId),{type:'bar',data:{
+      labels:de.map(d=>label(d[0])),datasets:[{data:de.map(d=>d[1]),
+        backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toFixed(2)+' km'}}},
+      scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}});
   }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════════════════════
-buildNav();
-buildAllSections();
-renderOverviewCharts();
+// ═══════════════════════════════════════
+buildNav();buildAllSections();renderOverviewCharts();
 </script>
 </body>
 </html>

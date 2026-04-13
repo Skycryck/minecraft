@@ -287,7 +287,10 @@ a{{color:var(--accent-light);text-decoration:none}}
   .profile-stats{{margin-left:0}}
   .stat-tile .value{{font-size:1.3rem}}
   .app{{padding:.5rem}}
+  .desktop-only{{display:none!important}}
 }}
+.mobile-only{{display:none}}
+@media(max-width:768px){{.mobile-only{{display:block!important}}}}
 @keyframes fadeUp{{from{{opacity:0;transform:translateY(12px)}}to{{opacity:1;transform:translateY(0)}}}}
 .card{{animation:fadeUp .4s ease both}}
 .card:nth-child(2){{animation-delay:.05s}}
@@ -738,9 +741,13 @@ function buildPlayerSection(name){{
       <div class="card"><h3><span class="icon">🚶</span> Distances parcourues</h3><div class="chart-wrap"><canvas id="chart-dist-${{name}}"></canvas></div></div>
       <div class="card"><h3><span class="icon">💀</span> Tué par</h3><ul class="leaderboard" style="font-size:.8rem">${{kbHtml}}</ul></div>
     </div>
-    <div class="card">
+    <div class="card desktop-only">
       <h3><span class="icon">⛏</span> Blocs minés — Treemap</h3>
       ${{buildTreemapHtml(Object.entries(p.mined_top15||{{}}))}}
+    </div>
+    <div class="card mobile-only">
+      <h3><span class="icon">⛏</span> Top 15 blocs minés</h3>
+      <ol class="leaderboard">${{mkList(Object.entries(p.mined_top15||{{}}),color)}}</ol>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">⚔</span> Top 10 mobs tués</h3><ol class="leaderboard">${{mkList(Object.entries(p.killed_top10||{{}}),'var(--red)')}}</ol></div>

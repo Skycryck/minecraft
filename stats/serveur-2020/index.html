@@ -142,7 +142,7 @@ a{color:var(--accent-light);text-decoration:none}
   <h1>⛏ Serveur 2020</h1>
   <p>Dashboard de statistiques du serveur</p>
   <div class="meta" id="globalMeta"></div>
-  <div class="sync-date">Dernière synchronisation : 13/04/2026 à 19:40</div>
+  <div class="sync-date">Dernière synchronisation : 13/04/2026 à 20:09</div>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>
@@ -161,36 +161,12 @@ const PLAYER_COLORS_MAP = {};
 const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
 playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
 
+// Labels FR uniquement pour les types de déplacement (UI)
+// Les noms de blocs/items/mobs restent en anglais (formatés automatiquement)
 const LABELS = {
-  stone:'Pierre',netherrack:'Netherrack',sand:'Sable',grass_block:'Herbe',dirt:'Terre',
-  sandstone:'Grès',gravel:'Gravier',spruce_log:'Bûche sapin',coal_ore:'Charbon',iron_ore:'Fer',
-  oak_log:'Bûche chêne',wheat:'Blé',packed_ice:'Glace compacte',andesite:'Andésite',diorite:'Diorite',
-  granite:'Granite',sugar_cane:'Canne à sucre',oak_leaves:'Feuilles chêne',redstone_ore:'Redstone',
-  cobblestone:'Pavé',nether_quartz_ore:'Quartz Nether',nether_gold_ore:'Or Nether',diamond_ore:'Diamant',
-  oak_planks:'Planches chêne',birch_planks:'Planches bouleau',spruce_planks:'Planches sapin',
-  white_concrete:'Béton blanc',end_stone:'Pierre End',beetroots:'Betteraves',melon:'Melon',
-  stone_bricks:'Briques pierre',birch_log:'Bûche bouleau',dark_oak_log:'Bûche chêne noir',
-  acacia_log:'Bûche acacia',deepslate:'Ardoise abîmes',short_grass:'Herbe courte',
-  cherry_log:'Bûche cerisier',tuff:'Tuf',copper_ore:'Cuivre',
-  enderman:'Enderman',zombie:'Zombie',skeleton:'Squelette',creeper:'Creeper',spider:'Araignée',
-  husk:'Husk',cow:'Vache',sheep:'Mouton',pig:'Cochon',blaze:'Blaze',
-  wither_skeleton:'Wither Squelette',magma_cube:'Cube magma',shulker:'Shulker',pillager:'Pillard',
-  hoglin:'Hoglin',squid:'Poulpe',drowned:'Noyé',chicken:'Poulet',slime:'Slime',
-  zombified_piglin:'Piglin zombifié',player:'Joueur',iron_golem:'Golem fer',vindicator:'Vindicateur',
-  phantom:'Phantom',piglin:'Piglin',piglin_brute:'Brute piglin',ghast:'Ghast',ravager:'Ravageur',
-  witch:'Sorcière',vex:'Vex',endermite:'Endermite',ender_dragon:'Ender Dragon',zoglin:'Zoglin',
-  mooshroom:'Champimeuh',breeze:'Breeze',bogged:'Bogged',warden:'Warden',salmon:'Saumon',
-  walk:'Marche',sprint:'Sprint',swim:'Nage',fly:'Vol créatif',aviate:'Élytre',boat:'Bateau',
+  walk:'Marche',sprint:'Sprint',swim:'Nage',fly:'Vol créatif',aviate:'Elytra',boat:'Bateau',
   horse:'Cheval',minecart:'Wagon',climb:'Escalade',crouch:'Accroupi',fall:'Chute',
-  walk_on_water:"Sur l'eau",walk_under_water:"Sous l'eau",
-  paper:'Papier',bone_meal:"Poudre d'os",glass:'Verre',glass_pane:'Vitre',torch:'Torche',
-  stick:'Bâton',iron_ingot:'Lingot fer',gold_ingot:'Lingot or',emerald:'Émeraude',
-  firework_rocket:'Fusée',coal:'Charbon',coal_block:'Bloc charbon',redstone_block:'Bloc redstone',
-  lapis_lazuli:'Lapis-lazuli',bread:'Pain',green_dye:'Teinture verte',cut_sandstone:'Grès taillé',
-  dark_oak_planks:'Planches chêne noir',acacia_planks:'Planches acacia',redstone:'Redstone',
-  quartz_block:'Bloc quartz',stone_button:'Bouton pierre',gold_nugget:'Pépite or',
-  sandstone_stairs:'Escalier grès',nether_brick:'Brique Nether',clay:'Argile',
-  bone_block:"Bloc d'os",white_concrete_powder:'Poudre béton blanc',oak_fence:'Barrière chêne'
+  walk_on_water:"Sur l'eau",walk_under_water:"Sous l'eau"
 };
 
 function label(k){return LABELS[k]||k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
@@ -383,7 +359,7 @@ function renderLeaderboardCharts(){
 // ═══════════════════════════════════════
 function buildPlayerSection(name){
   const p=PLAYERS_DATA[name];const color=PLAYER_COLORS_MAP[name];
-  const avatarUrl=`https://crafatar.com/avatars/${p.uuid}?size=64&overlay`;
+  const avatarUrl=`https://mc-heads.net/avatar/${p.uuid}/64`;
 
   const records=[];
   ['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','player_kills','enchant_item','fish_caught','traded_with_villager','animals_bred','jumps'].forEach(key=>{

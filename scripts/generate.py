@@ -470,6 +470,39 @@ function buildBrokenHtml(broken){{
 }}
 
 // ═══════════════════════════════════════
+// TIME ESTIMATION
+// ═══════════════════════════════════════
+function estimateTime(p){{
+  const h=p.play_hours;if(h<1)return null;
+  const totalS=h*3600;
+  // Minage: ~1s par bloc
+  let miningS=p.total_mined;
+  // Combat: damage / 10 DPS moyen
+  let combatS=p.damage_dealt/10;
+  // Déplacement: distance / vitesse
+  const speeds={{walk:4.3,sprint:5.6,swim:2.2,fly:10.9,aviate:33,boat:8,horse:9.9,minecart:8,climb:2.4,crouch:1.3,fall:20,walk_on_water:4.3,walk_under_water:2.2}};
+  let travelS=0;
+  Object.entries(p.distances||{{}}).forEach(([mode,km])=>{{travelS+=(km*1000)/(speeds[mode]||4.3)}});
+  // Craft: ~1.5s par opération
+  let craftS=p.total_crafted*1.5;
+  // Normaliser si dépasse 85% du temps
+  const estTotal=miningS+combatS+travelS+craftS;
+  if(estTotal>totalS*0.85){{
+    const scale=(totalS*0.85)/estTotal;
+    miningS*=scale;combatS*=scale;travelS*=scale;craftS*=scale;
+  }}
+  const otherS=Math.max(0,totalS-(miningS+combatS+travelS+craftS));
+  const toH=s=>Math.round(s/3600*10)/10;
+  return [
+    {{label:'⛏ Minage',hours:toH(miningS),color:'#efd96a'}},
+    {{label:'⚔ Combat',hours:toH(combatS),color:'#ef6a6a'}},
+    {{label:'🚶 Déplacement',hours:toH(travelS),color:'#3ecf8e'}},
+    {{label:'🔨 Craft',hours:toH(craftS),color:'#6aefd9'}},
+    {{label:'💤 Autre',hours:toH(otherS),color:'#5c5c68'}}
+  ];
+}}
+
+// ═══════════════════════════════════════
 // ANIMATED COUNTERS
 // ═══════════════════════════════════════
 function animateCounters(){{
@@ -738,7 +771,10 @@ function buildPlayerSection(name){{
       <div class="stat-tile"><div class="value" style="color:var(--pink)" data-target="${{p.traded_with_villager}}">0</div><div class="label">Échanges PNJ</div></div>
     </div>
     <div class="grid grid-2">
+      <div class="card"><h3><span class="icon">🕐</span> Répartition du temps estimée</h3><div class="chart-wrap"><canvas id="chart-time-${{name}}"></canvas></div></div>
       <div class="card"><h3><span class="icon">🚶</span> Distances parcourues</h3><div class="chart-wrap"><canvas id="chart-dist-${{name}}"></canvas></div></div>
+    </div>
+    <div class="grid grid-2">
       <div class="card"><h3><span class="icon">💀</span> Tué par</h3><ul class="leaderboard" style="font-size:.8rem">${{kbHtml}}</ul></div>
     </div>
     <div class="card desktop-only">
@@ -761,7 +797,23 @@ function buildPlayerSection(name){{
 }}
 
 function renderPlayerCharts(name){{
-  const p=PLAYERS_DATA[name];const distId=`chart-dist-${{name}}`;
+  const p=PLAYERS_DATA[name];
+
+  // Time estimation donut
+  const timeId=`chart-time-${{name}}`;
+  destroyChart(timeId);
+  const timeData=estimateTime(p);
+  if(timeData&&document.getElementById(timeId)){{
+    charts[timeId]=new Chart(document.getElementById(timeId),{{type:'doughnut',data:{{
+      labels:timeData.map(d=>d.label),
+      datasets:[{{data:timeData.map(d=>d.hours),backgroundColor:timeData.map(d=>d.color+'cc'),borderColor:'#16161a',borderWidth:2}}]
+    }},options:{{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{{legend:{{position:'bottom',labels:{{font:{{size:10}},padding:8}}}},
+        tooltip:{{callbacks:{{label:ctx=>{{const d=timeData[ctx.dataIndex];const total=timeData.reduce((s,x)=>s+x.hours,0);return ` ${{d.hours}}h (${{(d.hours/total*100).toFixed(0)}}%)`}}}}}}}}}}}});
+  }}
+
+  // Distance bar
+  const distId=`chart-dist-${{name}}`;
   destroyChart(distId);
   const dists=p.distances||{{}};
   const de=Object.entries(dists).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);

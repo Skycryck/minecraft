@@ -24,6 +24,7 @@ import argparse
 import urllib.request
 import urllib.error
 import time
+from datetime import datetime
 from pathlib import Path
 
 
@@ -153,7 +154,7 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
 def generate_html(players_data: dict, title: str) -> str:
     """Génère le fichier HTML complet du dashboard."""
     data_json = json.dumps(players_data, separators=(",", ":"))
-
+    sync_date = datetime.now().strftime("%d/%m/%Y à %H:%M")
     return f'''<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -203,6 +204,7 @@ a{{color:var(--accent-light);text-decoration:none}}
   background:var(--bg-card);padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
 }}
 .header .meta span b{{color:var(--accent-light);font-weight:600}}
+.sync-date{{font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);margin-top:.8rem}}
 .nav{{
   display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;
   padding:1rem 0;position:sticky;top:0;z-index:100;
@@ -297,6 +299,7 @@ a{{color:var(--accent-light);text-decoration:none}}
   <h1>⛏ {title}</h1>
   <p>Dashboard de statistiques du serveur</p>
   <div class="meta" id="globalMeta"></div>
+  <div class="sync-date">Derniere synchronisation : {sync_date}</div>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>

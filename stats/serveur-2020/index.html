@@ -129,7 +129,10 @@ a{color:var(--accent-light);text-decoration:none}
   .profile-stats{margin-left:0}
   .stat-tile .value{font-size:1.3rem}
   .app{padding:.5rem}
+  .desktop-only{display:none!important}
 }
+.mobile-only{display:none}
+@media(max-width:768px){.mobile-only{display:block!important}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .card{animation:fadeUp .4s ease both}
 .card:nth-child(2){animation-delay:.05s}
@@ -169,7 +172,7 @@ a{color:var(--accent-light);text-decoration:none}
   <h1>⛏ Serveur 2020</h1>
   <p>Dashboard de statistiques du serveur</p>
   <div class="meta" id="globalMeta"></div>
-  <div class="sync-date">Dernière synchronisation : 13/04/2026 à 23:17</div>
+  <div class="sync-date">Dernière synchronisation : 13/04/2026 à 23:56</div>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>
@@ -226,26 +229,59 @@ function getArchetype(p){
 
 // ═══════════════════════════════════════
 // FUN FACTS GENERATOR
+// Scored by impressiveness vs server max
 // ═══════════════════════════════════════
+const _funFactMaxCache={};
+function _maxOf(fn){
+  const key=fn.toString();
+  if(!_funFactMaxCache[key])_funFactMaxCache[key]=Math.max(...playerNames.map(n=>fn(PLAYERS_DATA[n])||0));
+  return _funFactMaxCache[key]||1;
+}
+
 function getFunFacts(name,p){
   const facts=[];const h=p.play_hours;if(h<0.5)return facts;
+
   const ek=p.killed_top10?.enderman||0;
-  if(ek>100)facts.push({emoji:'👁',text:`A tué ${fmt(ek)} Endermen — environ ${Math.floor(ek/64)} stacks d'Ender Pearls`});
-  if(p.deaths>5&&h>1){const mpd=Math.round(h*60/p.deaths);facts.push({emoji:'💀',text:`Meurt en moyenne toutes les ${mpd} minutes`})}
+  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),emoji:'👁',text:`A tué ${fmt(ek)} Endermen — environ ${Math.floor(ek/64)} stacks d'Ender Pearls`});
+
+  if(p.deaths>3&&h>1){const mpd=Math.round(h*60/p.deaths);const deathRate=p.deaths/h;
+    facts.push({score:deathRate/_maxOf(p=>p.play_hours>1?p.deaths/p.play_hours:0),emoji:'💀',text:`Meurt en moyenne toutes les ${mpd} minutes`})}
+
   const wk=p.distances?.walk||0;
-  if(wk>50)facts.push({emoji:'🏃',text:`A marché ${wk.toFixed(0)} km — soit ${(wk/42.195).toFixed(1)} marathons`});
-  if(p.jumps>1000&&h>1)facts.push({emoji:'🦘',text:`Saute ${Math.round(p.jumps/h)} fois par heure en moyenne`});
-  if(p.total_mined>1000&&h>1)facts.push({emoji:'💎',text:`Mine ${(p.total_mined/(h*60)).toFixed(1)} blocs par minute en moyenne`});
-  if(p.sleep_in_bed>10)facts.push({emoji:'🛏',text:`A dormi ${p.sleep_in_bed} nuits Minecraft — ${(p.sleep_in_bed/h).toFixed(1)} par heure de jeu`});
-  if(p.open_chest>1000)facts.push({emoji:'📦',text:`A ouvert ${fmt(p.open_chest)} coffres — un vrai fouineur`});
+  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),emoji:'🏃',text:`A marché ${wk.toFixed(0)} km — soit ${(wk/42.195).toFixed(1)} marathons`});
+
+  if(p.jumps>500&&h>1)facts.push({score:p.jumps/_maxOf(p=>p.jumps||0),emoji:'🦘',text:`Saute ${Math.round(p.jumps/h)} fois par heure en moyenne`});
+
+  if(p.total_mined>500&&h>1)facts.push({score:p.total_mined/_maxOf(p=>p.total_mined||0),emoji:'⛏',text:`Mine ${(p.total_mined/(h*60)).toFixed(1)} blocs par minute en moyenne`});
+
+  if(p.sleep_in_bed>5)facts.push({score:p.sleep_in_bed/_maxOf(p=>p.sleep_in_bed||0),emoji:'🛏',text:`A dormi ${p.sleep_in_bed} nuits Minecraft — ${(p.sleep_in_bed/h).toFixed(1)} par heure de jeu`});
+
+  if(p.open_chest>100)facts.push({score:p.open_chest/_maxOf(p=>p.open_chest||0),emoji:'📦',text:`A ouvert ${fmt(p.open_chest)} coffres — un vrai fouineur`});
+
   const pvpD=(p.killed_by?.player)||0;
-  if(pvpD>10)facts.push({emoji:'🎯',text:`Tué ${pvpD} fois par d'autres joueurs — cible favorite du serveur`});
+  if(pvpD>3)facts.push({score:pvpD/_maxOf(p=>(p.killed_by?.player)||0),emoji:'🎯',text:`Tué ${pvpD} fois par d'autres joueurs — cible favorite du serveur`});
+
   const ely=p.distances?.aviate||0;
-  if(ely>100)facts.push({emoji:'🪂',text:`${ely.toFixed(0)} km en Elytra — l'équivalent de ${Math.round(ely/6)} traversées de Paris`});
-  if(p.damage_dealt>50000)facts.push({emoji:'💔',text:`A infligé ${fmt(Math.round(p.damage_dealt/20))} cœurs de dégâts au total`});
-  if(p.traded_with_villager>500)facts.push({emoji:'🤝',text:`${fmt(p.traded_with_villager)} échanges avec des villageois — le capitaliste du serveur`});
+  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),emoji:'🪂',text:`${ely.toFixed(0)} km en Elytra — l'équivalent de ${Math.round(ely/6)} traversées de Paris`});
+
+  if(p.damage_dealt>10000)facts.push({score:p.damage_dealt/_maxOf(p=>p.damage_dealt||0),emoji:'💔',text:`A infligé ${fmt(Math.round(p.damage_dealt/20))} cœurs de dégâts au total`});
+
+  if(p.traded_with_villager>50)facts.push({score:p.traded_with_villager/_maxOf(p=>p.traded_with_villager||0),emoji:'🤝',text:`${fmt(p.traded_with_villager)} échanges avec des villageois — le capitaliste du serveur`});
+
   const brk=Object.values(p.broken||{}).reduce((s,v)=>s+v,0);
-  if(brk>20)facts.push({emoji:'💥',text:`A cassé ${brk} outils — pas très soigneux`});
+  if(brk>5)facts.push({score:brk/_maxOf(p=>Object.values(p.broken||{}).reduce((s,v)=>s+v,0)),emoji:'💥',text:`A cassé ${brk} outils — pas très soigneux`});
+
+  if(p.mob_kills>100)facts.push({score:p.mob_kills/_maxOf(p=>p.mob_kills||0),emoji:'⚔',text:`${fmt(p.mob_kills)} mobs tués — soit ${Math.round(p.mob_kills/h)} par heure`});
+
+  if(p.animals_bred>20)facts.push({score:p.animals_bred/_maxOf(p=>p.animals_bred||0),emoji:'💕',text:`A élevé ${p.animals_bred} animaux — fermier dans l'âme`});
+
+  if(p.fish_caught>10)facts.push({score:p.fish_caught/_maxOf(p=>p.fish_caught||0),emoji:'🎣',text:`A pêché ${p.fish_caught} poissons — le pêcheur du serveur`});
+
+  const totalDist=p.total_distance_km;
+  if(totalDist>100)facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),emoji:'🌍',text:`${totalDist.toFixed(0)} km parcourus au total — l'équivalent d'un ${totalDist>1000?'Paris-Barcelone':'Paris-Londres'}`});
+
+  // Tri par score décroissant et top 5
+  facts.sort((a,b)=>b.score-a.score);
   return facts.slice(0,5);
 }
 
@@ -547,9 +583,13 @@ function buildPlayerSection(name){
       <div class="card"><h3><span class="icon">🚶</span> Distances parcourues</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
       <div class="card"><h3><span class="icon">💀</span> Tué par</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
-    <div class="card">
+    <div class="card desktop-only">
       <h3><span class="icon">⛏</span> Blocs minés — Treemap</h3>
       ${buildTreemapHtml(Object.entries(p.mined_top15||{}))}
+    </div>
+    <div class="card mobile-only">
+      <h3><span class="icon">⛏</span> Top 15 blocs minés</h3>
+      <ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">⚔</span> Top 10 mobs tués</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>

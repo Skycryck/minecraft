@@ -31,6 +31,11 @@ if (-not (Test-Path $Dest)) {
 Set-Location $Repo
 Write-Host "Git pull..." -ForegroundColor Cyan
 git pull
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Git pull a echoue (code $LASTEXITCODE). Verifie ta connexion." -ForegroundColor Red
+    Read-Host "Appuie sur Entree pour fermer"
+    exit 1
+}
 
 # -- Copie des fichiers modifies --
 $copied = 0
@@ -65,6 +70,11 @@ Set-Location $Repo
 git add stats/serveur-2026/data/*.json
 git commit -m "Update stats serveur-2026 $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 git push
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Git push a echoue (code $LASTEXITCODE). Verifie ta connexion." -ForegroundColor Red
+    Read-Host "Appuie sur Entree pour fermer"
+    exit 1
+}
 
 Write-Host "Push effectue, les workflows vont se declencher." -ForegroundColor Green
 

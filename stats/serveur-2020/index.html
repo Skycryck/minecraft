@@ -178,10 +178,12 @@ a{color:var(--accent-light);text-decoration:none}
 .badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:.5rem}
 .badge-card{
   background:var(--bg-card-alt);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  padding:.65rem .7rem;display:flex;flex-direction:column;gap:.25rem;transition:border-color .2s,transform .15s;
+  padding:.65rem .7rem;display:flex;flex-direction:column;gap:.25rem;transition:all .2s;
+  position:relative;
 }
 .badge-card:hover{transform:translateY(-1px)}
 .badge-card.locked{opacity:.4;filter:grayscale(.5)}
+.badge-card.locked:hover{opacity:.75;filter:grayscale(.3)}
 .badge-card.tier-bronze{border-color:#cd7f32}
 .badge-card.tier-silver{border-color:#c0c0c0}
 .badge-card.tier-gold{border-color:#ffd700;box-shadow:0 0 6px rgba(255,215,0,.1)}
@@ -203,6 +205,22 @@ a{color:var(--accent-light);text-decoration:none}
   font-family:var(--font-mono);font-size:.58rem;color:var(--text-muted);
   display:flex;justify-content:space-between;
 }
+.badge-tooltip{
+  display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-sm);
+  padding:.5rem .65rem;font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);
+  white-space:nowrap;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.5);
+  pointer-events:none;line-height:1.6;text-align:center;
+}
+.badge-tooltip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--border-light);
+}
+.badge-card:hover .badge-tooltip{display:block}
+.tt-desc{color:var(--text);font-weight:600;margin-bottom:.2rem}
+.tt-tier{color:var(--text-muted)}
+.tt-tier.tt-done{color:var(--green)}
+.tt-tier.tt-next{color:var(--accent-light);font-weight:700}
 @media(max-width:768px){.badges-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}
 </style>
 </head>
@@ -212,7 +230,7 @@ a{color:var(--accent-light);text-decoration:none}
   <h1>⛏ Serveur Confinement 2020</h1>
   <p>Dashboard de statistiques du serveur</p>
   <div class="meta" id="globalMeta"></div>
-  <div class="sync-date">Dernière synchronisation : 15/04/2026 à 00:02</div>
+  <div class="sync-date">Dernière synchronisation : 15/04/2026 à 00:27</div>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>
@@ -598,6 +616,7 @@ function renderLeaderboardCharts(){
 const TIER_NAMES=['locked','bronze','silver','gold','diamond'];
 const TIER_LABELS=['🔒','🥉 Bronze','🥈 Argent','🥇 Or','💎 Diamant'];
 const TIER_COLORS=['var(--text-muted)','#cd7f32','#c0c0c0','#ffd700','#b9f2ff'];
+const TIER_EMOJIS=['🥉','🥈','🥇','💎'];
 const BADGE_CATEGORIES=[
   {id:'mining',name:'⛏ Minage'},
   {id:'combat',name:'⚔ Combat'},
@@ -676,6 +695,43 @@ const BADGES=[
   {id:'no_life',name:'No-Life',icon:'🎮',cat:'prestige',
    tiers:[10,50,100,200],val:p=>p.play_hours},
 ];
+const BADGE_DESCS={
+  mineur:'Miner des blocs au total',
+  diamantaire:'Miner du minerai de diamant',
+  nether_mole:'Miner de la netherrack',
+  ancient_debris:'Miner des débris antiques',
+  bucheron:'Couper des bûches (tous types)',
+  chasseur:'Tuer des mobs',
+  ender_slayer:'Tuer des Endermen',
+  nether_warrior:'Tuer des Wither Skeletons & Blazes',
+  berserker:'Infliger des dégâts (en cœurs)',
+  pvp_champion:'Tuer d\'autres joueurs',
+  raid_master:'Tuer Pillagers, Vindicators & Ravagers',
+  increvable:'Ratio heures jouées / morts',
+  kamikaze:'Mourir de nombreuses fois',
+  bouclier_humain:'Se faire tuer par d\'autres joueurs',
+  punching_bag:'Encaisser des dégâts (en cœurs)',
+  globe_trotter:'Parcourir des km au total',
+  marathonien:'Marcher en km',
+  sprinter:'Sprinter en km',
+  aviateur:'Voler en Elytra en km',
+  marin:'Naviguer en bateau en km',
+  cavalier:'Chevaucher en km',
+  fermier:'Élever des animaux',
+  pecheur:'Pêcher des poissons',
+  commercant:'Échanger avec des villageois',
+  recolte:'Récolter blé, betteraves, carottes & patates',
+  artisan:'Crafter des items au total',
+  enchanteur:'Enchanter des items',
+  paperasse:'Crafter du papier',
+  forgeron:'Casser des outils à force d\'usage',
+  rat_de_coffre:'Ouvrir des coffres',
+  dormeur:'Dormir dans un lit',
+  kangourou:'Faire des sauts',
+  no_life:'Accumuler des heures de jeu',
+  all_rounder:'Bronze dans chaque catégorie',
+  legende:'Obtenir Or ou mieux sur des badges',
+};
 
 function getBadgeTier(value,tiers){
   for(let i=tiers.length-1;i>=0;i--)if(value>=tiers[i])return i+1;
@@ -736,7 +792,10 @@ function buildBadgesHtml(name){
       const pc=TIER_COLORS[Math.max(b.tier,1)];
       const dv=b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value)));
       const nt=b.tier>=4?'MAX':fmt(b.nextTarget);
+      const desc=BADGE_DESCS[b.id]||'';
+      const ttTiers=b.tiers.map((t,i)=>{const cls=i<b.tier?'tt-done':(i===b.tier&&b.tier<4?'tt-next':'');return `<span class="tt-tier ${cls}">${TIER_EMOJIS[i]} ${fmt(t)}</span>`}).join(' · ');
       h+=`<div class="badge-card ${tc}">
+        <div class="badge-tooltip"><div class="tt-desc">${desc}</div><div class="tt-tiers">${ttTiers}</div></div>
         <div class="badge-header">
           <span class="badge-icon">${b.tier>0?b.icon:'🔒'}</span>
           <span class="badge-name">${b.name}</span>

@@ -115,6 +115,32 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
         if mc_key in custom:
             distances[key.replace("_one_cm", "")] = round(custom[mc_key] / 100_000, 2)
 
+    # Badge-specific stats (items that may not be in top 15/10)
+    mined_all = {clean_key(k): v for k, v in stats.get("minecraft:mined", {}).items()}
+    killed_all = {clean_key(k): v for k, v in stats.get("minecraft:killed", {}).items()}
+    crafted_all = {clean_key(k): v for k, v in stats.get("minecraft:crafted", {}).items()}
+
+    badge_data = {
+        "diamond_ore": mined_all.get("diamond_ore", 0) + mined_all.get("deepslate_diamond_ore", 0),
+        "ancient_debris": mined_all.get("ancient_debris", 0),
+        "netherrack": mined_all.get("netherrack", 0),
+        "logs": sum(mined_all.get(t, 0) for t in [
+            "oak_log", "spruce_log", "birch_log", "dark_oak_log",
+            "acacia_log", "jungle_log", "cherry_log",
+        ]),
+        "crops": sum(mined_all.get(t, 0) for t in [
+            "wheat", "beetroots", "carrots", "potatoes",
+        ]),
+        "enderman": killed_all.get("enderman", 0),
+        "wither_skeleton": killed_all.get("wither_skeleton", 0),
+        "blaze": killed_all.get("blaze", 0),
+        "pillager": killed_all.get("pillager", 0),
+        "vindicator": killed_all.get("vindicator", 0),
+        "ravager": killed_all.get("ravager", 0),
+        "paper": crafted_all.get("paper", 0),
+        "total_broken": sum(stats.get("minecraft:broken", {}).values()),
+    }
+
     return {
         "uuid": uuid,
         "play_hours": round(play_ticks / 20 / 3600, 1),
@@ -145,6 +171,7 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
         "total_picked_up": sum(stats.get("minecraft:picked_up", {}).values()),
         "total_dropped": sum(stats.get("minecraft:dropped", {}).values()),
         "broken": clean_dict(stats.get("minecraft:broken", {})),
+        "badge_data": badge_data,
     }
 
 
@@ -322,6 +349,46 @@ a{{color:var(--accent-light);text-decoration:none}}
   display:inline-flex;align-items:center;gap:.3rem;
 }}
 .broken-tag .bt-count{{color:var(--red);font-weight:600}}
+.badges-counter-wrap{{text-align:center;margin-bottom:.8rem}}
+.badges-counter{{
+  font-family:var(--font-mono);font-size:.85rem;color:var(--text-dim);
+  padding:.5rem 1rem;background:var(--bg-card-alt);border:1px solid var(--border);border-radius:20px;
+  display:inline-flex;gap:.4rem;align-items:center;
+}}
+.badges-counter b{{color:var(--accent-light)}}
+.badges-cat-header{{
+  font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);text-transform:uppercase;
+  letter-spacing:.08em;margin:1.2rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);
+}}
+.badges-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:.5rem}}
+.badge-card{{
+  background:var(--bg-card-alt);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:.65rem .7rem;display:flex;flex-direction:column;gap:.25rem;transition:border-color .2s,transform .15s;
+}}
+.badge-card:hover{{transform:translateY(-1px)}}
+.badge-card.locked{{opacity:.4;filter:grayscale(.5)}}
+.badge-card.tier-bronze{{border-color:#cd7f32}}
+.badge-card.tier-silver{{border-color:#c0c0c0}}
+.badge-card.tier-gold{{border-color:#ffd700;box-shadow:0 0 6px rgba(255,215,0,.1)}}
+.badge-card.tier-diamond{{border-color:#b9f2ff;box-shadow:0 0 10px rgba(185,242,255,.15)}}
+.badge-header{{display:flex;align-items:center;gap:.4rem}}
+.badge-icon{{font-size:1rem;flex-shrink:0}}
+.badge-name{{font-family:var(--font-mono);font-size:.7rem;font-weight:600;color:var(--text);flex:1;line-height:1.2}}
+.badge-tier{{
+  font-size:.55rem;font-family:var(--font-mono);padding:.1rem .35rem;border-radius:8px;white-space:nowrap;font-weight:600;
+}}
+.badge-tier-locked{{background:rgba(92,92,104,.15);color:var(--text-muted)}}
+.badge-tier-bronze{{background:rgba(205,127,50,.15);color:#cd7f32}}
+.badge-tier-silver{{background:rgba(192,192,192,.15);color:#c0c0c0}}
+.badge-tier-gold{{background:rgba(255,215,0,.15);color:#ffd700}}
+.badge-tier-diamond{{background:rgba(185,242,255,.2);color:#b9f2ff}}
+.badge-progress{{height:3px;background:var(--bg);border-radius:2px;overflow:hidden;margin-top:.15rem}}
+.badge-progress-fill{{height:100%;border-radius:2px;transition:width .6s ease}}
+.badge-progress-text{{
+  font-family:var(--font-mono);font-size:.58rem;color:var(--text-muted);
+  display:flex;justify-content:space-between;
+}}
+@media(max-width:768px){{.badges-grid{{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}}}
 </style>
 </head>
 <body>
@@ -711,6 +778,166 @@ function renderLeaderboardCharts(){{
 }}
 
 // ═══════════════════════════════════════
+// BADGE / ACHIEVEMENT SYSTEM
+// ═══════════════════════════════════════
+const TIER_NAMES=['locked','bronze','silver','gold','diamond'];
+const TIER_LABELS=['🔒','🥉 Bronze','🥈 Argent','🥇 Or','💎 Diamant'];
+const TIER_COLORS=['var(--text-muted)','#cd7f32','#c0c0c0','#ffd700','#b9f2ff'];
+const BADGE_CATEGORIES=[
+  {{id:'mining',name:'⛏ Minage'}},
+  {{id:'combat',name:'⚔ Combat'}},
+  {{id:'survival',name:'💀 Survie'}},
+  {{id:'exploration',name:'🚶 Exploration'}},
+  {{id:'farming',name:'🌾 Farming & Économie'}},
+  {{id:'craft',name:'🔨 Craft & Technique'}},
+  {{id:'daily',name:'🏠 Vie Quotidienne'}},
+  {{id:'prestige',name:'🏆 Prestige'}},
+];
+const BADGES=[
+  {{id:'mineur',name:'Mineur',icon:'⛏',cat:'mining',
+   tiers:[1000,10000,50000,100000],val:p=>p.total_mined}},
+  {{id:'diamantaire',name:'Diamantaire',icon:'💎',cat:'mining',
+   tiers:[10,50,150,300],val:p=>p.badge_data?.diamond_ore||0}},
+  {{id:'nether_mole',name:'Nether Mole',icon:'🕳',cat:'mining',
+   tiers:[1000,10000,20000,50000],val:p=>p.badge_data?.netherrack||0}},
+  {{id:'ancient_debris',name:'Débris Anciens',icon:'🟫',cat:'mining',
+   tiers:[5,20,50,100],val:p=>p.badge_data?.ancient_debris||0}},
+  {{id:'bucheron',name:'Bûcheron',icon:'🪓',cat:'mining',
+   tiers:[100,500,2000,5000],val:p=>p.badge_data?.logs||0}},
+  {{id:'chasseur',name:'Chasseur',icon:'⚔',cat:'combat',
+   tiers:[100,1000,10000,50000],val:p=>p.mob_kills}},
+  {{id:'ender_slayer',name:'Ender Slayer',icon:'👁',cat:'combat',
+   tiers:[100,1000,10000,40000],val:p=>p.badge_data?.enderman||0}},
+  {{id:'nether_warrior',name:'Nether Warrior',icon:'🔥',cat:'combat',
+   tiers:[50,200,500,1000],val:p=>(p.badge_data?.wither_skeleton||0)+(p.badge_data?.blaze||0)}},
+  {{id:'berserker',name:'Berserker',icon:'💥',cat:'combat',
+   tiers:[1000,10000,50000,100000],val:p=>Math.round(p.damage_dealt/20)}},
+  {{id:'pvp_champion',name:'PvP Champion',icon:'🗡',cat:'combat',
+   tiers:[1,5,15,30],val:p=>p.player_kills}},
+  {{id:'raid_master',name:'Raid Master',icon:'🏴',cat:'combat',
+   tiers:[10,50,100,200],val:p=>(p.badge_data?.pillager||0)+(p.badge_data?.vindicator||0)+(p.badge_data?.ravager||0)}},
+  {{id:'increvable',name:'Increvable',icon:'🛡',cat:'survival',
+   tiers:[2,5,10,20],val:p=>p.deaths>0?Math.round(p.play_hours/p.deaths*10)/10:(p.play_hours>=1?999:0)}},
+  {{id:'kamikaze',name:'Kamikaze',icon:'💀',cat:'survival',
+   tiers:[10,30,75,150],val:p=>p.deaths}},
+  {{id:'bouclier_humain',name:'Bouclier Humain',icon:'🎯',cat:'survival',
+   tiers:[5,15,30,50],val:p=>p.killed_by?.player||0}},
+  {{id:'punching_bag',name:'Punching Bag',icon:'🥊',cat:'survival',
+   tiers:[500,2000,5000,10000],val:p=>Math.round(p.damage_taken/20)}},
+  {{id:'globe_trotter',name:'Globe-trotter',icon:'🌍',cat:'exploration',
+   tiers:[50,200,500,1500],val:p=>p.total_distance_km}},
+  {{id:'marathonien',name:'Marathonien',icon:'🏃',cat:'exploration',
+   tiers:[42,100,200,500],val:p=>p.distances?.walk||0}},
+  {{id:'sprinter',name:'Sprinter',icon:'💨',cat:'exploration',
+   tiers:[50,150,300,500],val:p=>p.distances?.sprint||0}},
+  {{id:'aviateur',name:'Aviateur',icon:'🪂',cat:'exploration',
+   tiers:[50,200,500,1000],val:p=>p.distances?.aviate||0}},
+  {{id:'marin',name:'Marin',icon:'⛵',cat:'exploration',
+   tiers:[1,5,10,20],val:p=>p.distances?.boat||0}},
+  {{id:'cavalier',name:'Cavalier',icon:'🐴',cat:'exploration',
+   tiers:[1,5,15,30],val:p=>p.distances?.horse||0}},
+  {{id:'fermier',name:'Fermier',icon:'🐄',cat:'farming',
+   tiers:[10,50,200,1000],val:p=>p.animals_bred}},
+  {{id:'pecheur',name:'Pêcheur',icon:'🎣',cat:'farming',
+   tiers:[5,25,75,150],val:p=>p.fish_caught}},
+  {{id:'commercant',name:'Commerçant',icon:'🤝',cat:'farming',
+   tiers:[50,200,1000,3000],val:p=>p.traded_with_villager}},
+  {{id:'recolte',name:'Récolte',icon:'🌾',cat:'farming',
+   tiers:[100,500,2000,5000],val:p=>p.badge_data?.crops||0}},
+  {{id:'artisan',name:'Artisan',icon:'🔨',cat:'craft',
+   tiers:[1000,10000,30000,80000],val:p=>p.total_crafted}},
+  {{id:'enchanteur',name:'Enchanteur',icon:'✨',cat:'craft',
+   tiers:[10,50,200,500],val:p=>p.enchant_item}},
+  {{id:'paperasse',name:'Paperasse',icon:'📜',cat:'craft',
+   tiers:[100,1000,5000,15000],val:p=>p.badge_data?.paper||0}},
+  {{id:'forgeron',name:'Forgeron',icon:'🔧',cat:'craft',
+   tiers:[5,15,30,60],val:p=>p.badge_data?.total_broken||0}},
+  {{id:'rat_de_coffre',name:'Rat de coffre',icon:'📦',cat:'daily',
+   tiers:[100,1000,3000,5000],val:p=>p.open_chest}},
+  {{id:'dormeur',name:'Dormeur',icon:'🛏',cat:'daily',
+   tiers:[10,50,150,300],val:p=>p.sleep_in_bed}},
+  {{id:'kangourou',name:'Kangourou',icon:'🦘',cat:'daily',
+   tiers:[5000,20000,50000,80000],val:p=>p.jumps}},
+  {{id:'no_life',name:'No-Life',icon:'🎮',cat:'prestige',
+   tiers:[10,50,100,200],val:p=>p.play_hours}},
+];
+
+function getBadgeTier(value,tiers){{
+  for(let i=tiers.length-1;i>=0;i--)if(value>=tiers[i])return i+1;
+  return 0;
+}}
+
+function computePlayerBadges(p){{
+  const results=[];
+  BADGES.forEach(b=>{{
+    const value=b.val(p);
+    const tier=getBadgeTier(value,b.tiers);
+    let progress,nextTarget;
+    if(tier>=4){{progress=100;nextTarget=b.tiers[3]}}
+    else{{
+      nextTarget=b.tiers[tier];
+      const prev=tier>0?b.tiers[tier-1]:0;
+      progress=nextTarget>prev?Math.min(100,Math.max(0,Math.round((value-prev)/(nextTarget-prev)*100))):0;
+    }}
+    results.push({{id:b.id,name:b.name,icon:b.icon,cat:b.cat,tiers:b.tiers,value,tier,progress,nextTarget}});
+  }});
+  // All-Rounder: categories where all badges are Bronze+
+  const catIds=['mining','combat','survival','exploration','farming','craft','daily'];
+  let completeCats=0;
+  catIds.forEach(cid=>{{
+    const cb=results.filter(r=>r.cat===cid);
+    if(cb.length&&cb.every(r=>r.tier>=1))completeCats++;
+  }});
+  const arT=[1,3,5,7],arTier=getBadgeTier(completeCats,arT);
+  let arProg,arNext;
+  if(arTier>=4){{arProg=100;arNext=arT[3]}}
+  else{{arNext=arT[arTier];const arPrev=arTier>0?arT[arTier-1]:0;arProg=arNext>arPrev?Math.min(100,Math.round((completeCats-arPrev)/(arNext-arPrev)*100)):0}}
+  results.push({{id:'all_rounder',name:'All-Rounder',icon:'🌟',cat:'prestige',tiers:arT,value:completeCats,tier:arTier,progress:arProg,nextTarget:arNext}});
+  // Légende: badges with Gold+
+  const goldCount=results.filter(r=>r.tier>=3).length;
+  const lgT=[3,5,10,15],lgTier=getBadgeTier(goldCount,lgT);
+  let lgProg,lgNext;
+  if(lgTier>=4){{lgProg=100;lgNext=lgT[3]}}
+  else{{lgNext=lgT[lgTier];const lgPrev=lgTier>0?lgT[lgTier-1]:0;lgProg=lgNext>lgPrev?Math.min(100,Math.round((goldCount-lgPrev)/(lgNext-lgPrev)*100)):0}}
+  results.push({{id:'legende',name:'Légende',icon:'👑',cat:'prestige',tiers:lgT,value:goldCount,tier:lgTier,progress:lgProg,nextTarget:lgNext}});
+  return results;
+}}
+
+function buildBadgesHtml(name){{
+  const p=PLAYERS_DATA[name];
+  const badges=computePlayerBadges(p);
+  const unlocked=badges.filter(b=>b.tier>0).length;
+  const total=badges.length;
+  let h=`<div class="card"><h3><span class="icon">🏅</span> Badges & Achievements</h3>`;
+  h+=`<div class="badges-counter-wrap"><span class="badges-counter"><b>${{unlocked}}</b> / ${{total}} badges débloqués</span></div>`;
+  BADGE_CATEGORIES.forEach(cat=>{{
+    const cb=badges.filter(b=>b.cat===cat.id);
+    if(!cb.length)return;
+    h+=`<div class="badges-cat-header">${{cat.name}}</div><div class="badges-grid">`;
+    cb.forEach(b=>{{
+      const tn=TIER_NAMES[b.tier];
+      const tl=b.tier>0?TIER_LABELS[b.tier]:'🔒';
+      const tc=b.tier>0?'tier-'+tn:'locked';
+      const pc=TIER_COLORS[Math.max(b.tier,1)];
+      const dv=b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value)));
+      const nt=b.tier>=4?'MAX':fmt(b.nextTarget);
+      h+=`<div class="badge-card ${{tc}}">
+        <div class="badge-header">
+          <span class="badge-icon">${{b.tier>0?b.icon:'🔒'}}</span>
+          <span class="badge-name">${{b.name}}</span>
+          <span class="badge-tier badge-tier-${{tn}}">${{tl}}</span>
+        </div>
+        <div class="badge-progress-text"><span>${{dv}}</span><span>${{nt}}</span></div>
+        <div class="badge-progress"><div class="badge-progress-fill" style="width:${{b.progress}}%;background:${{pc}}"></div></div>
+      </div>`;
+    }});
+    h+=`</div>`;
+  }});
+  h+=`</div>`;
+  return h;
+}}
+
+// ═══════════════════════════════════════
 // PLAYER SECTION
 // ═══════════════════════════════════════
 function buildPlayerSection(name){{
@@ -793,6 +1020,7 @@ function buildPlayerSection(name){{
       <div class="card"><h3><span class="icon">🔧</span> Outils cassés</h3>${{buildBrokenHtml(p.broken)}}</div>
       <div class="card"><h3><span class="icon">💡</span> Fun Facts</h3><div class="fun-facts">${{funFactsHtml}}</div></div>
     </div>
+    ${{buildBadgesHtml(name)}}
   </div>`;
 }}
 

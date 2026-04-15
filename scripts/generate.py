@@ -424,7 +424,7 @@ a{{color:var(--accent-light);text-decoration:none}}
   <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
   <div class="sync-date" id="syncDate"></div>
-  <button id="langToggle" class="lang-toggle" onclick="switchLang(lang==='fr'?'en':'fr')"></button>
+  <button id="langToggle" class="lang-toggle"></button>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>
@@ -1274,6 +1274,7 @@ document.getElementById('html-root').lang=lang;
 document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
+document.getElementById('langToggle').addEventListener('click',function(){{switchLang(lang==='fr'?'en':'fr')}});
 buildNav();buildAllSections();renderOverviewCharts();animateCounters();
 </script>
 </body>

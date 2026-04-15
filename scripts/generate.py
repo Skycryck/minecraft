@@ -367,8 +367,8 @@ a{{color:var(--accent-light);text-decoration:none}}
   position:relative;
 }}
 .badge-card:hover{{transform:translateY(-1px)}}
-.badge-card.locked{{opacity:.4;filter:grayscale(.5)}}
-.badge-card.locked:hover{{opacity:.75;filter:grayscale(.3)}}
+.badge-card.locked>*:not(.badge-tooltip){{opacity:.4;filter:grayscale(.5);transition:opacity .15s,filter .15s}}
+.badge-card.locked:hover>*:not(.badge-tooltip){{opacity:.75;filter:grayscale(.3)}}
 .badge-card.tier-bronze{{border-color:#cd7f32}}
 .badge-card.tier-silver{{border-color:#c0c0c0}}
 .badge-card.tier-gold{{border-color:#ffd700;box-shadow:0 0 6px rgba(255,215,0,.1)}}

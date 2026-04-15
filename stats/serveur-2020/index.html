@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" id="html-root">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -222,15 +222,22 @@ a{color:var(--accent-light);text-decoration:none}
 .tt-tier.tt-done{color:var(--green)}
 .tt-tier.tt-next{color:var(--accent-light);font-weight:700}
 @media(max-width:768px){.badges-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}
+.lang-toggle{
+  position:absolute;top:1rem;right:1rem;font-family:var(--font-mono);font-size:.78rem;
+  padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;z-index:10;
+}
+.lang-toggle:hover{border-color:var(--accent);color:var(--text)}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="header">
   <h1>⛏ Serveur 2020</h1>
-  <p>Dashboard de statistiques du serveur</p>
+  <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
-  <div class="sync-date">Dernière synchronisation : 15/04/2026 à 16:35</div>
+  <div class="sync-date" id="syncDate"></div>
+  <button id="langToggle" class="lang-toggle"></button>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>
@@ -249,23 +256,189 @@ const PLAYER_COLORS_MAP = {};
 const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
 playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
 
-// Labels FR uniquement pour les types de déplacement (UI)
-// Les noms de blocs/items/mobs restent en anglais (formatés automatiquement)
-const LABELS = {
-  walk:'Marche',sprint:'Sprint',swim:'Nage',fly:'Vol créatif',aviate:'Elytra',boat:'Bateau',
-  horse:'Cheval',minecart:'Wagon',climb:'Escalade',crouch:'Accroupi',fall:'Chute',
-  walk_on_water:"Sur l'eau",walk_under_water:"Sous l'eau"
-};
-
-function label(k){return LABELS[k]||k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
-function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString('fr-FR')}
+// ═══════════════════════════════════════
+// I18N
+// ═══════════════════════════════════════
+const SYNC_FR='16/04/2026 à 00:32',SYNC_EN='2026-04-16 at 00:32';
+let lang=localStorage.getItem('mc-dash-lang')||(navigator.language.startsWith('fr')?'fr':'en');
+let currentSection='overview';
+const T={fr:{
+subtitle:'Dashboard de statistiques du serveur',sync_prefix:'Dernière synchronisation',
+players:'joueurs',hours_played:'h de jeu',blocks_mined_meta:'blocs minés',mobs_killed_meta:'mobs tués',
+nav_overview:'📊 Vue globale',nav_leaderboards:'🏆 Classements',
+total_playtime:'Temps de jeu total',blocks_mined:'Blocs minés',mobs_killed:'Mobs tués',items_crafted:'Items craftés',
+chart_playtime:'Temps de jeu par joueur',chart_distance:'Distance totale (km)',
+chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_multi:'Comparaison multi-stats',
+axis_hours:'Heures',axis_blocks:'Blocs',axis_kills:'Kills',axis_km:'km',
+radar_playtime:'Temps de jeu',radar_mined:'Blocs minés',radar_kills:'Mobs tués',
+radar_distance:'Distance',radar_crafted:'Items craftés',radar_deaths:'Morts',
+lb_playtime:'⏱ Temps de jeu',lb_mined:'⛏ Blocs minés',lb_kills:'⚔ Mobs tués',
+lb_deaths:'💀 Morts',lb_distance:'🗺 Distance',lb_crafted:'🔨 Items craftés',
+lb_pvp:'🗡 PvP Kills',lb_enchant:'✨ Enchantements',lb_fish:'🐟 Poissons',
+lb_trades:'🤝 Échanges PNJ',lb_breed:'💕 Élevage',lb_jumps:'🦘 Sauts',
+chart_deathcauses:'Causes de mort (tous)',chart_dist_type:'Distances par type',
+d_walk:'Marche',d_sprint:'Sprint',d_swim:'Nage',d_fly:'Vol créatif',
+d_aviate:'Elytra',d_boat:'Bateau',d_horse:'Cheval',d_minecart:'Wagon',
+d_climb:'Escalade',d_crouch:'Accroupi',d_fall:'Chute',
+d_walk_on_water:"Sur l'eau",d_walk_under_water:"Sous l'eau",
+arch_new:'Nouveau',arch_miner:'Mineur',arch_fighter:'Combattant',
+arch_explorer:'Explorateur',arch_builder:'Bâtisseur',arch_farmer:'Fermier',
+time_mining:'⛏ Minage',time_combat:'⚔ Combat',time_travel:'🚶 Déplacement',
+time_craft:'🔨 Craft',time_other:'💤 Autre',
+playtime:'Temps de jeu',kd_ratio:'K/D ratio',traveled:'Parcourus',per_hour:'/h',
+deaths:'Morts',enchantments:'Enchantements',chests_opened:'Coffres ouverts',
+fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
+card_time_est:'Répartition du temps estimée',card_distances:'Distances parcourues',
+card_killed_by:'Tué par',card_treemap:'Blocs minés — Treemap',
+card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
+card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
+no_death:'Aucune mort',no_data:'Pas assez de données',
+no_blocks:'Aucun bloc miné',no_tools:'Aucun outil cassé',
+badges_title:'Badges & Achievements',badges_unlocked:'badges débloqués',
+tier_locked:'🔒',tier_bronze:'🥉 Bronze',tier_silver:'🥈 Argent',tier_gold:'🥇 Or',tier_diamond:'💎 Diamant',
+cat_mining:'⛏ Minage',cat_combat:'⚔ Combat',cat_survival:'💀 Survie',
+cat_exploration:'🚶 Exploration',cat_farming:'🌾 Farming & Économie',
+cat_craft:'🔨 Craft & Technique',cat_daily:'🏠 Vie Quotidienne',cat_prestige:'🏆 Prestige',
+b_mineur:'Mineur',b_diamantaire:'Diamantaire',b_nether_mole:'Nether Mole',
+b_ancient_debris:'Débris Anciens',b_bucheron:'Bûcheron',b_chasseur:'Chasseur',
+b_ender_slayer:'Ender Slayer',b_nether_warrior:'Nether Warrior',b_berserker:'Berserker',
+b_pvp_champion:'PvP Champion',b_raid_master:'Raid Master',b_increvable:'Increvable',
+b_kamikaze:'Kamikaze',b_bouclier_humain:'Bouclier Humain',b_punching_bag:'Punching Bag',
+b_globe_trotter:'Globe-trotter',b_marathonien:'Marathonien',b_sprinter:'Sprinter',
+b_aviateur:'Aviateur',b_marin:'Marin',b_cavalier:'Cavalier',
+b_fermier:'Fermier',b_pecheur:'Pêcheur',b_commercant:'Commerçant',
+b_recolte:'Récolte',b_artisan:'Artisan',b_enchanteur:'Enchanteur',
+b_paperasse:'Paperasse',b_forgeron:'Forgeron',b_rat_de_coffre:'Rat de coffre',
+b_dormeur:'Dormeur',b_kangourou:'Kangourou',b_no_life:'No-Life',
+b_all_rounder:'All-Rounder',b_legende:'Légende',
+bd_mineur:'Miner des blocs au total',bd_diamantaire:'Miner du minerai de diamant',
+bd_nether_mole:'Miner de la netherrack',bd_ancient_debris:'Miner des débris antiques',
+bd_bucheron:'Couper des bûches (tous types)',bd_chasseur:'Tuer des mobs',
+bd_ender_slayer:'Tuer des Endermen',bd_nether_warrior:'Tuer des Wither Skeletons & Blazes',
+bd_berserker:'Infliger des dégâts (en cœurs)',bd_pvp_champion:"Tuer d'autres joueurs",
+bd_raid_master:'Tuer Pillagers, Vindicators & Ravagers',bd_increvable:'Ratio heures jouées / morts',
+bd_kamikaze:'Mourir de nombreuses fois',bd_bouclier_humain:"Se faire tuer par d'autres joueurs",
+bd_punching_bag:'Encaisser des dégâts (en cœurs)',bd_globe_trotter:'Parcourir des km au total',
+bd_marathonien:'Marcher en km',bd_sprinter:'Sprinter en km',bd_aviateur:'Voler en Elytra en km',
+bd_marin:'Naviguer en bateau en km',bd_cavalier:'Chevaucher en km',bd_fermier:'Élever des animaux',
+bd_pecheur:'Pêcher des poissons',bd_commercant:'Échanger avec des villageois',
+bd_recolte:'Récolter blé, betteraves, carottes & patates',bd_artisan:'Crafter des items au total',
+bd_enchanteur:'Enchanter des items',bd_paperasse:'Crafter du papier',
+bd_forgeron:"Casser des outils à force d'usage",bd_rat_de_coffre:'Ouvrir des coffres',
+bd_dormeur:'Dormir dans un lit',bd_kangourou:'Faire des sauts',
+bd_no_life:'Accumuler des heures de jeu',bd_all_rounder:'Bronze dans chaque catégorie',
+bd_legende:'Obtenir Or ou mieux sur des badges',
+ff_endermen:(n,s)=>`A tué ${n} Endermen — environ ${s} stacks d'Ender Pearls`,
+ff_death_rate:(m)=>`Meurt en moyenne toutes les ${m} minutes`,
+ff_walk:(km,mar)=>`A marché ${km} km — soit ${mar} marathons`,
+ff_jumps:(jph)=>`Saute ${jph} fois par heure en moyenne`,
+ff_mining:(bpm)=>`Mine ${bpm} blocs par minute en moyenne`,
+ff_sleep:(n,nph)=>`A dormi ${n} nuits Minecraft — ${nph} par heure de jeu`,
+ff_chests:(n)=>`A ouvert ${n} coffres — un vrai fouineur`,
+ff_pvp_target:(n)=>`Tué ${n} fois par d'autres joueurs — cible favorite du serveur`,
+ff_elytra:(km,n)=>`${km} km en Elytra — l'équivalent de ${n} traversées de Paris`,
+ff_damage:(h)=>`A infligé ${h} cœurs de dégâts au total`,
+ff_trades:(n)=>`${n} échanges avec des villageois — le capitaliste du serveur`,
+ff_tools:(n)=>`A cassé ${n} outils — pas très soigneux`,
+ff_mob_kills:(n,kph)=>`${n} mobs tués — soit ${kph} par heure`,
+ff_breeding:(n)=>`A élevé ${n} animaux — fermier dans l'âme`,
+ff_fishing:(n)=>`A pêché ${n} poissons — le pêcheur du serveur`,
+ff_total_dist:(km,eq)=>`${km} km parcourus au total — l'équivalent d'un ${eq}`,
+ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres'
+},en:{
+subtitle:'Server statistics dashboard',sync_prefix:'Last sync',
+players:'players',hours_played:'hours played',blocks_mined_meta:'blocks mined',mobs_killed_meta:'mobs killed',
+nav_overview:'📊 Overview',nav_leaderboards:'🏆 Leaderboards',
+total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
+chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
+chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
+axis_hours:'Hours',axis_blocks:'Blocks',axis_kills:'Kills',axis_km:'km',
+radar_playtime:'Playtime',radar_mined:'Blocks mined',radar_kills:'Mobs killed',
+radar_distance:'Distance',radar_crafted:'Items crafted',radar_deaths:'Deaths',
+lb_playtime:'⏱ Playtime',lb_mined:'⛏ Blocks mined',lb_kills:'⚔ Mobs killed',
+lb_deaths:'💀 Deaths',lb_distance:'🗺 Distance',lb_crafted:'🔨 Items crafted',
+lb_pvp:'🗡 PvP Kills',lb_enchant:'✨ Enchantments',lb_fish:'🐟 Fish caught',
+lb_trades:'🤝 NPC trades',lb_breed:'💕 Breeding',lb_jumps:'🦘 Jumps',
+chart_deathcauses:'Death causes (all)',chart_dist_type:'Distance by type',
+d_walk:'Walk',d_sprint:'Sprint',d_swim:'Swim',d_fly:'Creative flight',
+d_aviate:'Elytra',d_boat:'Boat',d_horse:'Horse',d_minecart:'Minecart',
+d_climb:'Climbing',d_crouch:'Crouching',d_fall:'Falling',
+d_walk_on_water:'On water',d_walk_under_water:'Underwater',
+arch_new:'Newcomer',arch_miner:'Miner',arch_fighter:'Fighter',
+arch_explorer:'Explorer',arch_builder:'Builder',arch_farmer:'Farmer',
+time_mining:'⛏ Mining',time_combat:'⚔ Combat',time_travel:'🚶 Travel',
+time_craft:'🔨 Crafting',time_other:'💤 Other',
+playtime:'Playtime',kd_ratio:'K/D ratio',traveled:'Traveled',per_hour:'/h',
+deaths:'Deaths',enchantments:'Enchantments',chests_opened:'Chests opened',
+fish_caught:'Fish caught',npc_trades:'NPC trades',pvp:'PvP',pve:'PvE',
+card_time_est:'Estimated time breakdown',card_distances:'Distances traveled',
+card_killed_by:'Killed by',card_treemap:'Blocks mined — Treemap',
+card_top15_mined:'Top 15 blocks mined',card_top10_killed:'Top 10 mobs killed',
+card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',card_fun_facts:'Fun Facts',
+no_death:'No deaths',no_data:'Not enough data',
+no_blocks:'No blocks mined',no_tools:'No tools broken',
+badges_title:'Badges & Achievements',badges_unlocked:'badges unlocked',
+tier_locked:'🔒',tier_bronze:'🥉 Bronze',tier_silver:'🥈 Silver',tier_gold:'🥇 Gold',tier_diamond:'💎 Diamond',
+cat_mining:'⛏ Mining',cat_combat:'⚔ Combat',cat_survival:'💀 Survival',
+cat_exploration:'🚶 Exploration',cat_farming:'🌾 Farming & Economy',
+cat_craft:'🔨 Craft & Tech',cat_daily:'🏠 Daily life',cat_prestige:'🏆 Prestige',
+b_mineur:'Miner',b_diamantaire:'Diamond Hunter',b_nether_mole:'Nether Mole',
+b_ancient_debris:'Ancient Debris',b_bucheron:'Lumberjack',b_chasseur:'Hunter',
+b_ender_slayer:'Ender Slayer',b_nether_warrior:'Nether Warrior',b_berserker:'Berserker',
+b_pvp_champion:'PvP Champion',b_raid_master:'Raid Master',b_increvable:'Unkillable',
+b_kamikaze:'Kamikaze',b_bouclier_humain:'Human Shield',b_punching_bag:'Punching Bag',
+b_globe_trotter:'Globe-trotter',b_marathonien:'Marathoner',b_sprinter:'Sprinter',
+b_aviateur:'Aviator',b_marin:'Sailor',b_cavalier:'Rider',
+b_fermier:'Farmer',b_pecheur:'Angler',b_commercant:'Merchant',
+b_recolte:'Harvest',b_artisan:'Artisan',b_enchanteur:'Enchanter',
+b_paperasse:'Paperwork',b_forgeron:'Blacksmith',b_rat_de_coffre:'Chest rat',
+b_dormeur:'Sleeper',b_kangourou:'Kangaroo',b_no_life:'No-Life',
+b_all_rounder:'All-Rounder',b_legende:'Legend',
+bd_mineur:'Mine blocks in total',bd_diamantaire:'Mine diamond ore',
+bd_nether_mole:'Mine netherrack',bd_ancient_debris:'Mine ancient debris',
+bd_bucheron:'Chop logs (all types)',bd_chasseur:'Kill mobs',
+bd_ender_slayer:'Kill Endermen',bd_nether_warrior:'Kill Wither Skeletons & Blazes',
+bd_berserker:'Deal damage (in hearts)',bd_pvp_champion:'Kill other players',
+bd_raid_master:'Kill Pillagers, Vindicators & Ravagers',bd_increvable:'Hours played / deaths ratio',
+bd_kamikaze:'Die many times',bd_bouclier_humain:'Get killed by other players',
+bd_punching_bag:'Take damage (in hearts)',bd_globe_trotter:'Travel km in total',
+bd_marathonien:'Walk in km',bd_sprinter:'Sprint in km',bd_aviateur:'Fly with Elytra in km',
+bd_marin:'Sail by boat in km',bd_cavalier:'Ride in km',bd_fermier:'Breed animals',
+bd_pecheur:'Catch fish',bd_commercant:'Trade with villagers',
+bd_recolte:'Harvest wheat, beetroot, carrots & potatoes',bd_artisan:'Craft items in total',
+bd_enchanteur:'Enchant items',bd_paperasse:'Craft paper',
+bd_forgeron:'Break tools from use',bd_rat_de_coffre:'Open chests',
+bd_dormeur:'Sleep in a bed',bd_kangourou:'Jump',
+bd_no_life:'Accumulate play hours',bd_all_rounder:'Bronze in every category',
+bd_legende:'Get Gold or better on badges',
+ff_endermen:(n,s)=>`Killed ${n} Endermen — about ${s} stacks of Ender Pearls`,
+ff_death_rate:(m)=>`Dies on average every ${m} minutes`,
+ff_walk:(km,mar)=>`Walked ${km} km — that's ${mar} marathons`,
+ff_jumps:(jph)=>`Jumps ${jph} times per hour on average`,
+ff_mining:(bpm)=>`Mines ${bpm} blocks per minute on average`,
+ff_sleep:(n,nph)=>`Slept ${n} Minecraft nights — ${nph} per hour played`,
+ff_chests:(n)=>`Opened ${n} chests — a real snoop`,
+ff_pvp_target:(n)=>`Killed ${n} times by other players — the server's favorite target`,
+ff_elytra:(km,n)=>`${km} km by Elytra — the equivalent of ${n} trips across Paris`,
+ff_damage:(h)=>`Dealt ${h} hearts of damage in total`,
+ff_trades:(n)=>`${n} trades with villagers — the server's capitalist`,
+ff_tools:(n)=>`Broke ${n} tools — not very careful`,
+ff_mob_kills:(n,kph)=>`${n} mobs killed — that's ${kph} per hour`,
+ff_breeding:(n)=>`Bred ${n} animals — farmer at heart`,
+ff_fishing:(n)=>`Caught ${n} fish — the server's angler`,
+ff_total_dist:(km,eq)=>`${km} km traveled in total — the equivalent of a ${eq}`,
+ff_equiv_long:'Paris-Barcelona',ff_equiv_short:'Paris-London'
+}};
+function t(k){const a=[].slice.call(arguments,1);const v=T[lang]?.[k];return typeof v==='function'?v.apply(null,a):(v||k)}
+function label(k){const dl=T[lang]?.['d_'+k];if(dl)return dl;return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString(lang==='fr'?'fr-FR':'en-US')}
 function pct(v,m){return m?Math.round(v/m*100):0}
 
 // ═══════════════════════════════════════
 // ARCHETYPE DETECTION
 // ═══════════════════════════════════════
 function getArchetype(p){
-  if(p.play_hours<1)return{name:'Nouveau',icon:'🌱',color:'var(--text-muted)'};
+  if(p.play_hours<1)return{name:t('arch_new'),icon:'🌱',color:'var(--text-muted)'};
   const h=p.play_hours;
   const scores={
     miner:p.total_mined/h,
@@ -275,11 +448,11 @@ function getArchetype(p){
     farmer:(p.animals_bred+p.traded_with_villager+p.fish_caught)/h
   };
   const types={
-    miner:{name:'Mineur',icon:'⛏',color:'var(--yellow)'},
-    fighter:{name:'Combattant',icon:'⚔',color:'var(--red)'},
-    explorer:{name:'Explorateur',icon:'🧭',color:'var(--green)'},
-    builder:{name:'Bâtisseur',icon:'🏗',color:'var(--cyan)'},
-    farmer:{name:'Fermier',icon:'🌾',color:'var(--orange)'}
+    miner:{name:t('arch_miner'),icon:'⛏',color:'var(--yellow)'},
+    fighter:{name:t('arch_fighter'),icon:'⚔',color:'var(--red)'},
+    explorer:{name:t('arch_explorer'),icon:'🧭',color:'var(--green)'},
+    builder:{name:t('arch_builder'),icon:'🏗',color:'var(--cyan)'},
+    farmer:{name:t('arch_farmer'),icon:'🌾',color:'var(--orange)'}
   };
   const top=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
   return types[top];
@@ -300,45 +473,44 @@ function getFunFacts(name,p){
   const facts=[];const h=p.play_hours;if(h<0.5)return facts;
 
   const ek=p.killed_top10?.enderman||0;
-  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),emoji:'👁',text:`A tué ${fmt(ek)} Endermen — environ ${Math.floor(ek/64)} stacks d'Ender Pearls`});
+  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),emoji:'👁',text:t('ff_endermen',fmt(ek),Math.floor(ek/64))});
 
   if(p.deaths>3&&h>1){const mpd=Math.round(h*60/p.deaths);const deathRate=p.deaths/h;
-    facts.push({score:deathRate/_maxOf(p=>p.play_hours>1?p.deaths/p.play_hours:0),emoji:'💀',text:`Meurt en moyenne toutes les ${mpd} minutes`})}
+    facts.push({score:deathRate/_maxOf(p=>p.play_hours>1?p.deaths/p.play_hours:0),emoji:'💀',text:t('ff_death_rate',mpd)})}
 
   const wk=p.distances?.walk||0;
-  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),emoji:'🏃',text:`A marché ${wk.toFixed(0)} km — soit ${(wk/42.195).toFixed(1)} marathons`});
+  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),emoji:'🏃',text:t('ff_walk',wk.toFixed(0),(wk/42.195).toFixed(1))});
 
-  if(p.jumps>500&&h>1)facts.push({score:p.jumps/_maxOf(p=>p.jumps||0),emoji:'🦘',text:`Saute ${Math.round(p.jumps/h)} fois par heure en moyenne`});
+  if(p.jumps>500&&h>1)facts.push({score:p.jumps/_maxOf(p=>p.jumps||0),emoji:'🦘',text:t('ff_jumps',Math.round(p.jumps/h))});
 
-  if(p.total_mined>500&&h>1)facts.push({score:p.total_mined/_maxOf(p=>p.total_mined||0),emoji:'⛏',text:`Mine ${(p.total_mined/(h*60)).toFixed(1)} blocs par minute en moyenne`});
+  if(p.total_mined>500&&h>1)facts.push({score:p.total_mined/_maxOf(p=>p.total_mined||0),emoji:'⛏',text:t('ff_mining',(p.total_mined/(h*60)).toFixed(1))});
 
-  if(p.sleep_in_bed>5)facts.push({score:p.sleep_in_bed/_maxOf(p=>p.sleep_in_bed||0),emoji:'🛏',text:`A dormi ${p.sleep_in_bed} nuits Minecraft — ${(p.sleep_in_bed/h).toFixed(1)} par heure de jeu`});
+  if(p.sleep_in_bed>5)facts.push({score:p.sleep_in_bed/_maxOf(p=>p.sleep_in_bed||0),emoji:'🛏',text:t('ff_sleep',p.sleep_in_bed,(p.sleep_in_bed/h).toFixed(1))});
 
-  if(p.open_chest>100)facts.push({score:p.open_chest/_maxOf(p=>p.open_chest||0),emoji:'📦',text:`A ouvert ${fmt(p.open_chest)} coffres — un vrai fouineur`});
+  if(p.open_chest>100)facts.push({score:p.open_chest/_maxOf(p=>p.open_chest||0),emoji:'📦',text:t('ff_chests',fmt(p.open_chest))});
 
   const pvpD=(p.killed_by?.player)||0;
-  if(pvpD>3)facts.push({score:pvpD/_maxOf(p=>(p.killed_by?.player)||0),emoji:'🎯',text:`Tué ${pvpD} fois par d'autres joueurs — cible favorite du serveur`});
+  if(pvpD>3)facts.push({score:pvpD/_maxOf(p=>(p.killed_by?.player)||0),emoji:'🎯',text:t('ff_pvp_target',pvpD)});
 
   const ely=p.distances?.aviate||0;
-  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),emoji:'🪂',text:`${ely.toFixed(0)} km en Elytra — l'équivalent de ${Math.round(ely/6)} traversées de Paris`});
+  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),emoji:'🪂',text:t('ff_elytra',ely.toFixed(0),Math.round(ely/6))});
 
-  if(p.damage_dealt>10000)facts.push({score:p.damage_dealt/_maxOf(p=>p.damage_dealt||0),emoji:'💔',text:`A infligé ${fmt(Math.round(p.damage_dealt/20))} cœurs de dégâts au total`});
+  if(p.damage_dealt>10000)facts.push({score:p.damage_dealt/_maxOf(p=>p.damage_dealt||0),emoji:'💔',text:t('ff_damage',fmt(Math.round(p.damage_dealt/20)))});
 
-  if(p.traded_with_villager>50)facts.push({score:p.traded_with_villager/_maxOf(p=>p.traded_with_villager||0),emoji:'🤝',text:`${fmt(p.traded_with_villager)} échanges avec des villageois — le capitaliste du serveur`});
+  if(p.traded_with_villager>50)facts.push({score:p.traded_with_villager/_maxOf(p=>p.traded_with_villager||0),emoji:'🤝',text:t('ff_trades',fmt(p.traded_with_villager))});
 
   const brk=Object.values(p.broken||{}).reduce((s,v)=>s+v,0);
-  if(brk>5)facts.push({score:brk/_maxOf(p=>Object.values(p.broken||{}).reduce((s,v)=>s+v,0)),emoji:'💥',text:`A cassé ${brk} outils — pas très soigneux`});
+  if(brk>5)facts.push({score:brk/_maxOf(p=>Object.values(p.broken||{}).reduce((s,v)=>s+v,0)),emoji:'💥',text:t('ff_tools',brk)});
 
-  if(p.mob_kills>100)facts.push({score:p.mob_kills/_maxOf(p=>p.mob_kills||0),emoji:'⚔',text:`${fmt(p.mob_kills)} mobs tués — soit ${Math.round(p.mob_kills/h)} par heure`});
+  if(p.mob_kills>100)facts.push({score:p.mob_kills/_maxOf(p=>p.mob_kills||0),emoji:'⚔',text:t('ff_mob_kills',fmt(p.mob_kills),Math.round(p.mob_kills/h))});
 
-  if(p.animals_bred>20)facts.push({score:p.animals_bred/_maxOf(p=>p.animals_bred||0),emoji:'💕',text:`A élevé ${p.animals_bred} animaux — fermier dans l'âme`});
+  if(p.animals_bred>20)facts.push({score:p.animals_bred/_maxOf(p=>p.animals_bred||0),emoji:'💕',text:t('ff_breeding',p.animals_bred)});
 
-  if(p.fish_caught>10)facts.push({score:p.fish_caught/_maxOf(p=>p.fish_caught||0),emoji:'🎣',text:`A pêché ${p.fish_caught} poissons — le pêcheur du serveur`});
+  if(p.fish_caught>10)facts.push({score:p.fish_caught/_maxOf(p=>p.fish_caught||0),emoji:'🎣',text:t('ff_fishing',p.fish_caught)});
 
   const totalDist=p.total_distance_km;
-  if(totalDist>100)facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),emoji:'🌍',text:`${totalDist.toFixed(0)} km parcourus au total — l'équivalent d'un ${totalDist>1000?'Paris-Barcelone':'Paris-Londres'}`});
+  if(totalDist>100)facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),emoji:'🌍',text:t('ff_total_dist',totalDist.toFixed(0),totalDist>1000?t('ff_equiv_long'):t('ff_equiv_short'))});
 
-  // Tri par score décroissant et top 5
   facts.sort((a,b)=>b.score-a.score);
   return facts.slice(0,5);
 }
@@ -347,7 +519,7 @@ function getFunFacts(name,p){
 // TREEMAP BUILDER
 // ═══════════════════════════════════════
 function buildTreemapHtml(entries){
-  if(!entries.length)return '<div style="color:var(--text-muted);padding:1rem;font-family:var(--font-mono);font-size:.8rem">Aucun bloc miné</div>';
+  if(!entries.length)return '<div style="color:var(--text-muted);padding:1rem;font-family:var(--font-mono);font-size:.8rem">'+t('no_blocks')+'</div>';
   const total=entries.reduce((s,[_,v])=>s+v,0);
   const colors=['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#6aefd9','#efd96a','#ef6ac0','#a86aef','#5a9e6f','#9e5a5a','#5a6f9e','#9e8b5a','#5a9e9e','#8b8b96'];
   return `<div class="treemap">${entries.slice(0,15).map(([k,v],i)=>{
@@ -363,7 +535,7 @@ function buildTreemapHtml(entries){
 // ═══════════════════════════════════════
 function buildBrokenHtml(broken){
   const entries=Object.entries(broken||{}).sort((a,b)=>b[1]-a[1]);
-  if(!entries.length)return '<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:.8rem">Aucun outil cassé</div>';
+  if(!entries.length)return '<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:.8rem">'+t('no_tools')+'</div>';
   return `<div class="broken-grid">${entries.map(([k,v])=>
     `<span class="broken-tag">${label(k)} <span class="bt-count">×${v}</span></span>`
   ).join('')}</div>`;
@@ -394,11 +566,11 @@ function estimateTime(p){
   const otherS=Math.max(0,totalS-(miningS+combatS+travelS+craftS));
   const toH=s=>Math.round(s/3600*10)/10;
   return [
-    {label:'⛏ Minage',hours:toH(miningS),color:'#efd96a'},
-    {label:'⚔ Combat',hours:toH(combatS),color:'#ef6a6a'},
-    {label:'🚶 Déplacement',hours:toH(travelS),color:'#3ecf8e'},
-    {label:'🔨 Craft',hours:toH(craftS),color:'#6aefd9'},
-    {label:'💤 Autre',hours:toH(otherS),color:'#5c5c68'}
+    {label:t('time_mining'),hours:toH(miningS),color:'#efd96a'},
+    {label:t('time_combat'),hours:toH(combatS),color:'#ef6a6a'},
+    {label:t('time_travel'),hours:toH(travelS),color:'#3ecf8e'},
+    {label:t('time_craft'),hours:toH(craftS),color:'#6aefd9'},
+    {label:t('time_other'),hours:toH(otherS),color:'#5c5c68'}
   ];
 }
 
@@ -448,11 +620,14 @@ const totalDeaths=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].deaths,0);
 const totalDist=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_distance_km,0);
 const totalCrafted=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_crafted,0);
 
-document.getElementById('globalMeta').innerHTML=`
-  <span><b>${playerNames.length}</b> joueurs</span>
-  <span><b>${totalHours.toFixed(0)}</b>h de jeu</span>
-  <span><b>${fmt(totalMined)}</b> blocs minés</span>
-  <span><b>${fmt(totalKills)}</b> mobs tués</span>`;
+function updateGlobalMeta(){
+  document.getElementById('globalMeta').innerHTML=`
+  <span><b>${playerNames.length}</b> ${t('players')}</span>
+  <span><b>${totalHours.toFixed(0)}</b> ${t('hours_played')}</span>
+  <span><b>${fmt(totalMined)}</b> ${t('blocks_mined_meta')}</span>
+  <span><b>${fmt(totalKills)}</b> ${t('mobs_killed_meta')}</span>`;
+}
+updateGlobalMeta();
 
 // ═══════════════════════════════════════
 // NAVIGATION
@@ -461,8 +636,8 @@ const navEl=document.getElementById('nav');
 const contentEl=document.getElementById('content');
 
 function buildNav(){
-  let h=`<button class="active" data-section="overview">📊 Vue globale</button>`;
-  h+=`<button data-section="leaderboards">🏆 Classements</button>`;
+  let h=`<button class="active" data-section="overview">${t('nav_overview')}</button>`;
+  h+=`<button data-section="leaderboards">${t('nav_leaderboards')}</button>`;
   playerNames.forEach(name=>{
     const dot=`<span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>`;
     h+=`<button data-section="player-${name}">${dot}${name}</button>`;
@@ -478,6 +653,7 @@ function buildNav(){
 }
 
 function showSection(id){
+  currentSection=id;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);
   if(el)el.classList.add('active');
@@ -500,18 +676,18 @@ function buildOverview(){
   return `
   <div class="section active" id="overview">
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--accent-light)" data-target="${totalHours.toFixed(0)}" data-suffix="h">0</div><div class="label">Temps de jeu total</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${totalMined}">0</div><div class="label">Blocs minés</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${totalKills}">0</div><div class="label">Mobs tués</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${totalCrafted}">0</div><div class="label">Items craftés</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--accent-light)" data-target="${totalHours.toFixed(0)}" data-suffix="h">0</div><div class="label">${t('total_playtime')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${totalMined}">0</div><div class="label">${t('blocks_mined')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">⏱</span> Temps de jeu par joueur</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
-      <div class="card"><h3><span class="icon">🗺</span> Distance totale (km)</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
-      <div class="card"><h3><span class="icon">⛏</span> Blocs minés par joueur</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
-      <div class="card"><h3><span class="icon">⚔</span> Mobs tués par joueur</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⏱</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🗺</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⛏</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
+      <div class="card"><h3><span class="icon">⚔</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
     </div>
-    <div class="card"><h3><span class="icon">📈</span> Comparaison multi-stats</h3>
+    <div class="card"><h3><span class="icon">📈</span> ${t('chart_multi')}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
     </div>
   </div>`;
@@ -527,15 +703,15 @@ function renderOverviewCharts(){
         borderColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]),borderWidth:1,borderRadius:4}]
     },options:{...barOpts(yLabel),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+(tooltipSuffix||'')}}}}});
   };
-  mkBar('chart-playtime',playerNames.map(n=>PLAYERS_DATA[n].play_hours),'h','Heures');
-  mkBar('chart-distance',playerNames.map(n=>PLAYERS_DATA[n].total_distance_km),' km','km');
-  mkBar('chart-mined',playerNames.map(n=>PLAYERS_DATA[n].total_mined),' blocs','Blocs');
-  mkBar('chart-kills',playerNames.map(n=>PLAYERS_DATA[n].mob_kills),' kills','Kills');
+  mkBar('chart-playtime',playerNames.map(n=>PLAYERS_DATA[n].play_hours),'h',t('axis_hours'));
+  mkBar('chart-distance',playerNames.map(n=>PLAYERS_DATA[n].total_distance_km),' km',t('axis_km'));
+  mkBar('chart-mined',playerNames.map(n=>PLAYERS_DATA[n].total_mined),' blocs',t('axis_blocks'));
+  mkBar('chart-kills',playerNames.map(n=>PLAYERS_DATA[n].mob_kills),' kills',t('axis_kills'));
 
   destroyChart('chart-radar');
   const top5=playerNames.slice(0,5);
   const rm=['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','deaths'];
-  const rl=['Temps de jeu','Blocs minés','Mobs tués','Distance','Items craftés','Morts'];
+  const rl=[t('radar_playtime'),t('radar_mined'),t('radar_kills'),t('radar_distance'),t('radar_crafted'),t('radar_deaths')];
   const mx=rm.map(m=>Math.max(...playerNames.map(n=>PLAYERS_DATA[n][m]||0)));
   charts['chart-radar']=new Chart(document.getElementById('chart-radar'),{type:'radar',data:{
     labels:rl,datasets:top5.map(name=>({label:name,
@@ -555,24 +731,24 @@ function renderOverviewCharts(){
 // ═══════════════════════════════════════
 function buildLeaderboards(){
   const boards=[
-    {key:'play_hours',title:'⏱ Temps de jeu',suffix:'h',color:'var(--accent-light)'},
-    {key:'total_mined',title:'⛏ Blocs minés',suffix:'',color:'var(--green)'},
-    {key:'mob_kills',title:'⚔ Mobs tués',suffix:'',color:'var(--red)'},
-    {key:'deaths',title:'💀 Morts',suffix:'',color:'var(--orange)'},
-    {key:'total_distance_km',title:'🗺 Distance',suffix:' km',color:'var(--blue)'},
-    {key:'total_crafted',title:'🔨 Items craftés',suffix:'',color:'var(--cyan)'},
-    {key:'player_kills',title:'🗡 PvP Kills',suffix:'',color:'var(--pink)'},
-    {key:'enchant_item',title:'✨ Enchantements',suffix:'',color:'var(--yellow)'},
-    {key:'fish_caught',title:'🐟 Poissons',suffix:'',color:'var(--teal)'},
-    {key:'traded_with_villager',title:'🤝 Échanges PNJ',suffix:'',color:'var(--accent-light)'},
-    {key:'animals_bred',title:'💕 Élevage',suffix:'',color:'var(--pink)'},
-    {key:'jumps',title:'🦘 Sauts',suffix:'',color:'var(--green)'},
+    {key:'play_hours',tkey:'lb_playtime',suffix:'h',color:'var(--accent-light)'},
+    {key:'total_mined',tkey:'lb_mined',suffix:'',color:'var(--green)'},
+    {key:'mob_kills',tkey:'lb_kills',suffix:'',color:'var(--red)'},
+    {key:'deaths',tkey:'lb_deaths',suffix:'',color:'var(--orange)'},
+    {key:'total_distance_km',tkey:'lb_distance',suffix:' km',color:'var(--blue)'},
+    {key:'total_crafted',tkey:'lb_crafted',suffix:'',color:'var(--cyan)'},
+    {key:'player_kills',tkey:'lb_pvp',suffix:'',color:'var(--pink)'},
+    {key:'enchant_item',tkey:'lb_enchant',suffix:'',color:'var(--yellow)'},
+    {key:'fish_caught',tkey:'lb_fish',suffix:'',color:'var(--teal)'},
+    {key:'traded_with_villager',tkey:'lb_trades',suffix:'',color:'var(--accent-light)'},
+    {key:'animals_bred',tkey:'lb_breed',suffix:'',color:'var(--pink)'},
+    {key:'jumps',tkey:'lb_jumps',suffix:'',color:'var(--green)'},
   ];
   let h=`<div class="section" id="leaderboards"><div class="grid grid-3">`;
   boards.forEach(b=>{
     const sorted=[...playerNames].sort((a,c)=>(PLAYERS_DATA[c][b.key]||0)-(PLAYERS_DATA[a][b.key]||0));
     const maxVal=PLAYERS_DATA[sorted[0]][b.key]||1;
-    h+=`<div class="card"><h3>${b.title}</h3><ol class="leaderboard">`;
+    h+=`<div class="card"><h3>${t(b.tkey)}</h3><ol class="leaderboard">`;
     sorted.forEach((name,i)=>{
       const val=PLAYERS_DATA[name][b.key]||0;const w=pct(val,maxVal);const isRec=i===0&&val>0;
       h+=`<li><span class="rank">${i+1}</span>
@@ -584,8 +760,8 @@ function buildLeaderboards(){
   });
   h+=`</div>
     <div class="grid grid-2" style="margin-top:1rem">
-      <div class="card"><h3><span class="icon">💀</span> Causes de mort (tous)</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
-      <div class="card"><h3><span class="icon">🚶</span> Distances par type</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+      <div class="card"><h3><span class="icon">💀</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🚶</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
     </div></div>`;
   return h;
 }
@@ -614,18 +790,12 @@ function renderLeaderboardCharts(){
 // BADGE / ACHIEVEMENT SYSTEM
 // ═══════════════════════════════════════
 const TIER_NAMES=['locked','bronze','silver','gold','diamond'];
-const TIER_LABELS=['🔒','🥉 Bronze','🥈 Argent','🥇 Or','💎 Diamant'];
+function tierLabel(i){return [t('tier_locked'),t('tier_bronze'),t('tier_silver'),t('tier_gold'),t('tier_diamond')][i]}
 const TIER_COLORS=['var(--text-muted)','#cd7f32','#c0c0c0','#ffd700','#b9f2ff'];
 const TIER_EMOJIS=['🥉','🥈','🥇','💎'];
 const BADGE_CATEGORIES=[
-  {id:'mining',name:'⛏ Minage'},
-  {id:'combat',name:'⚔ Combat'},
-  {id:'survival',name:'💀 Survie'},
-  {id:'exploration',name:'🚶 Exploration'},
-  {id:'farming',name:'🌾 Farming & Économie'},
-  {id:'craft',name:'🔨 Craft & Technique'},
-  {id:'daily',name:'🏠 Vie Quotidienne'},
-  {id:'prestige',name:'🏆 Prestige'},
+  {id:'mining'},{id:'combat'},{id:'survival'},{id:'exploration'},
+  {id:'farming'},{id:'craft'},{id:'daily'},{id:'prestige'},
 ];
 const BADGES=[
   {id:'mineur',name:'Mineur',icon:'⛏',cat:'mining',
@@ -695,43 +865,7 @@ const BADGES=[
   {id:'no_life',name:'No-Life',icon:'🎮',cat:'prestige',
    tiers:[10,50,100,200],val:p=>p.play_hours},
 ];
-const BADGE_DESCS={
-  mineur:'Miner des blocs au total',
-  diamantaire:'Miner du minerai de diamant',
-  nether_mole:'Miner de la netherrack',
-  ancient_debris:'Miner des débris antiques',
-  bucheron:'Couper des bûches (tous types)',
-  chasseur:'Tuer des mobs',
-  ender_slayer:'Tuer des Endermen',
-  nether_warrior:'Tuer des Wither Skeletons & Blazes',
-  berserker:'Infliger des dégâts (en cœurs)',
-  pvp_champion:'Tuer d\'autres joueurs',
-  raid_master:'Tuer Pillagers, Vindicators & Ravagers',
-  increvable:'Ratio heures jouées / morts',
-  kamikaze:'Mourir de nombreuses fois',
-  bouclier_humain:'Se faire tuer par d\'autres joueurs',
-  punching_bag:'Encaisser des dégâts (en cœurs)',
-  globe_trotter:'Parcourir des km au total',
-  marathonien:'Marcher en km',
-  sprinter:'Sprinter en km',
-  aviateur:'Voler en Elytra en km',
-  marin:'Naviguer en bateau en km',
-  cavalier:'Chevaucher en km',
-  fermier:'Élever des animaux',
-  pecheur:'Pêcher des poissons',
-  commercant:'Échanger avec des villageois',
-  recolte:'Récolter blé, betteraves, carottes & patates',
-  artisan:'Crafter des items au total',
-  enchanteur:'Enchanter des items',
-  paperasse:'Crafter du papier',
-  forgeron:'Casser des outils à force d\'usage',
-  rat_de_coffre:'Ouvrir des coffres',
-  dormeur:'Dormir dans un lit',
-  kangourou:'Faire des sauts',
-  no_life:'Accumuler des heures de jeu',
-  all_rounder:'Bronze dans chaque catégorie',
-  legende:'Obtenir Or ou mieux sur des badges',
-};
+// Badge descriptions moved to T translations object
 
 function getBadgeTier(value,tiers){
   for(let i=tiers.length-1;i>=0;i--)if(value>=tiers[i])return i+1;
@@ -779,26 +913,26 @@ function buildBadgesHtml(name){
   const badges=computePlayerBadges(p);
   const unlocked=badges.filter(b=>b.tier>0).length;
   const total=badges.length;
-  let h=`<div class="card"><h3><span class="icon">🏅</span> Badges & Achievements</h3>`;
-  h+=`<div class="badges-counter-wrap"><span class="badges-counter"><b>${unlocked}</b> / ${total} badges débloqués</span></div>`;
+  let h=`<div class="card"><h3><span class="icon">🏅</span> ${t('badges_title')}</h3>`;
+  h+=`<div class="badges-counter-wrap"><span class="badges-counter"><b>${unlocked}</b> / ${total} ${t('badges_unlocked')}</span></div>`;
   BADGE_CATEGORIES.forEach(cat=>{
     const cb=badges.filter(b=>b.cat===cat.id);
     if(!cb.length)return;
-    h+=`<div class="badges-cat-header">${cat.name}</div><div class="badges-grid">`;
+    h+=`<div class="badges-cat-header">${t('cat_'+cat.id)}</div><div class="badges-grid">`;
     cb.forEach(b=>{
       const tn=TIER_NAMES[b.tier];
-      const tl=b.tier>0?TIER_LABELS[b.tier]:'🔒';
+      const tl=b.tier>0?tierLabel(b.tier):t('tier_locked');
       const tc=b.tier>0?'tier-'+tn:'locked';
       const pc=TIER_COLORS[Math.max(b.tier,1)];
       const dv=b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value)));
       const nt=b.tier>=4?'MAX':fmt(b.nextTarget);
-      const desc=BADGE_DESCS[b.id]||'';
-      const ttTiers=b.tiers.map((t,i)=>{const cls=i<b.tier?'tt-done':(i===b.tier&&b.tier<4?'tt-next':'');return `<span class="tt-tier ${cls}">${TIER_EMOJIS[i]} ${fmt(t)}</span>`}).join(' · ');
+      const desc=t('bd_'+b.id);
+      const ttTiers=b.tiers.map((th,i)=>{const cls=i<b.tier?'tt-done':(i===b.tier&&b.tier<4?'tt-next':'');return `<span class="tt-tier ${cls}">${TIER_EMOJIS[i]} ${fmt(th)}</span>`}).join(' · ');
       h+=`<div class="badge-card ${tc}">
         <div class="badge-tooltip"><div class="tt-desc">${desc}</div><div class="tt-tiers">${ttTiers}</div></div>
         <div class="badge-header">
           <span class="badge-icon">${b.tier>0?b.icon:'🔒'}</span>
-          <span class="badge-name">${b.name}</span>
+          <span class="badge-name">${t('b_'+b.id)}</span>
           <span class="badge-tier badge-tier-${tn}">${tl}</span>
         </div>
         <div class="badge-progress-text"><span>${dv}</span><span>${nt}</span></div>
@@ -826,7 +960,7 @@ function buildPlayerSection(name){
   const recBadges=records.length?`<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">${records.map(r=>`<span class="record-badge">${label(r).substring(0,20)}</span>`).join('')}</div>`:'';
 
   const killedBy=Object.entries(p.killed_by||{}).sort((a,b)=>b[1]-a[1]);
-  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--red);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">Aucune mort</li>';
+  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--red);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">'+t('no_death')+'</li>';
 
   const mkList=(entries,color)=>{
     if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
@@ -841,7 +975,7 @@ function buildPlayerSection(name){
   const pveDeaths=p.deaths-pvpDeaths;
   const arch=getArchetype(p);
   const funFacts=getFunFacts(name,p);
-  const funFactsHtml=funFacts.length?funFacts.map(f=>`<div class="fun-fact"><span class="emoji">${f.emoji}</span><span>${f.text}</span></div>`).join(''):'<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:.8rem">Pas assez de données</div>';
+  const funFactsHtml=funFacts.length?funFacts.map(f=>`<div class="fun-fact"><span class="emoji">${f.emoji}</span><span>${f.text}</span></div>`).join(''):'<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:.8rem">'+t('no_data')+'</div>';
 
   return `
   <div class="section" id="player-${name}">
@@ -854,45 +988,45 @@ function buildPlayerSection(name){
         ${recBadges}
       </div>
       <div class="profile-stats">
-        <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">Temps de jeu</div></div>
-        <div class="profile-stat"><div class="pv" style="color:var(--red)">${kd}</div><div class="pl">K/D ratio</div></div>
-        <div class="profile-stat"><div class="pv" style="color:var(--green)">${fmt(p.total_distance_km)} km</div><div class="pl">Parcourus</div></div>
+        <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">${t('playtime')}</div></div>
+        <div class="profile-stat"><div class="pv" style="color:var(--red)">${kd}</div><div class="pl">${t('kd_ratio')}</div></div>
+        <div class="profile-stat"><div class="pv" style="color:var(--green)">${fmt(p.total_distance_km)} km</div><div class="pl">${t('traveled')}</div></div>
       </div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${p.total_mined}">0</div><div class="label">Blocs minés</div><div class="sub">${fmt(mph)}/h</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${p.mob_kills}">0</div><div class="label">Mobs tués</div><div class="sub">${fmt(kph)}/h</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${p.deaths}">0</div><div class="label">Morts</div><div class="sub">⚔ ${pvpDeaths} PvP · 🧟 ${pveDeaths} PvE</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--cyan)" data-target="${p.total_crafted}">0</div><div class="label">Items craftés</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">⚔ ${pvpDeaths} ${t('pvp')} · 🧟 ${pveDeaths} ${t('pve')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--cyan)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--yellow)" data-target="${p.enchant_item}">0</div><div class="label">Enchantements</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--blue)" data-target="${p.open_chest}">0</div><div class="label">Coffres ouverts</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--teal)" data-target="${p.fish_caught}">0</div><div class="label">Poissons pêchés</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--pink)" data-target="${p.traded_with_villager}">0</div><div class="label">Échanges PNJ</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--yellow)" data-target="${p.enchant_item}">0</div><div class="label">${t('enchantments')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--blue)" data-target="${p.open_chest}">0</div><div class="label">${t('chests_opened')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--teal)" data-target="${p.fish_caught}">0</div><div class="label">${t('fish_caught')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--pink)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">🕐</span> Répartition du temps estimée</h3><div class="chart-wrap"><canvas id="chart-time-${name}"></canvas></div></div>
-      <div class="card"><h3><span class="icon">🚶</span> Distances parcourues</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🕐</span> ${t('card_time_est')}</h3><div class="chart-wrap"><canvas id="chart-time-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">🚶</span> ${t('card_distances')}</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">💀</span> Tué par</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
+      <div class="card"><h3><span class="icon">💀</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
     <div class="card desktop-only">
-      <h3><span class="icon">⛏</span> Blocs minés — Treemap</h3>
+      <h3><span class="icon">⛏</span> ${t('card_treemap')}</h3>
       ${buildTreemapHtml(Object.entries(p.mined_top15||{}))}
     </div>
     <div class="card mobile-only">
-      <h3><span class="icon">⛏</span> Top 15 blocs minés</h3>
+      <h3><span class="icon">⛏</span> ${t('card_top15_mined')}</h3>
       <ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">⚔</span> Top 10 mobs tués</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>
-      <div class="card"><h3><span class="icon">🔨</span> Top 10 items craftés</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--cyan)')}</ol></div>
+      <div class="card"><h3><span class="icon">⚔</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>
+      <div class="card"><h3><span class="icon">🔨</span> ${t('card_top10_crafted')}</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--cyan)')}</ol></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">🔧</span> Outils cassés</h3>${buildBrokenHtml(p.broken)}</div>
-      <div class="card"><h3><span class="icon">💡</span> Fun Facts</h3><div class="fun-facts">${funFactsHtml}</div></div>
+      <div class="card"><h3><span class="icon">🔧</span> ${t('card_tools_broken')}</h3>${buildBrokenHtml(p.broken)}</div>
+      <div class="card"><h3><span class="icon">💡</span> ${t('card_fun_facts')}</h3><div class="fun-facts">${funFactsHtml}</div></div>
     </div>
     ${buildBadgesHtml(name)}
   </div>`;
@@ -931,8 +1065,29 @@ function renderPlayerCharts(name){
 }
 
 // ═══════════════════════════════════════
+// LANGUAGE SWITCH
+// ═══════════════════════════════════════
+function switchLang(newLang){
+  lang=newLang;
+  localStorage.setItem('mc-dash-lang',lang);
+  document.getElementById('html-root').lang=lang;
+  document.getElementById('subtitle').textContent=t('subtitle');
+  document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
+  document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
+  updateGlobalMeta();
+  buildNav();
+  buildAllSections();
+  showSection(currentSection);
+}
+
+// ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
+document.getElementById('html-root').lang=lang;
+document.getElementById('subtitle').textContent=t('subtitle');
+document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
+document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
+document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
 buildNav();buildAllSections();renderOverviewCharts();animateCounters();
 </script>
 </body>

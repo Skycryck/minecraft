@@ -73,12 +73,13 @@ a{color:var(--accent-light);text-decoration:none}
   display:flex;align-items:center;gap:.5rem;
 }
 .card h3 .icon{font-size:1.1rem}
-img.mc-icon{image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;vertical-align:middle;display:inline-block;width:16px;height:16px}
-.card h3 img.mc-icon{width:32px;height:32px}
-.badge-icon img.mc-icon{width:16px;height:16px}
-.fun-fact img.mc-icon{width:16px;height:16px;flex-shrink:0}
-.archetype img.mc-icon{width:16px;height:16px}
-.nav button img.mc-icon{width:16px;height:16px}
+img.mc-icon{image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;vertical-align:middle;display:inline-block;width:32px;height:32px}
+img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;width:32px;height:32px}
+.card h3 img.mc-icon,.card h3 img.mc-icon-hr{width:32px;height:32px}
+.badge-icon img.mc-icon,.badge-icon img.mc-icon-hr{width:32px;height:32px}
+.fun-fact img.mc-icon,.fun-fact img.mc-icon-hr{width:32px;height:32px;flex-shrink:0}
+.archetype img.mc-icon,.archetype img.mc-icon-hr{width:32px;height:32px}
+.nav button img.mc-icon,.nav button img.mc-icon-hr{width:32px;height:32px}
 .grid{display:grid;gap:1rem}
 .grid-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
 .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
@@ -239,7 +240,7 @@ img.mc-icon{image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-ren
 <body>
 <div class="app">
 <div class="header">
-  <h1><img class="mc-icon" style="width:48px;height:48px;margin-right:.3rem" src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/diamond_pickaxe.png" alt="pickaxe"> Serveur 2026</h1>
+  <h1><img class="mc-icon-hr" style="width:48px;height:48px;margin-right:.3rem" src="../assets/icons/diamond_pickaxe.png" alt="pickaxe"> Serveur 2026</h1>
   <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
   <div class="sync-date" id="syncDate"></div>
@@ -266,68 +267,21 @@ playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
 // MINECRAFT ITEM ICONS
 // ═══════════════════════════════════════
 const _MI='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/';
-const _MB='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/block/';
-const _MW='https://minecraft.wiki/images/Invicon_';
-const MC_ICONS={
-  diamond_pickaxe:_MI+'diamond_pickaxe.png',
-  diamond_axe:_MI+'diamond_axe.png',
-  diamond_sword:_MI+'diamond_sword.png',
-  netherite_sword:_MI+'netherite_sword.png',
-  iron_sword:_MI+'iron_sword.png',
-  iron_chestplate:_MI+'iron_chestplate.png',
-  shield:_MW+'Shield.png',
-  bow:_MI+'bow.png',
-  crossbow:_MI+'crossbow_standby.png',
-  elytra:_MI+'elytra.png',
-  fishing_rod:_MI+'fishing_rod.png',
-  diamond:_MI+'diamond.png',
-  blaze_rod:_MI+'blaze_rod.png',
-  ender_pearl:_MI+'ender_pearl.png',
-  emerald:_MI+'emerald.png',
-  nether_star:_MI+'nether_star.png',
-  golden_apple:_MI+'golden_apple.png',
-  paper:_MI+'paper.png',
-  saddle:_MI+'saddle.png',
-  clock:_MI+'clock_00.png',
-  compass:_MI+'compass_00.png',
-  filled_map:_MI+'filled_map.png',
-  enchanted_book:_MI+'enchanted_book.png',
-  feather:_MI+'feather.png',
-  wheat:_MI+'wheat.png',
-  wheat_seeds:_MI+'wheat_seeds.png',
-  rabbit_foot:_MI+'rabbit_foot.png',
-  leather_boots:_MI+'leather_boots.png',
-  gold_ingot:_MI+'gold_ingot.png',
-  iron_ingot:_MI+'iron_ingot.png',
-  copper_ingot:_MI+'copper_ingot.png',
-  rotten_flesh:_MI+'rotten_flesh.png',
-  skeleton_skull:_MW+'Skeleton_Skull.png',
-  totem_of_undying:_MI+'totem_of_undying.png',
-  oak_boat:_MI+'oak_boat.png',
-  egg:_MI+'egg.png',
-  torch:_MB+'torch.png',
-  cod:_MI+'cod.png',
-  oak_sapling:_MB+'oak_sapling.png',
-  oak_door:_MI+'oak_door.png',
-  oak_planks:_MW+'Oak_Planks.png',
-  netherrack:_MW+'Netherrack.png',
-  ancient_debris:_MW+'Ancient_Debris.png',
-  crafting_table:_MW+'Crafting_Table.png',
-  chest:_MW+'Chest.png',
-  white_bed:_MW+'White_Bed.png',
-  anvil:_MW+'Anvil.png',
-  tnt:_MW+'TNT.png',
-  target:_MW+'Target.png',
-};
+const _HR='../assets/icons/';
+// Icons pre-rendered at 256x256 (nearest-neighbor upscale of native source).
+// See scripts/build_icons.py — keep ICONS list there in sync with this set.
+const MC_ICONS_HR=new Set(['diamond_pickaxe','diamond_axe','diamond_sword','netherite_sword','iron_sword','iron_chestplate','shield','bow','crossbow','elytra','fishing_rod','diamond','blaze_rod','ender_pearl','emerald','nether_star','golden_apple','paper','saddle','clock','compass','filled_map','enchanted_book','feather','wheat','wheat_seeds','rabbit_foot','leather_boots','diamond_boots','gold_ingot','iron_ingot','copper_ingot','rotten_flesh','skeleton_skull','totem_of_undying','oak_boat','egg','torch','cod','oak_sapling','oak_door','oak_planks','netherrack','ancient_debris','crafting_table','chest','white_bed','anvil','tnt','target']);
 function mcIcon(name){
-  const src=MC_ICONS[name]||(_MI+name+'.png');
-  return '<img class="mc-icon" src="'+src+'" alt="'+name+'" loading="lazy">';
+  if(MC_ICONS_HR.has(name)){
+    return '<img class="mc-icon-hr" src="'+_HR+name+'.png" alt="'+name+'" loading="lazy">';
+  }
+  return '<img class="mc-icon" src="'+_MI+name+'.png" alt="'+name+'" loading="lazy">';
 }
 
 // ═══════════════════════════════════════
 // I18N
 // ═══════════════════════════════════════
-const SYNC_FR='16/04/2026 à 18:34',SYNC_EN='2026-04-16 at 18:34';
+const SYNC_FR='16/04/2026 à 22:53',SYNC_EN='2026-04-16 at 22:53';
 let lang=localStorage.getItem('mc-dash-lang')||(navigator.language.startsWith('fr')?'fr':'en');
 let currentSection='overview';
 const T={fr:{
@@ -888,7 +842,7 @@ const BADGES=[
    tiers:[1,5,15,30],val:p=>p.player_kills},
   {id:'raid_master',name:'Raid Master',icon:mcIcon('crossbow'),cat:'combat',
    tiers:[10,50,100,200],val:p=>(p.badge_data?.pillager||0)+(p.badge_data?.vindicator||0)+(p.badge_data?.ravager||0)},
-  {id:'increvable',name:'Increvable',icon:mcIcon('shield'),cat:'survival',
+  {id:'increvable',name:'Increvable',icon:mcIcon('totem_of_undying'),cat:'survival',
    tiers:[2,5,10,20],val:p=>p.deaths>0?Math.round(p.play_hours/p.deaths*10)/10:(p.play_hours>=1?999:0)},
   {id:'kamikaze',name:'Kamikaze',icon:mcIcon('skeleton_skull'),cat:'survival',
    tiers:[10,30,75,150],val:p=>p.deaths},
@@ -898,7 +852,7 @@ const BADGES=[
    tiers:[500,2000,5000,10000],val:p=>Math.round(p.damage_taken/20)},
   {id:'globe_trotter',name:'Globe-trotter',icon:mcIcon('compass'),cat:'exploration',
    tiers:[50,200,500,1500],val:p=>p.total_distance_km},
-  {id:'marathonien',name:'Marathonien',icon:mcIcon('leather_boots'),cat:'exploration',
+  {id:'marathonien',name:'Marathonien',icon:mcIcon('diamond_boots'),cat:'exploration',
    tiers:[42,100,200,500],val:p=>p.distances?.walk||0},
   {id:'sprinter',name:'Sprinter',icon:mcIcon('feather'),cat:'exploration',
    tiers:[50,150,300,500],val:p=>p.distances?.sprint||0},

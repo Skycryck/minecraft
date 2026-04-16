@@ -75,7 +75,7 @@
 
 ---
 
-### [ ] Tâche 3 — Déplacer la définition des BADGES en Python
+### [x] Tâche 3 — Déplacer la définition des BADGES en Python
 
 - **Priorité :** 🔴 Haute
 - **Fichiers concernés :**
@@ -84,10 +84,10 @@
 - **Problème identifié :**
   > Le tableau `BADGES` (`generate.py:1010-1077`) et sa logique de calcul (`computePlayerBadges`, `getBadgeTier`) sont en JS côté client. Les données sont figées au build, recalculer à chaque pageload est inutile et complique la lisibilité.
 - **Action attendue :**
-  - [ ] Créer un module `scripts/minecraft/badges.py` contenant les définitions de badges (id, cat, tiers, fonction d'extraction)
-  - [ ] Calculer les badges dans `process_player()` et les ajouter au dict exporté (clé `badges: [...]`)
-  - [ ] Supprimer `BADGES`, `computePlayerBadges`, `getBadgeTier` du JS ; la fonction `buildBadgesHtml` consomme directement `p.badges`
-  - [ ] Régénérer et vérifier que l'affichage des badges est identique
+  - [x] Créer un module `scripts/minecraft/badges.py` contenant les définitions de badges (id, cat, tiers, fonction d'extraction)
+  - [x] Calculer les badges dans `process_player()` et les ajouter au dict exporté (clé `badges: [...]`)
+  - [x] Supprimer `BADGES`, `computePlayerBadges`, `getBadgeTier` du JS ; la fonction `buildBadgesHtml` consomme directement `p.badges`
+  - [x] Régénérer et vérifier que l'affichage des badges est identique
 - **Critères d'acceptation :**
   - Aucune définition de badge ne reste en JS
   - Les tiers et progrès affichés sont identiques à avant
@@ -386,6 +386,14 @@
 - `generate.py` passe de 1167 à 308 lignes. `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0).
 - Régénération OK : `serveur-2026` (7 joueurs, 11 126 o) et `serveur-2020` (9 joueurs, 16 667 o) — la taille chute fortement car le JS n'est plus inliné.
 - Les seules `}}` restantes dans `app.js` sont des fermetures JS imbriquées légitimes (fin d'objet/fonction), pas des escapes f-string.
+
+### 2026-04-17 — Tâche 3 : Badges en Python
+
+- Nouveau module `scripts/minecraft/badges.py` : 33 badges standards + 2 méta (`all_rounder`, `legende`), avec `get_tier()` et `compute_player_badges()`.
+- `process_player()` appelle `compute_player_badges(player)` et attache la liste sous la clé `badges` — chaque entrée contient `{id, name, icon, cat, tiers, value, tier, progress, nextTarget}`, avec `icon` stocké comme nom (ex. `diamond_pickaxe`) et non comme HTML.
+- `BADGES`, `getBadgeTier`, `computePlayerBadges` supprimés de `app.js` (~80 lignes). `buildBadgesHtml` lit `p.badges` et appelle `mcIcon(b.icon)` au rendu.
+- Vérif manuelle des valeurs sur `serveur-2026` : thresholds et progress cohérents (ex. Martel0w mineur 58911 → tier 3, progress 18%).
+- `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o, `serveur-2020` 65 063 o (hausse attendue : badges pré-calculés embarqués dans le JSON).
 
 ---
 

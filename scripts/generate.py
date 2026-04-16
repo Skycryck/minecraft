@@ -28,6 +28,8 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 
+from minecraft.badges import compute_player_badges
+
 
 # ═══════════════════════════════════════════════════════════
 # 1. RÉSOLUTION UUID → PSEUDO (Mojang API)
@@ -141,7 +143,7 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
         "total_broken": sum(stats.get("minecraft:broken", {}).values()),
     }
 
-    return {
+    player = {
         "uuid": uuid,
         "play_hours": round(play_ticks / 20 / 3600, 1),
         "play_ticks": play_ticks,
@@ -173,6 +175,8 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
         "broken": clean_dict(stats.get("minecraft:broken", {})),
         "badge_data": badge_data,
     }
+    player["badges"] = compute_player_badges(player)
+    return player
 
 
 # ═══════════════════════════════════════════════════════════

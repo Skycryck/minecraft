@@ -567,120 +567,12 @@ const BADGE_CATEGORIES=[
   {id:'mining'},{id:'combat'},{id:'survival'},{id:'exploration'},
   {id:'farming'},{id:'craft'},{id:'daily'},{id:'prestige'},
 ];
-const BADGES=[
-  {id:'mineur',name:'Mineur',icon:mcIcon('diamond_pickaxe'),cat:'mining',
-   tiers:[1000,10000,50000,100000],val:p=>p.total_mined},
-  {id:'diamantaire',name:'Diamantaire',icon:mcIcon('diamond'),cat:'mining',
-   tiers:[10,50,150,300],val:p=>p.badge_data?.diamond_ore||0},
-  {id:'nether_mole',name:'Nether Mole',icon:mcIcon('netherrack'),cat:'mining',
-   tiers:[1000,10000,20000,50000],val:p=>p.badge_data?.netherrack||0},
-  {id:'ancient_debris',name:'Débris Anciens',icon:mcIcon('ancient_debris'),cat:'mining',
-   tiers:[5,20,50,100],val:p=>p.badge_data?.ancient_debris||0},
-  {id:'bucheron',name:'Bûcheron',icon:mcIcon('diamond_axe'),cat:'mining',
-   tiers:[100,500,2000,5000],val:p=>p.badge_data?.logs||0},
-  {id:'chasseur',name:'Chasseur',icon:mcIcon('diamond_sword'),cat:'combat',
-   tiers:[100,1000,10000,50000],val:p=>p.mob_kills},
-  {id:'ender_slayer',name:'Ender Slayer',icon:mcIcon('ender_pearl'),cat:'combat',
-   tiers:[100,1000,10000,40000],val:p=>p.badge_data?.enderman||0},
-  {id:'nether_warrior',name:'Nether Warrior',icon:mcIcon('blaze_rod'),cat:'combat',
-   tiers:[50,200,500,1000],val:p=>(p.badge_data?.wither_skeleton||0)+(p.badge_data?.blaze||0)},
-  {id:'berserker',name:'Berserker',icon:mcIcon('netherite_sword'),cat:'combat',
-   tiers:[1000,10000,50000,100000],val:p=>Math.round(p.damage_dealt/20)},
-  {id:'pvp_champion',name:'PvP Champion',icon:mcIcon('iron_sword'),cat:'combat',
-   tiers:[1,5,15,30],val:p=>p.player_kills},
-  {id:'raid_master',name:'Raid Master',icon:mcIcon('crossbow'),cat:'combat',
-   tiers:[10,50,100,200],val:p=>(p.badge_data?.pillager||0)+(p.badge_data?.vindicator||0)+(p.badge_data?.ravager||0)},
-  {id:'increvable',name:'Increvable',icon:mcIcon('totem_of_undying'),cat:'survival',
-   tiers:[2,5,10,20],val:p=>p.deaths>0?Math.round(p.play_hours/p.deaths*10)/10:(p.play_hours>=1?999:0)},
-  {id:'kamikaze',name:'Kamikaze',icon:mcIcon('skeleton_skull'),cat:'survival',
-   tiers:[10,30,75,150],val:p=>p.deaths},
-  {id:'bouclier_humain',name:'Bouclier Humain',icon:mcIcon('target'),cat:'survival',
-   tiers:[5,15,30,50],val:p=>p.killed_by?.player||0},
-  {id:'punching_bag',name:'Punching Bag',icon:mcIcon('iron_chestplate'),cat:'survival',
-   tiers:[500,2000,5000,10000],val:p=>Math.round(p.damage_taken/20)},
-  {id:'globe_trotter',name:'Globe-trotter',icon:mcIcon('compass'),cat:'exploration',
-   tiers:[50,200,500,1500],val:p=>p.total_distance_km},
-  {id:'marathonien',name:'Marathonien',icon:mcIcon('diamond_boots'),cat:'exploration',
-   tiers:[42,100,200,500],val:p=>p.distances?.walk||0},
-  {id:'sprinter',name:'Sprinter',icon:mcIcon('feather'),cat:'exploration',
-   tiers:[50,150,300,500],val:p=>p.distances?.sprint||0},
-  {id:'aviateur',name:'Aviateur',icon:mcIcon('elytra'),cat:'exploration',
-   tiers:[50,200,500,1000],val:p=>p.distances?.aviate||0},
-  {id:'marin',name:'Marin',icon:mcIcon('oak_boat'),cat:'exploration',
-   tiers:[1,5,10,20],val:p=>p.distances?.boat||0},
-  {id:'cavalier',name:'Cavalier',icon:mcIcon('saddle'),cat:'exploration',
-   tiers:[1,5,15,30],val:p=>p.distances?.horse||0},
-  {id:'fermier',name:'Fermier',icon:mcIcon('wheat_seeds'),cat:'farming',
-   tiers:[10,50,200,1000],val:p=>p.animals_bred},
-  {id:'pecheur',name:'Pêcheur',icon:mcIcon('fishing_rod'),cat:'farming',
-   tiers:[5,25,75,150],val:p=>p.fish_caught},
-  {id:'commercant',name:'Commerçant',icon:mcIcon('emerald'),cat:'farming',
-   tiers:[50,200,1000,3000],val:p=>p.traded_with_villager},
-  {id:'recolte',name:'Récolte',icon:mcIcon('wheat'),cat:'farming',
-   tiers:[100,500,2000,5000],val:p=>p.badge_data?.crops||0},
-  {id:'artisan',name:'Artisan',icon:mcIcon('crafting_table'),cat:'craft',
-   tiers:[1000,10000,30000,80000],val:p=>p.total_crafted},
-  {id:'enchanteur',name:'Enchanteur',icon:mcIcon('enchanted_book'),cat:'craft',
-   tiers:[10,50,200,500],val:p=>p.enchant_item},
-  {id:'paperasse',name:'Paperasse',icon:mcIcon('paper'),cat:'craft',
-   tiers:[100,1000,5000,15000],val:p=>p.badge_data?.paper||0},
-  {id:'forgeron',name:'Forgeron',icon:mcIcon('anvil'),cat:'craft',
-   tiers:[5,15,30,60],val:p=>p.badge_data?.total_broken||0},
-  {id:'rat_de_coffre',name:'Rat de coffre',icon:mcIcon('chest'),cat:'daily',
-   tiers:[100,1000,3000,5000],val:p=>p.open_chest},
-  {id:'dormeur',name:'Dormeur',icon:mcIcon('white_bed'),cat:'daily',
-   tiers:[10,50,150,300],val:p=>p.sleep_in_bed},
-  {id:'kangourou',name:'Kangourou',icon:mcIcon('rabbit_foot'),cat:'daily',
-   tiers:[5000,20000,50000,80000],val:p=>p.jumps},
-  {id:'no_life',name:'No-Life',icon:mcIcon('clock'),cat:'prestige',
-   tiers:[10,50,100,200],val:p=>p.play_hours},
-];
-// Badge descriptions moved to T translations object
-
-function getBadgeTier(value,tiers){
-  for(let i=tiers.length-1;i>=0;i--)if(value>=tiers[i])return i+1;
-  return 0;
-}
-
-function computePlayerBadges(p){
-  const results=[];
-  BADGES.forEach(b=>{
-    const value=b.val(p);
-    const tier=getBadgeTier(value,b.tiers);
-    let progress,nextTarget;
-    if(tier>=4){progress=100;nextTarget=b.tiers[3]}
-    else{
-      nextTarget=b.tiers[tier];
-      const prev=tier>0?b.tiers[tier-1]:0;
-      progress=nextTarget>prev?Math.min(100,Math.max(0,Math.round((value-prev)/(nextTarget-prev)*100))):0;
-    }
-    results.push({id:b.id,name:b.name,icon:b.icon,cat:b.cat,tiers:b.tiers,value,tier,progress,nextTarget});
-  });
-  // All-Rounder: categories where all badges are Bronze+
-  const catIds=['mining','combat','survival','exploration','farming','craft','daily'];
-  let completeCats=0;
-  catIds.forEach(cid=>{
-    const cb=results.filter(r=>r.cat===cid);
-    if(cb.length&&cb.every(r=>r.tier>=1))completeCats++;
-  });
-  const arT=[1,3,5,7],arTier=getBadgeTier(completeCats,arT);
-  let arProg,arNext;
-  if(arTier>=4){arProg=100;arNext=arT[3]}
-  else{arNext=arT[arTier];const arPrev=arTier>0?arT[arTier-1]:0;arProg=arNext>arPrev?Math.min(100,Math.round((completeCats-arPrev)/(arNext-arPrev)*100)):0}
-  results.push({id:'all_rounder',name:'All-Rounder',icon:mcIcon('nether_star'),cat:'prestige',tiers:arT,value:completeCats,tier:arTier,progress:arProg,nextTarget:arNext});
-  // Légende: badges with Gold+
-  const goldCount=results.filter(r=>r.tier>=3).length;
-  const lgT=[3,5,10,15],lgTier=getBadgeTier(goldCount,lgT);
-  let lgProg,lgNext;
-  if(lgTier>=4){lgProg=100;lgNext=lgT[3]}
-  else{lgNext=lgT[lgTier];const lgPrev=lgTier>0?lgT[lgTier-1]:0;lgProg=lgNext>lgPrev?Math.min(100,Math.round((goldCount-lgPrev)/(lgNext-lgPrev)*100)):0}
-  results.push({id:'legende',name:'Légende',icon:mcIcon('golden_apple'),cat:'prestige',tiers:lgT,value:goldCount,tier:lgTier,progress:lgProg,nextTarget:lgNext});
-  return results;
-}
+// Badge definitions & tier computation live in scripts/minecraft/badges.py.
+// The server ships pre-computed badges on each player (p.badges).
 
 function buildBadgesHtml(name){
   const p=PLAYERS_DATA[name];
-  const badges=computePlayerBadges(p);
+  const badges=p.badges||[];
   const unlocked=badges.filter(b=>b.tier>0).length;
   const total=badges.length;
   let h=`<div class="card"><h3><span class="icon">${mcIcon('nether_star')}</span> ${t('badges_title')}</h3>`;
@@ -701,7 +593,7 @@ function buildBadgesHtml(name){
       h+=`<div class="badge-card ${tc}">
         <div class="badge-tooltip"><div class="tt-desc">${desc}</div><div class="tt-tiers">${ttTiers}</div></div>
         <div class="badge-header">
-          <span class="badge-icon">${b.tier>0?b.icon:'🔒'}</span>
+          <span class="badge-icon">${b.tier>0?mcIcon(b.icon):'🔒'}</span>
           <span class="badge-name">${t('b_'+b.id)}</span>
           <span class="badge-tier badge-tier-${tn}">${tl}</span>
         </div>

@@ -13,6 +13,7 @@ from urllib.request import urlopen, Request
 
 _MI = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/'
 _MB = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/block/'
+_MG = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/gui/sprites/'
 # Wiki "Special:FilePath" auto-redirects to the thumbnail at the requested width.
 # Files listed in WIKI_HIRES exist as native 300x300 3D renders (not pixel art upscales).
 _WIKI_THUMB = 'https://minecraft.wiki/wiki/Special:FilePath/{filename}?width=256'
@@ -42,7 +43,9 @@ ICONS = {
     'clock': (_MI + 'clock_00.png', 16),
     'compass': (_MI + 'compass_00.png', 16),
     'filled_map': (_MI + 'filled_map.png', 16),
+    'new_realm': (_MG + 'icon/new_realm.png', 16),
     'enchanted_book': (_MI + 'enchanted_book.png', 16),
+    'knowledge_book': (_MI + 'knowledge_book.png', 16),
     'feather': (_MI + 'feather.png', 16),
     'wheat': (_MI + 'wheat.png', 16),
     'wheat_seeds': (_MI + 'wheat_seeds.png', 16),

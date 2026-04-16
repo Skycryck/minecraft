@@ -458,7 +458,7 @@ const _MI='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.
 const _HR='../assets/icons/';
 // Icons pre-rendered at 256x256 (nearest-neighbor upscale of native source).
 // See scripts/build_icons.py — keep ICONS list there in sync with this set.
-const MC_ICONS_HR=new Set(['diamond_pickaxe','diamond_axe','diamond_sword','netherite_sword','iron_sword','iron_chestplate','shield','bow','crossbow','elytra','fishing_rod','diamond','blaze_rod','ender_pearl','emerald','nether_star','golden_apple','paper','saddle','clock','compass','filled_map','enchanted_book','feather','wheat','wheat_seeds','rabbit_foot','leather_boots','diamond_boots','gold_ingot','iron_ingot','copper_ingot','rotten_flesh','skeleton_skull','totem_of_undying','oak_boat','egg','torch','cod','oak_sapling','oak_door','oak_planks','netherrack','ancient_debris','crafting_table','chest','white_bed','anvil','tnt','target']);
+const MC_ICONS_HR=new Set(['diamond_pickaxe','diamond_axe','diamond_sword','netherite_sword','iron_sword','iron_chestplate','shield','bow','crossbow','elytra','fishing_rod','diamond','blaze_rod','ender_pearl','emerald','nether_star','golden_apple','paper','saddle','clock','compass','filled_map','new_realm','enchanted_book','knowledge_book','feather','wheat','wheat_seeds','rabbit_foot','leather_boots','diamond_boots','gold_ingot','iron_ingot','copper_ingot','rotten_flesh','skeleton_skull','totem_of_undying','oak_boat','egg','torch','cod','oak_sapling','oak_door','oak_planks','netherrack','ancient_debris','crafting_table','chest','white_bed','anvil','tnt','target']);
 function mcIcon(name){{
   if(MC_ICONS_HR.has(name)){{
     return '<img class="mc-icon-hr" src="'+_HR+name+'.png" alt="'+name+'" loading="lazy">';
@@ -475,7 +475,7 @@ let currentSection='overview';
 const T={{fr:{{
 subtitle:'Dashboard de statistiques du serveur',sync_prefix:'Dernière synchronisation',
 players:'joueurs',hours_played:'h de jeu',blocks_mined_meta:'blocs minés',mobs_killed_meta:'mobs tués',
-nav_overview:mcIcon('filled_map')+' Vue globale',nav_leaderboards:mcIcon('nether_star')+' Classements',
+nav_overview:mcIcon('new_realm')+' Vue globale',nav_leaderboards:mcIcon('nether_star')+' Classements',
 total_playtime:'Temps de jeu total',blocks_mined:'Blocs minés',mobs_killed:'Mobs tués',items_crafted:'Items craftés',
 chart_playtime:'Temps de jeu par joueur',chart_distance:'Distance totale (km)',
 chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_multi:'Comparaison multi-stats',
@@ -558,7 +558,7 @@ ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres'
 }},en:{{
 subtitle:'Server statistics dashboard',sync_prefix:'Last sync',
 players:'players',hours_played:'hours played',blocks_mined_meta:'blocks mined',mobs_killed_meta:'mobs killed',
-nav_overview:mcIcon('filled_map')+' Overview',nav_leaderboards:mcIcon('nether_star')+' Leaderboards',
+nav_overview:mcIcon('new_realm')+' Overview',nav_leaderboards:mcIcon('nether_star')+' Leaderboards',
 total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
 chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
 chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
@@ -897,7 +897,7 @@ function buildOverview(){{
       <div class="card"><h3><span class="icon">${{mcIcon('diamond_pickaxe')}}</span> ${{t('chart_mined')}}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
       <div class="card"><h3><span class="icon">${{mcIcon('diamond_sword')}}</span> ${{t('chart_kills')}}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
     </div>
-    <div class="card"><h3><span class="icon">📈</span> ${{t('chart_multi')}}</h3>
+    <div class="card"><h3><span class="icon">${{mcIcon('knowledge_book')}}</span> ${{t('chart_multi')}}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
     </div>
   </div>`;

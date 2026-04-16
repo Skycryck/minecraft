@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Serveur Confinement 2020</title>
+<title>Serveur 2020</title>
 <link rel="icon" href="https://cdn2.steamgriddb.com/icon/0678c572b0d5597d2d4a6b5bd135754c/32/128x128.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -59,6 +59,7 @@ a{color:var(--accent-light);text-decoration:none}
   font-family:var(--font-mono);font-size:.78rem;
   padding:.5rem 1rem;border-radius:20px;border:1px solid var(--border);
   background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:.4rem;min-height:50px;box-sizing:border-box;
 }
 .nav button:hover{border-color:var(--accent);color:var(--text)}
 .nav button.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(124,106,239,.25)}
@@ -240,7 +241,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 <body>
 <div class="app">
 <div class="header">
-  <h1><img class="mc-icon-hr" style="width:48px;height:48px;margin-right:.3rem" src="../assets/icons/diamond_pickaxe.png" alt="pickaxe"> Serveur Confinement 2020</h1>
+  <h1><img class="mc-icon-hr" style="width:48px;height:48px;margin-right:.3rem" src="../assets/icons/diamond_pickaxe.png" alt="pickaxe"> Serveur 2020</h1>
   <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
   <div class="sync-date" id="syncDate"></div>
@@ -281,7 +282,7 @@ function mcIcon(name){
 // ═══════════════════════════════════════
 // I18N
 // ═══════════════════════════════════════
-const SYNC_FR='16/04/2026 à 22:53',SYNC_EN='2026-04-16 at 22:53';
+const SYNC_FR='16/04/2026 à 23:16',SYNC_EN='2026-04-16 at 23:16';
 let lang=localStorage.getItem('mc-dash-lang')||(navigator.language.startsWith('fr')?'fr':'en');
 let currentSection='overview';
 const T={fr:{

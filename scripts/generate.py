@@ -246,6 +246,7 @@ a{{color:var(--accent-light);text-decoration:none}}
   font-family:var(--font-mono);font-size:.78rem;
   padding:.5rem 1rem;border-radius:20px;border:1px solid var(--border);
   background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:.4rem;min-height:50px;box-sizing:border-box;
 }}
 .nav button:hover{{border-color:var(--accent);color:var(--text)}}
 .nav button.active{{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(124,106,239,.25)}}

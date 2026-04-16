@@ -97,7 +97,7 @@
 
 ---
 
-### [ ] Tâche 4 — Dédupliquer les traductions i18n
+### [x] Tâche 4 — Dédupliquer les traductions i18n
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -105,9 +105,9 @@
 - **Problème identifié :**
   > Le dict `T` (`generate.py:475-641`) contient FR et EN en miroir complet, soit 166 lignes dont ~95% de clés identiques. Toute nouvelle clé nécessite deux ajouts, sources d'oublis.
 - **Action attendue :**
-  - [ ] Restructurer : `T.fr` complet, `T.en` ne contient que les overrides
-  - [ ] Remplacer le lookup `T[lang][k]` par `T[lang]?.[k] ?? T.fr[k]`
-  - [ ] Supprimer les ~80 lignes identiques de `T.en`
+  - [x] Restructurer : `T.fr` complet, `T.en` ne contient que les overrides
+  - [x] Remplacer le lookup `T[lang][k]` par `T[lang]?.[k] ?? T.fr[k]`
+  - [x] Supprimer les ~80 lignes identiques de `T.en`
 - **Critères d'acceptation :**
   - Switch FR/EN fonctionne identiquement
   - Aucune clé manquante dans aucune langue (test manuel des 3 sections)
@@ -386,6 +386,12 @@
 - `generate.py` passe de 1167 à 308 lignes. `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0).
 - Régénération OK : `serveur-2026` (7 joueurs, 11 126 o) et `serveur-2020` (9 joueurs, 16 667 o) — la taille chute fortement car le JS n'est plus inliné.
 - Les seules `}}` restantes dans `app.js` sont des fermetures JS imbriquées légitimes (fin d'objet/fonction), pas des escapes f-string.
+
+### 2026-04-17 — Tâche 4 : Déduplication i18n
+
+- `T.en` dans `stats/assets/app.js` ne contient plus que les overrides : ~32 clés identiques à `T.fr` supprimées (p. ex. `axis_kills`, `d_sprint`, `tier_bronze`, `cat_combat`, `b_nether_mole`, `b_all_rounder`, etc.).
+- `t()` et `label()` utilisent désormais `T[lang]?.[k] ?? T.fr[k]` en fallback — le switch EN récupère la valeur FR quand la clé n'existe pas côté EN.
+- Régénération OK : `serveur-2026` (48 458 o), `serveur-2020` (65 063 o) — aucune variation de taille (JSON identique, JS externe). `deno check` OK, `python -m py_compile` OK.
 
 ### 2026-04-17 — Tâche 3 : Badges en Python
 

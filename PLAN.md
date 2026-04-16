@@ -53,7 +53,7 @@
 
 ---
 
-### [ ] Tâche 2 — Extraire le JS du f-string dans `app.js`
+### [x] Tâche 2 — Extraire le JS du f-string dans `app.js`
 
 - **Priorité :** 🔴 Haute
 - **Fichiers concernés :**
@@ -62,10 +62,10 @@
 - **Problème identifié :**
   > Le JS (~850 lignes, `generate.py:440-1302`) est noyé dans le f-string. Toutes les accolades sont doublées (`{{` `}}`), ce qui rend la maintenance cauchemardesque et masque les erreurs de syntaxe JS.
 - **Action attendue :**
-  - [ ] Créer `stats/assets/app.js` contenant tout le JS actuel (accolades simples)
-  - [ ] Injecter les données via `<script>window.PLAYERS_DATA = {data_json}; window.SYNC = {"fr": "...", "en": "..."};</script>` suivi de `<script src="../assets/app.js"></script>`
-  - [ ] Adapter le JS pour lire `window.PLAYERS_DATA` au lieu de la constante inline
-  - [ ] Régénérer les deux index.html et vérifier la console (0 erreur)
+  - [x] Créer `stats/assets/app.js` contenant tout le JS actuel (accolades simples)
+  - [x] Injecter les données via `<script>window.PLAYERS_DATA = {data_json}; window.SYNC = {"fr": "...", "en": "..."};</script>` suivi de `<script src="../assets/app.js"></script>`
+  - [x] Adapter le JS pour lire `window.PLAYERS_DATA` au lieu de la constante inline
+  - [x] Régénérer les deux index.html et vérifier la console (0 erreur)
 - **Critères d'acceptation :**
   - Aucune accolade doublée ne subsiste dans `app.js`
   - Toutes les sections (overview, leaderboards, joueurs) s'affichent correctement
@@ -378,6 +378,14 @@
 - Bloc `<style>...</style>` remplacé par `<link rel="stylesheet" href="../assets/styles.css">` dans `generate_html()`.
 - Régénération OK : `serveur-2026` (7 joueurs, 64 937 o) et `serveur-2020` (9 joueurs, 70 454 o).
 - `python -m py_compile scripts/generate.py` passe. Les seules `}}` restantes dans le CSS sont des fermetures de blocs CSS imbriqués légitimes (@media + règle).
+
+### 2026-04-17 — Tâche 2 : Extraction JS
+
+- JS (~860 lignes) extrait de `generate.py` vers `stats/assets/app.js` avec accolades simples.
+- Bloc `<script>...</script>` remplacé par `<script>window.PLAYERS_DATA={data_json};window.SYNC={...};</script><script src="../assets/app.js"></script>` dans `generate_html()`.
+- `generate.py` passe de 1167 à 308 lignes. `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0).
+- Régénération OK : `serveur-2026` (7 joueurs, 11 126 o) et `serveur-2020` (9 joueurs, 16 667 o) — la taille chute fortement car le JS n'est plus inliné.
+- Les seules `}}` restantes dans `app.js` sont des fermetures JS imbriquées légitimes (fin d'objet/fonction), pas des escapes f-string.
 
 ---
 

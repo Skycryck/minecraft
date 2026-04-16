@@ -496,7 +496,7 @@ const MC_ICONS={{
   cod:_MI+'cod.png',
   oak_sapling:_MB+'oak_sapling.png',
   oak_door:_MI+'oak_door.png',
-  oak_planks:_MB+'oak_planks.png',
+  oak_planks:_MW+'Oak_Planks.png',
   netherrack:_MW+'Netherrack.png',
   ancient_debris:_MW+'Ancient_Debris.png',
   crafting_table:_MW+'Crafting_Table.png',

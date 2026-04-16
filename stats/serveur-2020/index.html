@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Serveur 2020</title>
+<title>Serveur Confinement 2020</title>
 <link rel="icon" href="https://cdn2.steamgriddb.com/icon/0678c572b0d5597d2d4a6b5bd135754c/32/128x128.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -73,6 +73,12 @@ a{color:var(--accent-light);text-decoration:none}
   display:flex;align-items:center;gap:.5rem;
 }
 .card h3 .icon{font-size:1.1rem}
+img.mc-icon{image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;vertical-align:middle;display:inline-block;width:16px;height:16px}
+.card h3 img.mc-icon{width:32px;height:32px}
+.badge-icon img.mc-icon{width:16px;height:16px}
+.fun-fact img.mc-icon{width:16px;height:16px;flex-shrink:0}
+.archetype img.mc-icon{width:16px;height:16px}
+.nav button img.mc-icon{width:16px;height:16px}
 .grid{display:grid;gap:1rem}
 .grid-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
 .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
@@ -233,7 +239,7 @@ a{color:var(--accent-light);text-decoration:none}
 <body>
 <div class="app">
 <div class="header">
-  <h1>⛏ Serveur 2020</h1>
+  <h1><img class="mc-icon" style="width:48px;height:48px;margin-right:.3rem" src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/diamond_pickaxe.png" alt="pickaxe"> Serveur Confinement 2020</h1>
   <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
   <div class="sync-date" id="syncDate"></div>
@@ -257,25 +263,87 @@ const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_h
 playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
 
 // ═══════════════════════════════════════
+// MINECRAFT ITEM ICONS
+// ═══════════════════════════════════════
+const _MI='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/';
+const _MB='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/block/';
+const _MW='https://minecraft.wiki/images/Invicon_';
+const MC_ICONS={
+  diamond_pickaxe:_MI+'diamond_pickaxe.png',
+  diamond_axe:_MI+'diamond_axe.png',
+  diamond_sword:_MI+'diamond_sword.png',
+  netherite_sword:_MI+'netherite_sword.png',
+  iron_sword:_MI+'iron_sword.png',
+  iron_chestplate:_MI+'iron_chestplate.png',
+  shield:_MW+'Shield.png',
+  bow:_MI+'bow.png',
+  crossbow:_MI+'crossbow_standby.png',
+  elytra:_MI+'elytra.png',
+  fishing_rod:_MI+'fishing_rod.png',
+  diamond:_MI+'diamond.png',
+  blaze_rod:_MI+'blaze_rod.png',
+  ender_pearl:_MI+'ender_pearl.png',
+  emerald:_MI+'emerald.png',
+  nether_star:_MI+'nether_star.png',
+  golden_apple:_MI+'golden_apple.png',
+  paper:_MI+'paper.png',
+  saddle:_MI+'saddle.png',
+  clock:_MI+'clock_00.png',
+  compass:_MI+'compass_00.png',
+  filled_map:_MI+'filled_map.png',
+  enchanted_book:_MI+'enchanted_book.png',
+  feather:_MI+'feather.png',
+  wheat:_MI+'wheat.png',
+  wheat_seeds:_MI+'wheat_seeds.png',
+  rabbit_foot:_MI+'rabbit_foot.png',
+  leather_boots:_MI+'leather_boots.png',
+  gold_ingot:_MI+'gold_ingot.png',
+  iron_ingot:_MI+'iron_ingot.png',
+  copper_ingot:_MI+'copper_ingot.png',
+  rotten_flesh:_MI+'rotten_flesh.png',
+  skeleton_skull:_MW+'Skeleton_Skull.png',
+  totem_of_undying:_MI+'totem_of_undying.png',
+  oak_boat:_MI+'oak_boat.png',
+  egg:_MI+'egg.png',
+  torch:_MB+'torch.png',
+  cod:_MI+'cod.png',
+  oak_sapling:_MB+'oak_sapling.png',
+  oak_door:_MI+'oak_door.png',
+  oak_planks:_MB+'oak_planks.png',
+  netherrack:_MW+'Netherrack.png',
+  ancient_debris:_MW+'Ancient_Debris.png',
+  crafting_table:_MW+'Crafting_Table.png',
+  chest:_MW+'Chest.png',
+  white_bed:_MW+'White_Bed.png',
+  anvil:_MW+'Anvil.png',
+  tnt:_MW+'TNT.png',
+  target:_MW+'Target.png',
+};
+function mcIcon(name){
+  const src=MC_ICONS[name]||(_MI+name+'.png');
+  return '<img class="mc-icon" src="'+src+'" alt="'+name+'" loading="lazy">';
+}
+
+// ═══════════════════════════════════════
 // I18N
 // ═══════════════════════════════════════
-const SYNC_FR='16/04/2026 à 00:32',SYNC_EN='2026-04-16 at 00:32';
+const SYNC_FR='16/04/2026 à 18:05',SYNC_EN='2026-04-16 at 18:05';
 let lang=localStorage.getItem('mc-dash-lang')||(navigator.language.startsWith('fr')?'fr':'en');
 let currentSection='overview';
 const T={fr:{
 subtitle:'Dashboard de statistiques du serveur',sync_prefix:'Dernière synchronisation',
 players:'joueurs',hours_played:'h de jeu',blocks_mined_meta:'blocs minés',mobs_killed_meta:'mobs tués',
-nav_overview:'📊 Vue globale',nav_leaderboards:'🏆 Classements',
+nav_overview:mcIcon('filled_map')+' Vue globale',nav_leaderboards:mcIcon('nether_star')+' Classements',
 total_playtime:'Temps de jeu total',blocks_mined:'Blocs minés',mobs_killed:'Mobs tués',items_crafted:'Items craftés',
 chart_playtime:'Temps de jeu par joueur',chart_distance:'Distance totale (km)',
 chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_multi:'Comparaison multi-stats',
 axis_hours:'Heures',axis_blocks:'Blocs',axis_kills:'Kills',axis_km:'km',
 radar_playtime:'Temps de jeu',radar_mined:'Blocs minés',radar_kills:'Mobs tués',
 radar_distance:'Distance',radar_crafted:'Items craftés',radar_deaths:'Morts',
-lb_playtime:'⏱ Temps de jeu',lb_mined:'⛏ Blocs minés',lb_kills:'⚔ Mobs tués',
-lb_deaths:'💀 Morts',lb_distance:'🗺 Distance',lb_crafted:'🔨 Items craftés',
-lb_pvp:'🗡 PvP Kills',lb_enchant:'✨ Enchantements',lb_fish:'🐟 Poissons',
-lb_trades:'🤝 Échanges PNJ',lb_breed:'💕 Élevage',lb_jumps:'🦘 Sauts',
+lb_playtime:mcIcon('clock')+' Temps de jeu',lb_mined:mcIcon('diamond_pickaxe')+' Blocs minés',lb_kills:mcIcon('diamond_sword')+' Mobs tués',
+lb_deaths:mcIcon('skeleton_skull')+' Morts',lb_distance:mcIcon('filled_map')+' Distance',lb_crafted:mcIcon('crafting_table')+' Items craftés',
+lb_pvp:mcIcon('iron_sword')+' PvP Kills',lb_enchant:mcIcon('enchanted_book')+' Enchantements',lb_fish:mcIcon('cod')+' Poissons',
+lb_trades:mcIcon('emerald')+' Échanges PNJ',lb_breed:mcIcon('egg')+' Élevage',lb_jumps:mcIcon('rabbit_foot')+' Sauts',
 chart_deathcauses:'Causes de mort (tous)',chart_dist_type:'Distances par type',
 d_walk:'Marche',d_sprint:'Sprint',d_swim:'Nage',d_fly:'Vol créatif',
 d_aviate:'Elytra',d_boat:'Bateau',d_horse:'Cheval',d_minecart:'Wagon',
@@ -295,10 +363,10 @@ card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',ca
 no_death:'Aucune mort',no_data:'Pas assez de données',
 no_blocks:'Aucun bloc miné',no_tools:'Aucun outil cassé',
 badges_title:'Badges & Achievements',badges_unlocked:'badges débloqués',
-tier_locked:'🔒',tier_bronze:'🥉 Bronze',tier_silver:'🥈 Argent',tier_gold:'🥇 Or',tier_diamond:'💎 Diamant',
-cat_mining:'⛏ Minage',cat_combat:'⚔ Combat',cat_survival:'💀 Survie',
-cat_exploration:'🚶 Exploration',cat_farming:'🌾 Farming & Économie',
-cat_craft:'🔨 Craft & Technique',cat_daily:'🏠 Vie Quotidienne',cat_prestige:'🏆 Prestige',
+tier_locked:'🔒',tier_bronze:mcIcon('copper_ingot')+' Bronze',tier_silver:mcIcon('iron_ingot')+' Argent',tier_gold:mcIcon('gold_ingot')+' Or',tier_diamond:mcIcon('diamond')+' Diamant',
+cat_mining:mcIcon('diamond_pickaxe')+' Minage',cat_combat:mcIcon('diamond_sword')+' Combat',cat_survival:mcIcon('skeleton_skull')+' Survie',
+cat_exploration:mcIcon('compass')+' Exploration',cat_farming:mcIcon('wheat')+' Farming & Économie',
+cat_craft:mcIcon('crafting_table')+' Craft & Technique',cat_daily:mcIcon('white_bed')+' Vie Quotidienne',cat_prestige:mcIcon('nether_star')+' Prestige',
 b_mineur:'Mineur',b_diamantaire:'Diamantaire',b_nether_mole:'Nether Mole',
 b_ancient_debris:'Débris Anciens',b_bucheron:'Bûcheron',b_chasseur:'Chasseur',
 b_ender_slayer:'Ender Slayer',b_nether_warrior:'Nether Warrior',b_berserker:'Berserker',
@@ -348,17 +416,17 @@ ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres'
 },en:{
 subtitle:'Server statistics dashboard',sync_prefix:'Last sync',
 players:'players',hours_played:'hours played',blocks_mined_meta:'blocks mined',mobs_killed_meta:'mobs killed',
-nav_overview:'📊 Overview',nav_leaderboards:'🏆 Leaderboards',
+nav_overview:mcIcon('filled_map')+' Overview',nav_leaderboards:mcIcon('nether_star')+' Leaderboards',
 total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
 chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
 chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
 axis_hours:'Hours',axis_blocks:'Blocks',axis_kills:'Kills',axis_km:'km',
 radar_playtime:'Playtime',radar_mined:'Blocks mined',radar_kills:'Mobs killed',
 radar_distance:'Distance',radar_crafted:'Items crafted',radar_deaths:'Deaths',
-lb_playtime:'⏱ Playtime',lb_mined:'⛏ Blocks mined',lb_kills:'⚔ Mobs killed',
-lb_deaths:'💀 Deaths',lb_distance:'🗺 Distance',lb_crafted:'🔨 Items crafted',
-lb_pvp:'🗡 PvP Kills',lb_enchant:'✨ Enchantments',lb_fish:'🐟 Fish caught',
-lb_trades:'🤝 NPC trades',lb_breed:'💕 Breeding',lb_jumps:'🦘 Jumps',
+lb_playtime:mcIcon('clock')+' Playtime',lb_mined:mcIcon('diamond_pickaxe')+' Blocks mined',lb_kills:mcIcon('diamond_sword')+' Mobs killed',
+lb_deaths:mcIcon('skeleton_skull')+' Deaths',lb_distance:mcIcon('filled_map')+' Distance',lb_crafted:mcIcon('crafting_table')+' Items crafted',
+lb_pvp:mcIcon('iron_sword')+' PvP Kills',lb_enchant:mcIcon('enchanted_book')+' Enchantments',lb_fish:mcIcon('cod')+' Fish caught',
+lb_trades:mcIcon('emerald')+' NPC trades',lb_breed:mcIcon('egg')+' Breeding',lb_jumps:mcIcon('rabbit_foot')+' Jumps',
 chart_deathcauses:'Death causes (all)',chart_dist_type:'Distance by type',
 d_walk:'Walk',d_sprint:'Sprint',d_swim:'Swim',d_fly:'Creative flight',
 d_aviate:'Elytra',d_boat:'Boat',d_horse:'Horse',d_minecart:'Minecart',
@@ -378,10 +446,10 @@ card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',card_
 no_death:'No deaths',no_data:'Not enough data',
 no_blocks:'No blocks mined',no_tools:'No tools broken',
 badges_title:'Badges & Achievements',badges_unlocked:'badges unlocked',
-tier_locked:'🔒',tier_bronze:'🥉 Bronze',tier_silver:'🥈 Silver',tier_gold:'🥇 Gold',tier_diamond:'💎 Diamond',
-cat_mining:'⛏ Mining',cat_combat:'⚔ Combat',cat_survival:'💀 Survival',
-cat_exploration:'🚶 Exploration',cat_farming:'🌾 Farming & Economy',
-cat_craft:'🔨 Craft & Tech',cat_daily:'🏠 Daily life',cat_prestige:'🏆 Prestige',
+tier_locked:'🔒',tier_bronze:mcIcon('copper_ingot')+' Bronze',tier_silver:mcIcon('iron_ingot')+' Silver',tier_gold:mcIcon('gold_ingot')+' Gold',tier_diamond:mcIcon('diamond')+' Diamond',
+cat_mining:mcIcon('diamond_pickaxe')+' Mining',cat_combat:mcIcon('diamond_sword')+' Combat',cat_survival:mcIcon('skeleton_skull')+' Survival',
+cat_exploration:mcIcon('compass')+' Exploration',cat_farming:mcIcon('wheat')+' Farming & Economy',
+cat_craft:mcIcon('crafting_table')+' Craft & Tech',cat_daily:mcIcon('white_bed')+' Daily life',cat_prestige:mcIcon('nether_star')+' Prestige',
 b_mineur:'Miner',b_diamantaire:'Diamond Hunter',b_nether_mole:'Nether Mole',
 b_ancient_debris:'Ancient Debris',b_bucheron:'Lumberjack',b_chasseur:'Hunter',
 b_ender_slayer:'Ender Slayer',b_nether_warrior:'Nether Warrior',b_berserker:'Berserker',
@@ -438,7 +506,7 @@ function pct(v,m){return m?Math.round(v/m*100):0}
 // ARCHETYPE DETECTION
 // ═══════════════════════════════════════
 function getArchetype(p){
-  if(p.play_hours<1)return{name:t('arch_new'),icon:'🌱',color:'var(--text-muted)'};
+  if(p.play_hours<1)return{name:t('arch_new'),icon:mcIcon('oak_sapling'),color:'var(--text-muted)'};
   const h=p.play_hours;
   const scores={
     miner:p.total_mined/h,
@@ -448,11 +516,11 @@ function getArchetype(p){
     farmer:(p.animals_bred+p.traded_with_villager+p.fish_caught)/h
   };
   const types={
-    miner:{name:t('arch_miner'),icon:'⛏',color:'var(--yellow)'},
-    fighter:{name:t('arch_fighter'),icon:'⚔',color:'var(--red)'},
-    explorer:{name:t('arch_explorer'),icon:'🧭',color:'var(--green)'},
-    builder:{name:t('arch_builder'),icon:'🏗',color:'var(--cyan)'},
-    farmer:{name:t('arch_farmer'),icon:'🌾',color:'var(--orange)'}
+    miner:{name:t('arch_miner'),icon:mcIcon('diamond_pickaxe'),color:'var(--yellow)'},
+    fighter:{name:t('arch_fighter'),icon:mcIcon('diamond_sword'),color:'var(--red)'},
+    explorer:{name:t('arch_explorer'),icon:mcIcon('compass'),color:'var(--green)'},
+    builder:{name:t('arch_builder'),icon:mcIcon('oak_planks'),color:'var(--cyan)'},
+    farmer:{name:t('arch_farmer'),icon:mcIcon('wheat'),color:'var(--orange)'}
   };
   const top=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
   return types[top];
@@ -473,43 +541,43 @@ function getFunFacts(name,p){
   const facts=[];const h=p.play_hours;if(h<0.5)return facts;
 
   const ek=p.killed_top10?.enderman||0;
-  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),emoji:'👁',text:t('ff_endermen',fmt(ek),Math.floor(ek/64))});
+  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),icon:mcIcon('ender_pearl'),text:t('ff_endermen',fmt(ek),Math.floor(ek/64))});
 
   if(p.deaths>3&&h>1){const mpd=Math.round(h*60/p.deaths);const deathRate=p.deaths/h;
-    facts.push({score:deathRate/_maxOf(p=>p.play_hours>1?p.deaths/p.play_hours:0),emoji:'💀',text:t('ff_death_rate',mpd)})}
+    facts.push({score:deathRate/_maxOf(p=>p.play_hours>1?p.deaths/p.play_hours:0),icon:mcIcon('skeleton_skull'),text:t('ff_death_rate',mpd)})}
 
   const wk=p.distances?.walk||0;
-  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),emoji:'🏃',text:t('ff_walk',wk.toFixed(0),(wk/42.195).toFixed(1))});
+  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),icon:mcIcon('leather_boots'),text:t('ff_walk',wk.toFixed(0),(wk/42.195).toFixed(1))});
 
-  if(p.jumps>500&&h>1)facts.push({score:p.jumps/_maxOf(p=>p.jumps||0),emoji:'🦘',text:t('ff_jumps',Math.round(p.jumps/h))});
+  if(p.jumps>500&&h>1)facts.push({score:p.jumps/_maxOf(p=>p.jumps||0),icon:mcIcon('rabbit_foot'),text:t('ff_jumps',Math.round(p.jumps/h))});
 
-  if(p.total_mined>500&&h>1)facts.push({score:p.total_mined/_maxOf(p=>p.total_mined||0),emoji:'⛏',text:t('ff_mining',(p.total_mined/(h*60)).toFixed(1))});
+  if(p.total_mined>500&&h>1)facts.push({score:p.total_mined/_maxOf(p=>p.total_mined||0),icon:mcIcon('diamond_pickaxe'),text:t('ff_mining',(p.total_mined/(h*60)).toFixed(1))});
 
-  if(p.sleep_in_bed>5)facts.push({score:p.sleep_in_bed/_maxOf(p=>p.sleep_in_bed||0),emoji:'🛏',text:t('ff_sleep',p.sleep_in_bed,(p.sleep_in_bed/h).toFixed(1))});
+  if(p.sleep_in_bed>5)facts.push({score:p.sleep_in_bed/_maxOf(p=>p.sleep_in_bed||0),icon:mcIcon('white_bed'),text:t('ff_sleep',p.sleep_in_bed,(p.sleep_in_bed/h).toFixed(1))});
 
-  if(p.open_chest>100)facts.push({score:p.open_chest/_maxOf(p=>p.open_chest||0),emoji:'📦',text:t('ff_chests',fmt(p.open_chest))});
+  if(p.open_chest>100)facts.push({score:p.open_chest/_maxOf(p=>p.open_chest||0),icon:mcIcon('chest'),text:t('ff_chests',fmt(p.open_chest))});
 
   const pvpD=(p.killed_by?.player)||0;
-  if(pvpD>3)facts.push({score:pvpD/_maxOf(p=>(p.killed_by?.player)||0),emoji:'🎯',text:t('ff_pvp_target',pvpD)});
+  if(pvpD>3)facts.push({score:pvpD/_maxOf(p=>(p.killed_by?.player)||0),icon:mcIcon('bow'),text:t('ff_pvp_target',pvpD)});
 
   const ely=p.distances?.aviate||0;
-  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),emoji:'🪂',text:t('ff_elytra',ely.toFixed(0),Math.round(ely/6))});
+  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),icon:mcIcon('elytra'),text:t('ff_elytra',ely.toFixed(0),Math.round(ely/6))});
 
-  if(p.damage_dealt>10000)facts.push({score:p.damage_dealt/_maxOf(p=>p.damage_dealt||0),emoji:'💔',text:t('ff_damage',fmt(Math.round(p.damage_dealt/20)))});
+  if(p.damage_dealt>10000)facts.push({score:p.damage_dealt/_maxOf(p=>p.damage_dealt||0),icon:mcIcon('netherite_sword'),text:t('ff_damage',fmt(Math.round(p.damage_dealt/20)))});
 
-  if(p.traded_with_villager>50)facts.push({score:p.traded_with_villager/_maxOf(p=>p.traded_with_villager||0),emoji:'🤝',text:t('ff_trades',fmt(p.traded_with_villager))});
+  if(p.traded_with_villager>50)facts.push({score:p.traded_with_villager/_maxOf(p=>p.traded_with_villager||0),icon:mcIcon('emerald'),text:t('ff_trades',fmt(p.traded_with_villager))});
 
   const brk=Object.values(p.broken||{}).reduce((s,v)=>s+v,0);
-  if(brk>5)facts.push({score:brk/_maxOf(p=>Object.values(p.broken||{}).reduce((s,v)=>s+v,0)),emoji:'💥',text:t('ff_tools',brk)});
+  if(brk>5)facts.push({score:brk/_maxOf(p=>Object.values(p.broken||{}).reduce((s,v)=>s+v,0)),icon:mcIcon('anvil'),text:t('ff_tools',brk)});
 
-  if(p.mob_kills>100)facts.push({score:p.mob_kills/_maxOf(p=>p.mob_kills||0),emoji:'⚔',text:t('ff_mob_kills',fmt(p.mob_kills),Math.round(p.mob_kills/h))});
+  if(p.mob_kills>100)facts.push({score:p.mob_kills/_maxOf(p=>p.mob_kills||0),icon:mcIcon('diamond_sword'),text:t('ff_mob_kills',fmt(p.mob_kills),Math.round(p.mob_kills/h))});
 
-  if(p.animals_bred>20)facts.push({score:p.animals_bred/_maxOf(p=>p.animals_bred||0),emoji:'💕',text:t('ff_breeding',p.animals_bred)});
+  if(p.animals_bred>20)facts.push({score:p.animals_bred/_maxOf(p=>p.animals_bred||0),icon:mcIcon('egg'),text:t('ff_breeding',p.animals_bred)});
 
-  if(p.fish_caught>10)facts.push({score:p.fish_caught/_maxOf(p=>p.fish_caught||0),emoji:'🎣',text:t('ff_fishing',p.fish_caught)});
+  if(p.fish_caught>10)facts.push({score:p.fish_caught/_maxOf(p=>p.fish_caught||0),icon:mcIcon('fishing_rod'),text:t('ff_fishing',p.fish_caught)});
 
   const totalDist=p.total_distance_km;
-  if(totalDist>100)facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),emoji:'🌍',text:t('ff_total_dist',totalDist.toFixed(0),totalDist>1000?t('ff_equiv_long'):t('ff_equiv_short'))});
+  if(totalDist>100)facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),icon:mcIcon('compass'),text:t('ff_total_dist',totalDist.toFixed(0),totalDist>1000?t('ff_equiv_long'):t('ff_equiv_short'))});
 
   facts.sort((a,b)=>b.score-a.score);
   return facts.slice(0,5);
@@ -682,10 +750,10 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">⏱</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
-      <div class="card"><h3><span class="icon">🗺</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
-      <div class="card"><h3><span class="icon">⛏</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
-      <div class="card"><h3><span class="icon">⚔</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
     </div>
     <div class="card"><h3><span class="icon">📈</span> ${t('chart_multi')}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
@@ -760,8 +828,8 @@ function buildLeaderboards(){
   });
   h+=`</div>
     <div class="grid grid-2" style="margin-top:1rem">
-      <div class="card"><h3><span class="icon">💀</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
-      <div class="card"><h3><span class="icon">🚶</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
     </div></div>`;
   return h;
 }
@@ -792,77 +860,77 @@ function renderLeaderboardCharts(){
 const TIER_NAMES=['locked','bronze','silver','gold','diamond'];
 function tierLabel(i){return [t('tier_locked'),t('tier_bronze'),t('tier_silver'),t('tier_gold'),t('tier_diamond')][i]}
 const TIER_COLORS=['var(--text-muted)','#cd7f32','#c0c0c0','#ffd700','#b9f2ff'];
-const TIER_EMOJIS=['🥉','🥈','🥇','💎'];
+const TIER_EMOJIS=[mcIcon('copper_ingot'),mcIcon('iron_ingot'),mcIcon('gold_ingot'),mcIcon('diamond')];
 const BADGE_CATEGORIES=[
   {id:'mining'},{id:'combat'},{id:'survival'},{id:'exploration'},
   {id:'farming'},{id:'craft'},{id:'daily'},{id:'prestige'},
 ];
 const BADGES=[
-  {id:'mineur',name:'Mineur',icon:'⛏',cat:'mining',
+  {id:'mineur',name:'Mineur',icon:mcIcon('diamond_pickaxe'),cat:'mining',
    tiers:[1000,10000,50000,100000],val:p=>p.total_mined},
-  {id:'diamantaire',name:'Diamantaire',icon:'💎',cat:'mining',
+  {id:'diamantaire',name:'Diamantaire',icon:mcIcon('diamond'),cat:'mining',
    tiers:[10,50,150,300],val:p=>p.badge_data?.diamond_ore||0},
-  {id:'nether_mole',name:'Nether Mole',icon:'🕳',cat:'mining',
+  {id:'nether_mole',name:'Nether Mole',icon:mcIcon('netherrack'),cat:'mining',
    tiers:[1000,10000,20000,50000],val:p=>p.badge_data?.netherrack||0},
-  {id:'ancient_debris',name:'Débris Anciens',icon:'🟫',cat:'mining',
+  {id:'ancient_debris',name:'Débris Anciens',icon:mcIcon('ancient_debris'),cat:'mining',
    tiers:[5,20,50,100],val:p=>p.badge_data?.ancient_debris||0},
-  {id:'bucheron',name:'Bûcheron',icon:'🪓',cat:'mining',
+  {id:'bucheron',name:'Bûcheron',icon:mcIcon('diamond_axe'),cat:'mining',
    tiers:[100,500,2000,5000],val:p=>p.badge_data?.logs||0},
-  {id:'chasseur',name:'Chasseur',icon:'⚔',cat:'combat',
+  {id:'chasseur',name:'Chasseur',icon:mcIcon('diamond_sword'),cat:'combat',
    tiers:[100,1000,10000,50000],val:p=>p.mob_kills},
-  {id:'ender_slayer',name:'Ender Slayer',icon:'👁',cat:'combat',
+  {id:'ender_slayer',name:'Ender Slayer',icon:mcIcon('ender_pearl'),cat:'combat',
    tiers:[100,1000,10000,40000],val:p=>p.badge_data?.enderman||0},
-  {id:'nether_warrior',name:'Nether Warrior',icon:'🔥',cat:'combat',
+  {id:'nether_warrior',name:'Nether Warrior',icon:mcIcon('blaze_rod'),cat:'combat',
    tiers:[50,200,500,1000],val:p=>(p.badge_data?.wither_skeleton||0)+(p.badge_data?.blaze||0)},
-  {id:'berserker',name:'Berserker',icon:'💥',cat:'combat',
+  {id:'berserker',name:'Berserker',icon:mcIcon('netherite_sword'),cat:'combat',
    tiers:[1000,10000,50000,100000],val:p=>Math.round(p.damage_dealt/20)},
-  {id:'pvp_champion',name:'PvP Champion',icon:'🗡',cat:'combat',
+  {id:'pvp_champion',name:'PvP Champion',icon:mcIcon('iron_sword'),cat:'combat',
    tiers:[1,5,15,30],val:p=>p.player_kills},
-  {id:'raid_master',name:'Raid Master',icon:'🏴',cat:'combat',
+  {id:'raid_master',name:'Raid Master',icon:mcIcon('crossbow'),cat:'combat',
    tiers:[10,50,100,200],val:p=>(p.badge_data?.pillager||0)+(p.badge_data?.vindicator||0)+(p.badge_data?.ravager||0)},
-  {id:'increvable',name:'Increvable',icon:'🛡',cat:'survival',
+  {id:'increvable',name:'Increvable',icon:mcIcon('shield'),cat:'survival',
    tiers:[2,5,10,20],val:p=>p.deaths>0?Math.round(p.play_hours/p.deaths*10)/10:(p.play_hours>=1?999:0)},
-  {id:'kamikaze',name:'Kamikaze',icon:'💀',cat:'survival',
+  {id:'kamikaze',name:'Kamikaze',icon:mcIcon('skeleton_skull'),cat:'survival',
    tiers:[10,30,75,150],val:p=>p.deaths},
-  {id:'bouclier_humain',name:'Bouclier Humain',icon:'🎯',cat:'survival',
+  {id:'bouclier_humain',name:'Bouclier Humain',icon:mcIcon('target'),cat:'survival',
    tiers:[5,15,30,50],val:p=>p.killed_by?.player||0},
-  {id:'punching_bag',name:'Punching Bag',icon:'🥊',cat:'survival',
+  {id:'punching_bag',name:'Punching Bag',icon:mcIcon('iron_chestplate'),cat:'survival',
    tiers:[500,2000,5000,10000],val:p=>Math.round(p.damage_taken/20)},
-  {id:'globe_trotter',name:'Globe-trotter',icon:'🌍',cat:'exploration',
+  {id:'globe_trotter',name:'Globe-trotter',icon:mcIcon('compass'),cat:'exploration',
    tiers:[50,200,500,1500],val:p=>p.total_distance_km},
-  {id:'marathonien',name:'Marathonien',icon:'🏃',cat:'exploration',
+  {id:'marathonien',name:'Marathonien',icon:mcIcon('leather_boots'),cat:'exploration',
    tiers:[42,100,200,500],val:p=>p.distances?.walk||0},
-  {id:'sprinter',name:'Sprinter',icon:'💨',cat:'exploration',
+  {id:'sprinter',name:'Sprinter',icon:mcIcon('feather'),cat:'exploration',
    tiers:[50,150,300,500],val:p=>p.distances?.sprint||0},
-  {id:'aviateur',name:'Aviateur',icon:'🪂',cat:'exploration',
+  {id:'aviateur',name:'Aviateur',icon:mcIcon('elytra'),cat:'exploration',
    tiers:[50,200,500,1000],val:p=>p.distances?.aviate||0},
-  {id:'marin',name:'Marin',icon:'⛵',cat:'exploration',
+  {id:'marin',name:'Marin',icon:mcIcon('oak_boat'),cat:'exploration',
    tiers:[1,5,10,20],val:p=>p.distances?.boat||0},
-  {id:'cavalier',name:'Cavalier',icon:'🐴',cat:'exploration',
+  {id:'cavalier',name:'Cavalier',icon:mcIcon('saddle'),cat:'exploration',
    tiers:[1,5,15,30],val:p=>p.distances?.horse||0},
-  {id:'fermier',name:'Fermier',icon:'🐄',cat:'farming',
+  {id:'fermier',name:'Fermier',icon:mcIcon('wheat_seeds'),cat:'farming',
    tiers:[10,50,200,1000],val:p=>p.animals_bred},
-  {id:'pecheur',name:'Pêcheur',icon:'🎣',cat:'farming',
+  {id:'pecheur',name:'Pêcheur',icon:mcIcon('fishing_rod'),cat:'farming',
    tiers:[5,25,75,150],val:p=>p.fish_caught},
-  {id:'commercant',name:'Commerçant',icon:'🤝',cat:'farming',
+  {id:'commercant',name:'Commerçant',icon:mcIcon('emerald'),cat:'farming',
    tiers:[50,200,1000,3000],val:p=>p.traded_with_villager},
-  {id:'recolte',name:'Récolte',icon:'🌾',cat:'farming',
+  {id:'recolte',name:'Récolte',icon:mcIcon('wheat'),cat:'farming',
    tiers:[100,500,2000,5000],val:p=>p.badge_data?.crops||0},
-  {id:'artisan',name:'Artisan',icon:'🔨',cat:'craft',
+  {id:'artisan',name:'Artisan',icon:mcIcon('crafting_table'),cat:'craft',
    tiers:[1000,10000,30000,80000],val:p=>p.total_crafted},
-  {id:'enchanteur',name:'Enchanteur',icon:'✨',cat:'craft',
+  {id:'enchanteur',name:'Enchanteur',icon:mcIcon('enchanted_book'),cat:'craft',
    tiers:[10,50,200,500],val:p=>p.enchant_item},
-  {id:'paperasse',name:'Paperasse',icon:'📜',cat:'craft',
+  {id:'paperasse',name:'Paperasse',icon:mcIcon('paper'),cat:'craft',
    tiers:[100,1000,5000,15000],val:p=>p.badge_data?.paper||0},
-  {id:'forgeron',name:'Forgeron',icon:'🔧',cat:'craft',
+  {id:'forgeron',name:'Forgeron',icon:mcIcon('anvil'),cat:'craft',
    tiers:[5,15,30,60],val:p=>p.badge_data?.total_broken||0},
-  {id:'rat_de_coffre',name:'Rat de coffre',icon:'📦',cat:'daily',
+  {id:'rat_de_coffre',name:'Rat de coffre',icon:mcIcon('chest'),cat:'daily',
    tiers:[100,1000,3000,5000],val:p=>p.open_chest},
-  {id:'dormeur',name:'Dormeur',icon:'🛏',cat:'daily',
+  {id:'dormeur',name:'Dormeur',icon:mcIcon('white_bed'),cat:'daily',
    tiers:[10,50,150,300],val:p=>p.sleep_in_bed},
-  {id:'kangourou',name:'Kangourou',icon:'🦘',cat:'daily',
+  {id:'kangourou',name:'Kangourou',icon:mcIcon('rabbit_foot'),cat:'daily',
    tiers:[5000,20000,50000,80000],val:p=>p.jumps},
-  {id:'no_life',name:'No-Life',icon:'🎮',cat:'prestige',
+  {id:'no_life',name:'No-Life',icon:mcIcon('clock'),cat:'prestige',
    tiers:[10,50,100,200],val:p=>p.play_hours},
 ];
 // Badge descriptions moved to T translations object
@@ -897,14 +965,14 @@ function computePlayerBadges(p){
   let arProg,arNext;
   if(arTier>=4){arProg=100;arNext=arT[3]}
   else{arNext=arT[arTier];const arPrev=arTier>0?arT[arTier-1]:0;arProg=arNext>arPrev?Math.min(100,Math.round((completeCats-arPrev)/(arNext-arPrev)*100)):0}
-  results.push({id:'all_rounder',name:'All-Rounder',icon:'🌟',cat:'prestige',tiers:arT,value:completeCats,tier:arTier,progress:arProg,nextTarget:arNext});
+  results.push({id:'all_rounder',name:'All-Rounder',icon:mcIcon('nether_star'),cat:'prestige',tiers:arT,value:completeCats,tier:arTier,progress:arProg,nextTarget:arNext});
   // Légende: badges with Gold+
   const goldCount=results.filter(r=>r.tier>=3).length;
   const lgT=[3,5,10,15],lgTier=getBadgeTier(goldCount,lgT);
   let lgProg,lgNext;
   if(lgTier>=4){lgProg=100;lgNext=lgT[3]}
   else{lgNext=lgT[lgTier];const lgPrev=lgTier>0?lgT[lgTier-1]:0;lgProg=lgNext>lgPrev?Math.min(100,Math.round((goldCount-lgPrev)/(lgNext-lgPrev)*100)):0}
-  results.push({id:'legende',name:'Légende',icon:'👑',cat:'prestige',tiers:lgT,value:goldCount,tier:lgTier,progress:lgProg,nextTarget:lgNext});
+  results.push({id:'legende',name:'Légende',icon:mcIcon('golden_apple'),cat:'prestige',tiers:lgT,value:goldCount,tier:lgTier,progress:lgProg,nextTarget:lgNext});
   return results;
 }
 
@@ -913,7 +981,7 @@ function buildBadgesHtml(name){
   const badges=computePlayerBadges(p);
   const unlocked=badges.filter(b=>b.tier>0).length;
   const total=badges.length;
-  let h=`<div class="card"><h3><span class="icon">🏅</span> ${t('badges_title')}</h3>`;
+  let h=`<div class="card"><h3><span class="icon">${mcIcon('nether_star')}</span> ${t('badges_title')}</h3>`;
   h+=`<div class="badges-counter-wrap"><span class="badges-counter"><b>${unlocked}</b> / ${total} ${t('badges_unlocked')}</span></div>`;
   BADGE_CATEGORIES.forEach(cat=>{
     const cb=badges.filter(b=>b.cat===cat.id);
@@ -975,7 +1043,7 @@ function buildPlayerSection(name){
   const pveDeaths=p.deaths-pvpDeaths;
   const arch=getArchetype(p);
   const funFacts=getFunFacts(name,p);
-  const funFactsHtml=funFacts.length?funFacts.map(f=>`<div class="fun-fact"><span class="emoji">${f.emoji}</span><span>${f.text}</span></div>`).join(''):'<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:.8rem">'+t('no_data')+'</div>';
+  const funFactsHtml=funFacts.length?funFacts.map(f=>`<div class="fun-fact">${f.icon}<span>${f.text}</span></div>`).join(''):'<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:.8rem">'+t('no_data')+'</div>';
 
   return `
   <div class="section" id="player-${name}">
@@ -996,7 +1064,7 @@ function buildPlayerSection(name){
     <div class="grid grid-4" style="margin-bottom:1rem">
       <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">⚔ ${pvpDeaths} ${t('pvp')} · 🧟 ${pveDeaths} ${t('pve')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--cyan)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
@@ -1006,27 +1074,27 @@ function buildPlayerSection(name){
       <div class="stat-tile"><div class="value" style="color:var(--pink)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">🕐</span> ${t('card_time_est')}</h3><div class="chart-wrap"><canvas id="chart-time-${name}"></canvas></div></div>
-      <div class="card"><h3><span class="icon">🚶</span> ${t('card_distances')}</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_time_est')}</h3><div class="chart-wrap"><canvas id="chart-time-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('leather_boots')}</span> ${t('card_distances')}</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">💀</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
+      <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
     <div class="card desktop-only">
-      <h3><span class="icon">⛏</span> ${t('card_treemap')}</h3>
+      <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_treemap')}</h3>
       ${buildTreemapHtml(Object.entries(p.mined_top15||{}))}
     </div>
     <div class="card mobile-only">
-      <h3><span class="icon">⛏</span> ${t('card_top15_mined')}</h3>
+      <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_top15_mined')}</h3>
       <ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">⚔</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>
-      <div class="card"><h3><span class="icon">🔨</span> ${t('card_top10_crafted')}</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--cyan)')}</ol></div>
+      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>
+      <div class="card"><h3><span class="icon">${mcIcon('crafting_table')}</span> ${t('card_top10_crafted')}</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--cyan)')}</ol></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">🔧</span> ${t('card_tools_broken')}</h3>${buildBrokenHtml(p.broken)}</div>
-      <div class="card"><h3><span class="icon">💡</span> ${t('card_fun_facts')}</h3><div class="fun-facts">${funFactsHtml}</div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('anvil')}</span> ${t('card_tools_broken')}</h3>${buildBrokenHtml(p.broken)}</div>
+      <div class="card"><h3><span class="icon">${mcIcon('torch')}</span> ${t('card_fun_facts')}</h3><div class="fun-facts">${funFactsHtml}</div></div>
     </div>
     ${buildBadgesHtml(name)}
   </div>`;

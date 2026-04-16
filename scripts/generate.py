@@ -260,12 +260,12 @@ a{{color:var(--accent-light);text-decoration:none}}
   display:flex;align-items:center;gap:.5rem;
 }}
 .card h3 .icon{{font-size:1.1rem}}
-img.mc-icon{{image-rendering:pixelated;vertical-align:middle;display:inline-block;width:18px;height:18px}}
-.card h3 img.mc-icon{{width:20px;height:20px}}
-.badge-icon img.mc-icon{{width:18px;height:18px}}
+img.mc-icon{{image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;vertical-align:middle;display:inline-block;width:16px;height:16px}}
+.card h3 img.mc-icon{{width:32px;height:32px}}
+.badge-icon img.mc-icon{{width:16px;height:16px}}
 .fun-fact img.mc-icon{{width:16px;height:16px;flex-shrink:0}}
-.archetype img.mc-icon{{width:14px;height:14px}}
-.nav button img.mc-icon{{width:14px;height:14px}}
+.archetype img.mc-icon{{width:16px;height:16px}}
+.nav button img.mc-icon{{width:16px;height:16px}}
 .grid{{display:grid;gap:1rem}}
 .grid-2{{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}}
 .grid-3{{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
@@ -426,7 +426,7 @@ img.mc-icon{{image-rendering:pixelated;vertical-align:middle;display:inline-bloc
 <body>
 <div class="app">
 <div class="header">
-  <h1><img class="mc-icon" style="width:2.4rem;height:2.4rem;margin-right:.3rem" src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/diamond_pickaxe.png" alt="pickaxe"> {title}</h1>
+  <h1><img class="mc-icon" style="width:48px;height:48px;margin-right:.3rem" src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/diamond_pickaxe.png" alt="pickaxe"> {title}</h1>
   <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
   <div class="sync-date" id="syncDate"></div>
@@ -462,9 +462,9 @@ const MC_ICONS={{
   netherite_sword:_MI+'netherite_sword.png',
   iron_sword:_MI+'iron_sword.png',
   iron_chestplate:_MI+'iron_chestplate.png',
-  shield:_MI+'shield.png',
+  shield:_MW+'Shield.png',
   bow:_MI+'bow.png',
-  crossbow:_MI+'crossbow.png',
+  crossbow:_MI+'crossbow_standby.png',
   elytra:_MI+'elytra.png',
   fishing_rod:_MI+'fishing_rod.png',
   diamond:_MI+'diamond.png',
@@ -475,8 +475,8 @@ const MC_ICONS={{
   golden_apple:_MI+'golden_apple.png',
   paper:_MI+'paper.png',
   saddle:_MI+'saddle.png',
-  clock:_MI+'clock.png',
-  compass:_MI+'compass.png',
+  clock:_MI+'clock_00.png',
+  compass:_MI+'compass_00.png',
   filled_map:_MI+'filled_map.png',
   enchanted_book:_MI+'enchanted_book.png',
   feather:_MI+'feather.png',
@@ -488,13 +488,13 @@ const MC_ICONS={{
   iron_ingot:_MI+'iron_ingot.png',
   copper_ingot:_MI+'copper_ingot.png',
   rotten_flesh:_MI+'rotten_flesh.png',
-  skeleton_skull:_MI+'skeleton_skull.png',
+  skeleton_skull:_MW+'Skeleton_Skull.png',
   totem_of_undying:_MI+'totem_of_undying.png',
   oak_boat:_MI+'oak_boat.png',
   egg:_MI+'egg.png',
-  torch:_MI+'torch.png',
+  torch:_MB+'torch.png',
   cod:_MI+'cod.png',
-  oak_sapling:_MI+'oak_sapling.png',
+  oak_sapling:_MB+'oak_sapling.png',
   oak_door:_MI+'oak_door.png',
   oak_planks:_MB+'oak_planks.png',
   netherrack:_MW+'Netherrack.png',
@@ -1375,7 +1375,7 @@ def main():
 
     data_dir = Path(args.data_dir)
     if not data_dir.exists():
-        print(f"❌ Le dossier {data_dir} n'existe pas.")
+        print(f"[ERR] Le dossier {data_dir} n'existe pas.")
         sys.exit(1)
 
     # Titre : argument ou nom du dossier parent formaté

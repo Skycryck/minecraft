@@ -33,7 +33,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 │   │   ├── data/            # Raw Minecraft stats JSON (UUID-named)
 │   │   ├── index.html       # Generated — DO NOT EDIT BY HAND
 │   │   └── .uuid_cache.json # Mojang UUID→name cache (auto-managed)
-│   └── serveur-confinement-2020/
+│   └── serveur-2020/
 │       ├── data/
 │       └── index.html
 └── .github/workflows/

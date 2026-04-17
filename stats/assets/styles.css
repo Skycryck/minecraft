@@ -70,7 +70,7 @@ a{color:var(--accent-light);text-decoration:none}
 }
 .nav-player-select option{background:var(--bg-card);color:var(--text)}
 @media(max-width:768px){
-  .nav-player-select{width:100%;max-width:none}
+  .nav-player-select{min-width:0;max-width:260px;flex:0 1 auto}
 }
 .card{
   background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
@@ -207,7 +207,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .badge-card.tier-diamond{border-color:#b9f2ff;box-shadow:0 0 10px rgba(185,242,255,.15)}
 .badge-header{display:flex;align-items:center;gap:.4rem}
 .badge-icon{font-size:1rem;flex-shrink:0}
-.badge-name{font-family:var(--font-mono);font-size:.7rem;font-weight:600;color:var(--text);flex:1;line-height:1.2}
+.badge-name{font-family:var(--font-mono);font-size:.7rem;font-weight:600;color:var(--text);flex:1;line-height:1.2;min-width:0}
 .badge-tier{
   font-size:.55rem;font-family:var(--font-mono);padding:.1rem .35rem;border-radius:8px;white-space:nowrap;font-weight:600;
 }
@@ -220,8 +220,10 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .badge-progress-fill{height:100%;border-radius:2px;transition:width .6s ease}
 .badge-progress-text{
   font-family:var(--font-mono);font-size:.58rem;color:var(--text-muted);
-  display:flex;justify-content:space-between;
+  display:flex;justify-content:space-between;align-items:center;gap:.4rem;
+  margin:.35rem 0;
 }
+.badge-progress-text .bpt-vals{white-space:nowrap}
 .badge-tooltip{
   display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
   background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-sm);

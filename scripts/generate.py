@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-generate.py — Minecraft Stats Dashboard Generator
+generate.py — Tickstats Dashboard Generator
 ===================================================
-Lit les fichiers JSON de stats Minecraft dans un dossier,
-résout les UUIDs en pseudos via l'API Mojang,
-et génère un fichier index.html complet avec le dashboard.
+Reads Minecraft stats JSON files from a directory,
+resolves UUIDs to usernames via the Mojang API,
+and generates a complete index.html dashboard.
 
 Usage:
-    python generate.py <chemin_dossier_data> [--title "Titre du serveur"]
+    python generate.py <data_dir_path> [--title "Server title"]
 
-Exemple:
-    python generate.py stats/<server-name>/data --title "Nom du serveur"
+Example:
+    python generate.py stats/<server-name>/data --title "Server name"
 
-Le fichier index.html est créé dans le dossier parent de <chemin_dossier_data>.
-Ex: stats/<server-name>/data → stats/<server-name>/index.html
+The index.html file is created in the parent directory of <data_dir_path>.
+e.g. stats/<server-name>/data → stats/<server-name>/index.html
 """
 
 import json
@@ -31,11 +31,11 @@ from minecraft.badges import compute_player_badges
 
 
 # ═══════════════════════════════════════════════════════════
-# 1. RÉSOLUTION UUID → PSEUDO (Mojang API)
+# 1. UUID → USERNAME RESOLUTION (Mojang API)
 # ═══════════════════════════════════════════════════════════
 
 def resolve_uuid(uuid: str) -> str:
-    """Résout un UUID Minecraft en pseudo via l'API Mojang."""
+    """Resolve a Minecraft UUID to a username via the Mojang API."""
     clean = uuid.replace("-", "")
     url = f"https://sessionserver.mojang.com/session/minecraft/profile/{clean}"
     try:
@@ -43,14 +43,14 @@ def resolve_uuid(uuid: str) -> str:
         data = json.loads(req.read())
         return data.get("name", uuid[:8])
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError) as e:
-        print(f"  [!] Impossible de resoudre {uuid}: {e}")
+        print(f"  [!] Could not resolve {uuid}: {e}")
         return uuid[:8]
 
 
 def resolve_all_uuids(uuids: list[str], cache_path: Path | None = None) -> dict[str, str]:
     """
-    Résout une liste d'UUIDs, avec cache local pour éviter
-    de re-requêter l'API à chaque exécution.
+    Resolve a list of UUIDs, using a local cache to avoid
+    re-hitting the API on every run.
     """
     cache = {}
     if cache_path and cache_path.exists():
@@ -67,7 +67,7 @@ def resolve_all_uuids(uuids: list[str], cache_path: Path | None = None) -> dict[
             result[uuid] = name
             cache[uuid] = name
             print(f"  + {uuid} -> {name} (API)")
-            time.sleep(0.5)  # Rate limiting Mojang
+            time.sleep(0.5)  # Mojang rate limiting
 
     if cache_path:
         with open(cache_path, "w") as f:
@@ -77,7 +77,7 @@ def resolve_all_uuids(uuids: list[str], cache_path: Path | None = None) -> dict[
 
 
 # ═══════════════════════════════════════════════════════════
-# 2. EXTRACTION & NORMALISATION DES STATS
+# 2. STATS EXTRACTION & NORMALIZATION
 # ═══════════════════════════════════════════════════════════
 
 def clean_key(k: str) -> str:
@@ -92,14 +92,14 @@ def clean_dict(d: dict, top_n: int | None = None) -> dict:
 
 
 def process_player(uuid: str, name: str, filepath: str) -> dict:
-    """Extrait et normalise toutes les stats d'un joueur."""
+    """Extract and normalize all stats for a player."""
     with open(filepath) as f:
         data = json.load(f)
 
     stats = data.get("stats", {})
     custom = stats.get("minecraft:custom", {})
 
-    # Temps de jeu : play_time (1.17+) ou play_one_minute (legacy)
+    # Play time: play_time (1.17+) or play_one_minute (legacy)
     play_ticks = custom.get("minecraft:play_time",
                             custom.get("minecraft:play_one_minute", 0))
 
@@ -179,11 +179,11 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════
-# 3. GÉNÉRATION HTML
+# 3. HTML GENERATION
 # ═══════════════════════════════════════════════════════════
 
 def generate_html(players_data: dict, title: str) -> str:
-    """Génère le fichier HTML complet du dashboard."""
+    """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
@@ -226,85 +226,85 @@ window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Génère un dashboard HTML à partir des fichiers de stats Minecraft."
+        description="Generate an HTML dashboard from Minecraft stats JSON files."
     )
     parser.add_argument(
         "data_dir",
-        help="Chemin vers le dossier contenant les fichiers JSON de stats (ex: stats/<server-name>/data)"
+        help="Path to the directory containing the stats JSON files (e.g. stats/<server-name>/data)"
     )
     parser.add_argument(
         "--title", "-t",
         default=None,
-        help="Titre du serveur affiché dans le dashboard (défaut: nom du dossier parent)"
+        help="Server title displayed in the dashboard (default: parent directory name)"
     )
     parser.add_argument(
         "--output", "-o",
         default=None,
-        help="Chemin du fichier HTML de sortie (défaut: <dossier_parent>/index.html)"
+        help="Output HTML file path (default: <parent_dir>/index.html)"
     )
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)
     if not data_dir.exists():
-        print(f"[ERR] Le dossier {data_dir} n'existe pas.")
+        print(f"[ERR] Directory {data_dir} does not exist.")
         sys.exit(1)
 
-    # Titre : argument ou nom du dossier parent formaté
+    # Title: from argument or formatted parent directory name
     if args.title:
         title = args.title
     else:
         parent_name = data_dir.parent.name
         title = parent_name.replace("-", " ").replace("_", " ").title()
 
-    # Fichier de sortie
+    # Output file
     if args.output:
         output_path = Path(args.output)
     else:
         output_path = data_dir.parent / "index.html"
 
-    # Cache des UUIDs (persiste entre les exécutions)
+    # UUID cache (persists across runs)
     cache_path = data_dir.parent / ".uuid_cache.json"
 
-    print(f"[MC] Generation du dashboard : {title}")
-    print(f"[IN] Dossier data : {data_dir}")
-    print(f"[OUT] Sortie : {output_path}")
+    print(f"[MC] Generating dashboard: {title}")
+    print(f"[IN] Data directory: {data_dir}")
+    print(f"[OUT] Output: {output_path}")
     print()
 
-    # Trouver les fichiers JSON
+    # Find JSON files
     json_files = sorted(data_dir.glob("*.json"))
     if not json_files:
-        print("[ERR] Aucun fichier JSON trouve dans le dossier.")
+        print("[ERR] No JSON file found in the directory.")
         sys.exit(1)
 
-    print(f"[DATA] {len(json_files)} fichier(s) de stats trouve(s)")
+    print(f"[DATA] {len(json_files)} stats file(s) found")
 
-    # Extraire les UUIDs
+    # Extract UUIDs
     uuids = [f.stem for f in json_files]
 
-    # Résoudre les pseudos
-    print("\n[UUID] Resolution des pseudos Mojang...")
+    # Resolve usernames
+    print("\n[UUID] Resolving Mojang usernames...")
     uuid_to_name = resolve_all_uuids(uuids, cache_path)
 
-    # Traiter les stats
-    print("\n[STATS] Traitement des statistiques...")
+    # Process stats
+    print("\n[STATS] Processing statistics...")
     players_data = {}
     for json_file in json_files:
         uuid = json_file.stem
         name = uuid_to_name[uuid]
         player = process_player(uuid, name, str(json_file))
         players_data[name] = player
-        print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocs, {player['mob_kills']} kills")
+        print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocks, {player['mob_kills']} kills")
 
-    # Générer le HTML
-    print(f"\n[HTML] Generation du HTML...")
+    # Generate HTML
+    print(f"\n[HTML] Generating HTML...")
     html = generate_html(players_data, title)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)
 
-    print(f"[OK] Dashboard genere : {output_path} ({len(html):,} octets)")
-    print(f"   {len(players_data)} joueurs - {sum(p['play_hours'] for p in players_data.values()):.0f}h de jeu total")
+    print(f"[OK] Dashboard generated: {output_path} ({len(html):,} bytes)")
+    print(f"   {len(players_data)} players - {sum(p['play_hours'] for p in players_data.values()):.0f}h total playtime")
 
 
 if __name__ == "__main__":

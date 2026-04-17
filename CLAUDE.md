@@ -1,6 +1,6 @@
-# Minecraft Stats Dashboard
+# Tickstats
 
-Static HTML dashboards generated from Minecraft server stats JSON files, deployed via GitHub Pages.
+Static Minecraft stats dashboards generated from Minecraft server stats JSON files, deployed via GitHub Pages.
 
 ## Commands
 

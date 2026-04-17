@@ -1,34 +1,34 @@
 <#
 .SYNOPSIS
-    Reconstruit la branche locale "public-main" depuis "main" en retirant
-    les donnees perso (serveurs, plans de dev, script de sync local), puis
-    indique comment pousser vers le remote public.
+    Rebuild the local "public-main" branch from "main" with personal data
+    (servers, dev plans, local sync script) stripped out, then show how to
+    push to the public remote.
 
 .DESCRIPTION
-    Chaque appel produit un nouveau commit sur public-main dont l'arbre =
-    arbre de main moins les chemins listes dans -Exclude. L'historique de
-    public-main est donc une chaine lineaire de snapshots "mirror from main"
-    - pas d'historique des donnees perso ne fuite vers le depot public.
+    Each call produces a new commit on public-main whose tree =
+    main's tree minus the paths listed in -Exclude. public-main's history
+    is therefore a linear chain of "mirror from main" snapshots -
+    no history of personal data ever leaks to the public repo.
 
-    Si la branche public-main n'existe pas, elle est creee comme orpheline
-    (zero historique partage avec main).
+    If the public-main branch does not exist, it is created as an orphan
+    (zero shared history with main).
 
 .USAGE
     .\scripts\mirror-to-public.ps1
     .\scripts\mirror-to-public.ps1 -Push            # mirror + git push public
-    .\scripts\mirror-to-public.ps1 -Exclude @("stats/mon-serveur", "PLAN.md")
+    .\scripts\mirror-to-public.ps1 -Exclude @("stats/my-server", "PLAN.md")
 
 .PARAMETER SourceBranch
-    Branche source (defaut: main).
+    Source branch (default: main).
 
 .PARAMETER TargetBranch
-    Branche locale a (re)construire (defaut: public-main).
+    Local branch to (re)build (default: public-main).
 
 .PARAMETER Exclude
-    Chemins (fichiers ou dossiers) a retirer du mirror, relatifs a la racine.
+    Paths (files or folders) to strip from the mirror, relative to repo root.
 
 .PARAMETER Push
-    Si present, pousse TargetBranch vers le remote "public" en tant que main.
+    If set, pushes TargetBranch to the "public" remote as main.
 #>
 param(
     [string]$SourceBranch = "main",
@@ -42,32 +42,32 @@ param(
     [switch]$Push
 )
 
-# -- Verifications --
+# -- Checks --
 $inRepo = git rev-parse --show-toplevel 2>$null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Pas dans un repo git." -ForegroundColor Red
+    Write-Host "Not in a git repo." -ForegroundColor Red
     exit 1
 }
 Set-Location $inRepo
 
 if (git status --porcelain) {
-    Write-Host "Worktree non propre. Commit ou stash d'abord." -ForegroundColor Red
+    Write-Host "Worktree not clean. Commit or stash first." -ForegroundColor Red
     exit 1
 }
 
 $current = git rev-parse --abbrev-ref HEAD
 $sourceSha = git rev-parse --short $SourceBranch
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Branche source introuvable : $SourceBranch" -ForegroundColor Red
+    Write-Host "Source branch not found: $SourceBranch" -ForegroundColor Red
     exit 1
 }
 
-# -- Bascule sur TargetBranch (cree comme orpheline si absente) --
+# -- Switch to TargetBranch (created as orphan if missing) --
 git show-ref --verify --quiet "refs/heads/$TargetBranch"
 $targetExists = ($LASTEXITCODE -eq 0)
 
 if (-not $targetExists) {
-    Write-Host "Creation de la branche orpheline $TargetBranch..." -ForegroundColor Cyan
+    Write-Host "Creating orphan branch $TargetBranch..." -ForegroundColor Cyan
     git checkout --orphan $TargetBranch
     git rm -rf . 2>$null | Out-Null
     git commit --allow-empty -m "init public-main" | Out-Null
@@ -75,42 +75,42 @@ if (-not $targetExists) {
     git checkout $TargetBranch
 }
 
-# -- Efface le contenu puis recopie depuis SourceBranch --
-Write-Host "Recopie de l'arbre depuis $SourceBranch ($sourceSha)..." -ForegroundColor Cyan
+# -- Wipe contents then recopy from SourceBranch --
+Write-Host "Recopying tree from $SourceBranch ($sourceSha)..." -ForegroundColor Cyan
 git rm -rf . 2>$null | Out-Null
 git checkout $SourceBranch -- .
 
-# -- Retrait des chemins exclus --
+# -- Strip excluded paths --
 foreach ($p in $Exclude) {
     if (Test-Path $p) {
-        Write-Host "  exclu: $p" -ForegroundColor Yellow
+        Write-Host "  excluded: $p" -ForegroundColor Yellow
         git rm -rf $p | Out-Null
     }
 }
 
-# -- Commit si diff --
+# -- Commit if diff --
 git add -A
 if (git diff --staged --quiet) {
-    Write-Host "Aucun changement par rapport au mirror precedent." -ForegroundColor Yellow
+    Write-Host "No changes since the previous mirror." -ForegroundColor Yellow
 } else {
     git commit -m "mirror from $SourceBranch @ $sourceSha" | Out-Null
-    Write-Host "public-main mis a jour." -ForegroundColor Green
+    Write-Host "public-main updated." -ForegroundColor Green
 }
 
-# -- Retour branche initiale --
+# -- Back to initial branch --
 git checkout $current | Out-Null
 
-# -- Push optionnel --
+# -- Optional push --
 if ($Push) {
-    Write-Host "Push vers remote 'public' (${TargetBranch}:main)..." -ForegroundColor Cyan
+    Write-Host "Push to 'public' remote (${TargetBranch}:main)..." -ForegroundColor Cyan
     git push public "${TargetBranch}:main"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "Push echoue. Remote 'public' configure ? " -ForegroundColor Red
+        Write-Host "Push failed. Is the 'public' remote configured?" -ForegroundColor Red
         Write-Host "  git remote add public git@github.com:<user>/<repo-public>.git" -ForegroundColor Yellow
         exit 1
     }
 } else {
     Write-Host ""
-    Write-Host "Pour pousser vers le depot public :" -ForegroundColor Cyan
+    Write-Host "To push to the public repo:" -ForegroundColor Cyan
     Write-Host "  git push public ${TargetBranch}:main" -ForegroundColor White
 }

@@ -1,92 +1,102 @@
 # Minecraft Stats Dashboard
 
-Dashboard web interactif qui transforme les fichiers de statistiques bruts d'un serveur Minecraft en tableaux de bord visuels, déployés automatiquement via GitHub Pages.
+Interactive web dashboard that turns raw Minecraft server stats files into visual dashboards, deployed automatically via GitHub Pages.
 
-## Fonctionnalités
+## Features
 
-- **Profils joueurs** — Heures de jeu, morts, mobs tués, blocs minés, distances parcourues, objets craftés, avec détection automatique d'archétype (Mineur, Combattant, Explorateur, Bâtisseur, Fermier)
-- **Système de badges** — 32 badges répartis en 4 paliers (Bronze → Argent → Or → Diamant), avec tooltips de progression au survol
-- **Visualisations interactives** — Graphiques Chart.js : répartition du temps de jeu, distances par mode de déplacement, blocs minés, mobs tués, estimation du temps passé par activité
-- **Leaderboards** — Classements sur 15+ métriques
-- **Fun facts** — Faits amusants générés automatiquement pour chaque joueur
-- **Pipeline automatisé** — Push de données JSON → GitHub Actions régénère le HTML → déploiement GitHub Pages
+- **Player profiles** — Playtime, deaths, mobs killed, blocks mined, distances traveled, items crafted, with automatic archetype detection (Miner, Fighter, Explorer, Builder, Farmer)
+- **Badge system** — 32 badges across 4 tiers (Bronze → Silver → Gold → Diamond), with progression tooltips on hover
+- **Interactive visualizations** — Chart.js charts: playtime breakdown, distances by travel mode, blocks mined, mobs killed, estimated time spent per activity
+- **Leaderboards** — Rankings across 15+ metrics
+- **Fun facts** — Fun facts automatically generated for each player
+- **Automated pipeline** — Push JSON data → GitHub Actions regenerates the HTML → deployed to GitHub Pages
 
-## Stack technique
+## Tech stack
 
-| Composant | Technologie |
+| Component | Technology |
 |---|---|
-| Génération | Python 3.12+ (stdlib uniquement) |
-| Frontend | HTML5 / CSS3 / JavaScript vanilla (ES6+) |
-| Graphiques | Chart.js 4.4.1 |
-| Polices | JetBrains Mono, Space Grotesk |
+| Generation | Python 3.12+ (stdlib only) |
+| Frontend | HTML5 / CSS3 / vanilla JavaScript (ES6+) |
+| Charts | Chart.js 4.4.1 |
+| Fonts | JetBrains Mono, Space Grotesk |
 | CI/CD | GitHub Actions |
-| Hébergement | GitHub Pages |
-| Sync locale | PowerShell |
+| Hosting | GitHub Pages |
+| Local sync | PowerShell |
 
-## Structure du projet
+## Project structure
 
 ```
 ├── scripts/
-│   ├── generate.py          # Générateur principal (JSON → HTML)
-│   └── sync-stats.ps1       # Script de synchronisation Windows
+│   ├── generate.py          # Main generator (JSON → HTML)
+│   ├── minecraft/
+│   │   └── badges.py        # Badge definitions + per-player tier computation
+│   ├── build_icons.py       # Pre-renders local Minecraft icon PNGs (stdlib only)
+│   └── sync-stats.ps1       # Windows sync script
 ├── stats/
+│   ├── assets/
+│   │   ├── icons/           # Pre-rendered 256×256 Minecraft icon PNGs (committed)
+│   │   ├── styles.css       # Shared dashboard stylesheet
+│   │   └── app.js           # Shared dashboard runtime
 │   ├── serveur-2026/
-│   │   ├── data/            # Fichiers JSON bruts (stats Minecraft)
-│   │   ├── index.html       # Dashboard généré automatiquement
-│   │   └── .uuid_cache.json # Cache UUID → pseudo Mojang
+│   │   ├── data/            # Raw JSON files (Minecraft stats)
+│   │   ├── index.html       # Automatically generated dashboard
+│   │   └── .uuid_cache.json # UUID → Mojang username cache
 │   └── serveur-2020/
 │       ├── data/
-│       ├── index.html
-│       └── .uuid_cache.json
+│       └── index.html
 └── .github/workflows/
-    ├── update-stats.yml     # Régénère le dashboard à chaque changement
-    └── static.yml           # Déploie sur GitHub Pages
+    ├── update-stats.yml     # Regenerates the dashboard on every change
+    └── static.yml           # Deploys to GitHub Pages
 ```
 
-## Utilisation
+## Usage
 
-### Prérequis
+### Requirements
 
 - Python 3.12+
 - Git
 
-### Générer un dashboard localement
+### Generate a dashboard locally
 
 ```bash
 python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"
 ```
 
-Le fichier `stats/serveur-2026/index.html` est généré automatiquement.
+The file `stats/serveur-2026/index.html` is generated automatically.
 
-### Synchroniser les stats depuis un serveur (Windows)
+### Sync stats from a server (Windows)
 
 ```powershell
 .\scripts\sync-stats.ps1
 ```
 
-Ce script copie les fichiers JSON modifiés depuis Crafty Controller, commit et push vers GitHub.
+This script copies modified JSON files from Crafty Controller, commits and pushes to GitHub.
 
-### Pipeline CI/CD
+### CI/CD pipeline
 
-1. `sync-stats.ps1` copie les JSON et push sur GitHub
-2. GitHub Actions (`update-stats.yml`) détecte les changements dans `stats/*/data/`
-3. `generate.py` régénère les fichiers `index.html`
-4. GitHub Actions (`static.yml`) déploie sur GitHub Pages
+1. `sync-stats.ps1` copies the JSON files and pushes to GitHub
+2. GitHub Actions (`update-stats.yml`) detects changes in `stats/*/data/`
+3. `generate.py` regenerates the `index.html` files
+4. GitHub Actions (`static.yml`) deploys to GitHub Pages
 
-## Détails techniques
+## Technical details
 
-### Résolution UUID
+### UUID resolution
 
-Les UUID Minecraft sont convertis en pseudos via l'API Mojang Session Server, avec un cache local (`.uuid_cache.json`) pour éviter le rate-limiting.
+Minecraft UUIDs are resolved to usernames via the Mojang Session Server API, with a local cache (`.uuid_cache.json`) to avoid rate-limiting.
 
-### Conversion des unités
+### Unit conversion
 
-| Unité Minecraft | Conversion |
+| Minecraft unit | Conversion |
 |---|---|
-| `play_one_minute` (ticks) | ÷ 72 000 → heures |
-| `*_one_cm` (distances) | ÷ 100 000 → km |
-| `damage_*` | ÷ 20 → cœurs |
+| `play_one_minute` (ticks) | ÷ 72,000 → hours |
+| `*_one_cm` (distances) | ÷ 100,000 → km |
+| `damage_*` | ÷ 20 → hearts |
 
 ### Badges
 
-Les 32 badges couvrent 8 catégories : Minage, Combat, Survie, Exploration, Agriculture, Artisanat, Vie quotidienne et Prestige. Chaque badge possède 4 seuils progressifs avec indicateur visuel de progression.
+The 32 badges span 8 categories: Mining, Combat, Survival, Exploration, Farming, Crafting, Daily life, and Prestige. Each badge has 4 progressive thresholds with a visual progression indicator. Thresholds and tiers are computed in `scripts/minecraft/badges.py`; `app.js` is a pure renderer.
+
+### Shared frontend assets
+
+`stats/assets/styles.css` and `stats/assets/app.js` are shared across every server dashboard — `generate.py` only emits a small HTML shell that injects `window.PLAYERS_DATA` and loads these static files. Minecraft icons under `stats/assets/icons/` are pre-rendered locally (via `scripts/build_icons.py`) and committed to the repo so the dashboard is self-contained.

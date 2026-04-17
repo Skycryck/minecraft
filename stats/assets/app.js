@@ -73,6 +73,7 @@ playtime:'Temps de jeu',kd_ratio:'K/D ratio',traveled:'Parcourus',per_hour:'/h',
 deaths:'Morts',enchantments:'Enchantements',chests_opened:'Coffres ouverts',
 fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
 card_distances:'Distances parcourues',
+travel_time_sub:(h,pct)=>`≈ ${h}h en déplacement · ${pct}% du temps de jeu`,
 card_killed_by:'Tué par',card_treemap:'Blocs minés — Treemap',
 card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
 card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
@@ -156,6 +157,7 @@ playtime:'Playtime',traveled:'Traveled',
 deaths:'Deaths',enchantments:'Enchantments',chests_opened:'Chests opened',
 fish_caught:'Fish caught',npc_trades:'NPC trades',
 card_distances:'Distances traveled',
+travel_time_sub:(h,pct)=>`≈ ${h}h traveling · ${pct}% of playtime`,
 card_killed_by:'Killed by',card_treemap:'Blocks mined — Treemap',
 card_top15_mined:'Top 15 blocks mined',card_top10_killed:'Top 10 mobs killed',
 card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',
@@ -322,6 +324,25 @@ function buildBrokenHtml(broken){
   return `<div class="broken-grid">${entries.map(([k,v])=>
     `<span class="broken-tag">${label(k)} <span class="bt-count">×${v}</span></span>`
   ).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════
+// TRAVEL TIME
+// ═══════════════════════════════════════
+// Vanilla Minecraft movement speeds (m/s). Accurate to ~±10% for most
+// modes; elytra cruise speed varies strongly with pitch (~±30%).
+const TRAVEL_SPEEDS={walk:4.317,sprint:5.612,swim:2.2,fly:10.89,aviate:33,boat:8,horse:9.9,minecart:8,climb:2.35,crouch:1.295,fall:20,walk_on_water:4.317,walk_under_water:2.2};
+function travelSeconds(mode,km){return (km*1000)/(TRAVEL_SPEEDS[mode]||4.317)}
+function totalTravelHours(distances){
+  let s=0;
+  Object.entries(distances||{}).forEach(([m,km])=>{s+=travelSeconds(m,km)});
+  return s/3600;
+}
+function fmtDuration(sec){
+  if(sec<60)return Math.round(sec)+' s';
+  if(sec<3600)return Math.round(sec/60)+' min';
+  const h=Math.floor(sec/3600),m=Math.round((sec%3600)/60);
+  return m===0?h+' h':h+'h'+String(m).padStart(2,'0');
 }
 
 // ═══════════════════════════════════════
@@ -648,7 +669,7 @@ function buildPlayerSection(name){
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('leather_boots')}</span> ${t('card_distances')}</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('leather_boots')}</span> ${t('card_distances')}</h3><div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem">${t('travel_time_sub',totalTravelHours(p.distances).toFixed(1),p.play_hours>0?Math.round(totalTravelHours(p.distances)/p.play_hours*100):0)}</div><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
@@ -687,7 +708,7 @@ function renderPlayerCharts(name){
       labels:de.map(d=>label(d[0])),datasets:[{data:de.map(d=>d[1]),
         backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}]
     },options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toFixed(2)+' km'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const mode=de[ctx.dataIndex][0];const km=ctx.parsed.x;return ` ${km.toFixed(2)} km — ~${fmtDuration(travelSeconds(mode,km))}`}}}},
       scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}});
   }
 }

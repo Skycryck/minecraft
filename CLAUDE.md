@@ -25,10 +25,15 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 ```
 ├── scripts/
 │   ├── generate.py          # Main generator: JSON → HTML dashboard
+│   ├── minecraft/
+│   │   └── badges.py        # Badge definitions + per-player tier computation
 │   ├── build_icons.py       # Pre-renders Minecraft icon PNGs (stdlib only)
 │   └── sync-stats.ps1       # Windows: copy stats from Crafty + git push
 ├── stats/
-│   ├── assets/icons/        # Pre-rendered 256×256 Minecraft icon PNGs (committed)
+│   ├── assets/
+│   │   ├── icons/           # Pre-rendered 256×256 Minecraft icon PNGs (committed)
+│   │   ├── styles.css       # Dashboard stylesheet (shared across servers)
+│   │   └── app.js           # Dashboard runtime (shared across servers)
 │   ├── serveur-2026/
 │   │   ├── data/            # Raw Minecraft stats JSON (UUID-named)
 │   │   ├── index.html       # Generated — DO NOT EDIT BY HAND
@@ -44,8 +49,8 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 ### generate.py internals
 
 1. **UUID resolution** — Mojang API with local `.uuid_cache.json` to avoid rate limits (0.5s delay between calls)
-2. **Stats extraction** — `process_player()` normalizes Minecraft JSON: ticks→hours, cm→km, strips `minecraft:` prefixes
-3. **HTML generation** — Single f-string template with embedded CSS/JS/data. Uses `{{` `}}` for literal JS braces.
+2. **Stats extraction** — `process_player()` normalizes Minecraft JSON: ticks→hours, cm→km, strips `minecraft:` prefixes, then calls `compute_player_badges()` and attaches the result under the `badges` key
+3. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` then loads `../assets/styles.css` and `../assets/app.js`. CSS/JS are not embedded — they ship as static files under `stats/assets/`.
 
 ### build_icons.py internals
 
@@ -64,19 +69,26 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 
 `update-stats.yml` commits regenerated HTML → but `github-actions[bot]` commits don't trigger other workflows → `static.yml` uses `workflow_run` trigger to redeploy after stats update.
 
+### badges.py internals
+
+- `BADGES` list — each entry declares `{id, name, icon, cat, tiers: [{label, min}], value: callable(player)}`. Meta-badges (`all_rounder`, `legende`) are computed after the standard pass using already-assigned tiers.
+- `compute_player_badges(player)` returns the list embedded in each player dict under `badges` (icon stored as a name like `diamond_pickaxe`, not rendered HTML).
+- `app.js` is a dumb renderer — `buildBadgesHtml` reads `p.badges` directly and calls `mcIcon(b.icon)`. No badge thresholds or tier logic live in JS.
+
 ## Code style
 
 ### generate.py template (the f-string)
 
-- All JS/CSS braces must be **doubled**: `{{` `}}` — single braces are Python f-string interpolation
-- Python values injected via `{variable}` inside the f-string
-- Template is one giant `return f'''...'''` in `generate_html()`
+- `generate_html()` only holds the HTML shell + data injection — keep it short. Real markup is built by `app.js` from `window.PLAYERS_DATA`.
+- The two injected values are `{data_json}` (compact JSON of all players) and the sync-date strings. Any literal `{` / `}` in the shell still need doubling (e.g. the `window.SYNC` object literal).
+- Do **not** reintroduce inline CSS/JS here — edit `stats/assets/styles.css` and `stats/assets/app.js` instead (no escaping needed, full syntax highlighting, lintable).
 
 ### Dashboard language conventions
 
 - **French** for all UI: titles, section headers, labels, navigation, stat tile names, distance types (Marche, Sprint, Elytra)
 - **English** for Minecraft entity names: blocks, items, mobs. Formatted automatically from snake_case → Title Case via JS `label()` function
 - The `LABELS` dict in JS only contains French overrides for distance types. Everything else falls through to auto-formatting.
+- **i18n dict (`T` in app.js)** — `T.fr` is the complete source of truth; `T.en` only holds overrides. Lookups use `T[lang]?.[k] ?? T.fr[k]`, so any missing EN key silently falls back to French. When adding a new UI string, add it to `T.fr`; only add a matching `T.en` entry if it needs a non-French value.
 
 ### Stats units
 

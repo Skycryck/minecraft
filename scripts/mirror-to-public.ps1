@@ -37,6 +37,7 @@ param(
         "stats/serveur-2026",
         "stats/serveur-2020",
         "scripts/sync-stats.ps1",
+        "scripts/mirror-to-public.ps1",
         "PLAN.md"
     ),
     [switch]$Push

@@ -5,10 +5,12 @@ Interactive web dashboard that turns raw Minecraft server stats files into visua
 ## Features
 
 - **Player profiles** — Playtime, deaths, mobs killed, blocks mined, distances traveled, items crafted, with automatic archetype detection (Miner, Fighter, Explorer, Builder, Farmer)
-- **Badge system** — 32 badges across 4 tiers (Bronze → Silver → Gold → Diamond), with progression tooltips on hover
-- **Interactive visualizations** — Chart.js charts: playtime breakdown, distances by travel mode, blocks mined, mobs killed, estimated time spent per activity
-- **Leaderboards** — Rankings across 15+ metrics
+- **Badge system** — 33 badges + 2 meta badges across 4 tiers (Bronze → Silver → Gold → Diamond), with progression tooltips on hover
+- **Interactive visualizations** — Chart.js charts: playtime breakdown, distances by travel mode, blocks mined, mobs killed, deaths aggregate, radar comparison
+- **Leaderboards** — 12 rankings grouped around activity categories
 - **Fun facts** — Fun facts automatically generated for each player
+- **Deep-linkable views** — Player selector with hash routing (`#player/<name>`), shareable URLs
+- **Historical snapshots** — Daily archive of raw JSON under `stats/<server>/snapshots/YYYY-MM-DD/`, ready for future time-series visualizations
 - **Automated pipeline** — Push JSON data → GitHub Actions regenerates the HTML → deployed to GitHub Pages
 
 ## Tech stack
@@ -39,6 +41,7 @@ Interactive web dashboard that turns raw Minecraft server stats files into visua
 │   │   └── app.js           # Shared dashboard runtime
 │   └── <server-name>/
 │       ├── data/            # Raw JSON files (Minecraft stats)
+│       ├── snapshots/       # Dated archive (YYYY-MM-DD/*.json), 1/day
 │       ├── index.html       # Automatically generated dashboard
 │       └── .uuid_cache.json # UUID → Mojang username cache
 └── .github/workflows/
@@ -67,7 +70,7 @@ The file `stats/<server-name>/index.html` is generated automatically.
 .\scripts\sync-stats.ps1
 ```
 
-This script copies modified JSON files from Crafty Controller, commits and pushes to GitHub.
+This script copies modified JSON files from Crafty Controller, writes a dated snapshot under `stats/<server>/snapshots/YYYY-MM-DD/` (once per day), then commits and pushes to GitHub.
 
 ### CI/CD pipeline
 
@@ -92,7 +95,7 @@ Minecraft UUIDs are resolved to usernames via the Mojang Session Server API, wit
 
 ### Badges
 
-The 32 badges span 8 categories: Mining, Combat, Survival, Exploration, Farming, Crafting, Daily life, and Prestige. Each badge has 4 progressive thresholds with a visual progression indicator. Thresholds and tiers are computed in `scripts/minecraft/badges.py`; `app.js` is a pure renderer.
+33 standard badges + 2 meta badges (`all_rounder`, `legende`) span 8 categories: Mining, Combat, Survival, Exploration, Farming, Crafting, Daily life, and Prestige. Each badge has 4 progressive thresholds (Bronze → Silver → Gold → Diamond) with a visual progression indicator. Thresholds and tiers are computed in `scripts/minecraft/badges.py`; `app.js` is a pure renderer.
 
 ### Shared frontend assets
 

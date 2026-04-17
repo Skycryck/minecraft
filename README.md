@@ -37,13 +37,10 @@ Interactive web dashboard that turns raw Minecraft server stats files into visua
 │   │   ├── icons/           # Pre-rendered 256×256 Minecraft icon PNGs (committed)
 │   │   ├── styles.css       # Shared dashboard stylesheet
 │   │   └── app.js           # Shared dashboard runtime
-│   ├── serveur-2026/
-│   │   ├── data/            # Raw JSON files (Minecraft stats)
-│   │   ├── index.html       # Automatically generated dashboard
-│   │   └── .uuid_cache.json # UUID → Mojang username cache
-│   └── serveur-2020/
-│       ├── data/
-│       └── index.html
+│   └── <server-name>/
+│       ├── data/            # Raw JSON files (Minecraft stats)
+│       ├── index.html       # Automatically generated dashboard
+│       └── .uuid_cache.json # UUID → Mojang username cache
 └── .github/workflows/
     ├── update-stats.yml     # Regenerates the dashboard on every change
     └── static.yml           # Deploys to GitHub Pages
@@ -59,10 +56,10 @@ Interactive web dashboard that turns raw Minecraft server stats files into visua
 ### Generate a dashboard locally
 
 ```bash
-python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"
+python scripts/generate.py stats/<server-name>/data --title "Server Name"
 ```
 
-The file `stats/serveur-2026/index.html` is generated automatically.
+The file `stats/<server-name>/index.html` is generated automatically.
 
 ### Sync stats from a server (Windows)
 

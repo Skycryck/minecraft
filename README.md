@@ -4,6 +4,9 @@
 
 Drop the raw stats JSON files your Minecraft server already writes into this repo, push, and GitHub Pages serves an interactive dashboard — per-player profiles, leaderboards, badges, charts, fun facts. No database, no server to maintain, no paid services.
 
+> **[See a live example →](https://skycryck.github.io/minecraft/stats/hermitcraft-s10/)**
+> A Tickstats dashboard built from the publicly available HermitCraft Season 10 world save.
+
 ## What you get
 
 - **Per-player profiles** — playtime, deaths, mobs killed, blocks mined, distances by travel mode, items crafted, with automatic archetype detection (Miner, Fighter, Explorer, Builder, Farmer)

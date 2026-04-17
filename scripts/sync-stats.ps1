@@ -65,9 +65,20 @@ if ($copied -eq 0) {
 
 Write-Host "$copied fichier(s) copie(s)" -ForegroundColor Cyan
 
+# -- Snapshot horodate (1 par jour max) --
+$snapshotDate = Get-Date -Format 'yyyy-MM-dd'
+$snapshotDir  = Join-Path $Repo "stats\serveur-2026\snapshots\$snapshotDate"
+if (-not (Test-Path $snapshotDir)) {
+    New-Item -ItemType Directory -Path $snapshotDir -Force | Out-Null
+    Copy-Item (Join-Path $Dest "*.json") -Destination $snapshotDir -Force
+    Write-Host "Snapshot cree : snapshots\$snapshotDate" -ForegroundColor Green
+} else {
+    Write-Host "Snapshot du jour deja present, skip : snapshots\$snapshotDate" -ForegroundColor Yellow
+}
+
 # -- Git add / commit / push --
 Set-Location $Repo
-git add stats/serveur-2026/data/*.json
+git add stats/serveur-2026/data/*.json stats/serveur-2026/snapshots
 git commit -m "Update stats serveur-2026 $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 git push
 if ($LASTEXITCODE -ne 0) {

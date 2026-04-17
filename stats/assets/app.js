@@ -8,17 +8,20 @@ const PLAYERS_DATA = window.PLAYERS_DATA;
 // ═══════════════════════════════════════
 // 8 curated hues for the first 8 players — intentionally excludes the brand
 // accent (#7c6aef) so the player-dot stays visible on the active nav button.
-// Beyond 8 players we generate additional hues via golden-angle HSL rotation
-// (~137.5°) so every player keeps a unique color instead of wrapping onto the
-// first hue. The rotation also avoids landing near the accent hue (~251°).
+// The palette already fills most of the hue wheel, so adding *new* hues for
+// overflow players always lands near an existing one. Instead we reuse each
+// palette hue at a very different lightness: pass 1 uses pastels (L=82),
+// pass 2 uses dark (L=40). That gives 24 visually distinct identities before
+// any duplication, without creating indistinguishable near-hues.
 const PALETTE = ['#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
+const _PALETTE_HUES = [153, 0, 29, 209, 321, 170, 50, 268];
 function _hslHex(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l);const f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4)}
 function playerColor(i){
   if(i<PALETTE.length)return PALETTE[i];
-  let h=(100+(i-PALETTE.length+1)*137.508)%360;
-  const d=Math.min(Math.abs(h-251),Math.abs(h-251+360),Math.abs(h-251-360));
-  if(d<18)h=(h+30)%360;
-  return _hslHex(h,72,65);
+  const pass=Math.floor(i/PALETTE.length);
+  const h=_PALETTE_HUES[i%PALETTE.length];
+  const l=pass===1?82:pass===2?40:60;
+  return _hslHex(h,70,l);
 }
 const PLAYER_COLORS_MAP = {};
 const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);

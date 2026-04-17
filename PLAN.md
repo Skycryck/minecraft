@@ -154,7 +154,7 @@
 
 ---
 
-### [ ] Tâche 7 — Corriger le contraste `--text-muted` (accessibilité AA)
+### [x] Tâche 7 — Corriger le contraste `--text-muted` (accessibilité AA)
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -162,8 +162,8 @@
 - **Problème identifié :**
   > `--text-muted:#5c5c68` sur `--bg:#0c0c0f` donne un ratio de contraste de ~3.8, sous le seuil AA (4.5). Les labels de stat-tile, sync-date et plusieurs méta sont concernés.
 - **Action attendue :**
-  - [ ] Monter `--text-muted` à `#8080a0` minimum (vérifier ratio ≥ 4.5 via outil)
-  - [ ] Vérifier qu'aucun autre endroit ne descend sous le seuil (grep des hex de gris)
+  - [x] Monter `--text-muted` à `#8080a0` minimum (vérifier ratio ≥ 4.5 via outil)
+  - [x] Vérifier qu'aucun autre endroit ne descend sous le seuil (grep des hex de gris)
 - **Critères d'acceptation :**
   - Tous les textes passent AA sur fond sombre
   - L'aspect visuel reste cohérent (pas de texte brutalement blanc)
@@ -408,6 +408,14 @@
 - `estimateTime` corrigé : `time_mining` passe de #efd96a (yellow) → #3ecf8e (c-mining), `time_travel` de #3ecf8e (green, ambigu) → #6aafef (c-travel). Le vert est maintenant réservé au mining partout.
 - `PALETTE` (identités joueur) inchangée, utilisée uniquement en ligne 12 pour `PLAYER_COLORS_MAP`.
 - `python -m py_compile` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o et `serveur-2020` 65 063 o (tailles identiques à avant, CSS et JS externes).
+
+### 2026-04-17 — Tâche 7 : Contraste `--text-muted` AA
+
+- `--text-muted` passe de `#5c5c68` à `#8080a0` dans `stats/assets/styles.css` `:root`.
+- Vérification ratios (WCAG 2.1 relative luminance) sur fond `--bg:#0c0c0f` : avant ≈ 3.06 (échec AA), après ≈ 5.06 ✓. Sur fond `--bg-card:#16161a` : après ≈ 4.78 ✓. Sur `--bg-card-alt:#1c1c22` (stat-tiles, badges) : idem largement >4.5.
+- Grep des autres hex gris : seul `--text-dim:#8b8b96` est utilisé comme texte — ratio 5.72 sur `--bg`, déjà AA, inchangé. `#5c5c68` dans `app.js:706` est une couleur de dataset de chart (pas du texte), laissée telle quelle.
+- Usages touchés automatiquement (via `var(--text-muted)`) : `.sync-date`, `.header .meta span`, `.card h3`, `.stat-tile .label`, `.leaderboard .rank`, `.profile-info .uuid`, `.profile-stat .pl`, `.badges-cat-header`, `.badge-progress-text`, `.badge-tier-locked`, `.tt-tier`. Aucun texte blanc brutal : l'écart reste perceptible (violet clair/gris moyen/gris foncé).
+- `python -m py_compile` OK. Régénération : `serveur-2026` 48 458 o, `serveur-2020` 65 063 o (tailles identiques — seul le CSS change).
 
 ### 2026-04-17 — Tâche 6 : Suppression de l'estimation du temps
 

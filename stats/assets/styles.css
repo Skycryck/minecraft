@@ -2,7 +2,7 @@
 :root{
   --bg:#0c0c0f;--bg-card:#16161a;--bg-card-alt:#1c1c22;--bg-hover:#222230;
   --border:#2a2a35;--border-light:#3a3a48;
-  --text:#e8e6e3;--text-dim:#8b8b96;--text-muted:#5c5c68;
+  --text:#e8e6e3;--text-dim:#8b8b96;--text-muted:#8080a0;
   --accent:#7c6aef;--accent-light:#9b8df7;--accent-dim:#5a4bb8;
   /* Semantic stat categories — each maps a category (mining/combat/survival/travel/craft) to one color. */
   --c-mining:#3ecf8e;--c-combat:#ef6a6a;--c-survival:#efaa6a;--c-travel:#6aafef;--c-craft:#6aefd9;

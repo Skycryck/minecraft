@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       server:
-        description: "Nom du dossier serveur (ex: serveur-2026)"
+        description: "Nom du dossier serveur (ex: mon-serveur)"
         required: false
 
 permissions:
@@ -67,8 +67,7 @@ jobs:
               echo "══════════════════════════════════════"
 
               # Transformer le nom du dossier en titre lisible
-              # serveur-2026 → "Serveur 2026"
-              # serveur-confinement-2020 → "Serveur Confinement 2020"
+              # mon-serveur-2026 → "Mon Serveur 2026"
               TITLE=$(echo "$SERVER" | sed 's/-/ /g' | sed 's/\b\w/\U&/g')
 
               python scripts/generate.py "$DATA_DIR" --title "$TITLE"

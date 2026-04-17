@@ -9,12 +9,11 @@ et génère un fichier index.html complet avec le dashboard.
 Usage:
     python generate.py <chemin_dossier_data> [--title "Titre du serveur"]
 
-Exemples:
-    python generate.py stats/serveur-2026/data --title "Serveur 2026"
-    python generate.py stats/serveur-confinement-2020/data --title "Serveur Confinement 2020"
+Exemple:
+    python generate.py stats/<server-name>/data --title "Nom du serveur"
 
 Le fichier index.html est créé dans le dossier parent de <chemin_dossier_data>.
-Ex: stats/serveur-2026/data → stats/serveur-2026/index.html
+Ex: stats/<server-name>/data → stats/<server-name>/index.html
 """
 
 import json
@@ -231,7 +230,7 @@ def main():
     )
     parser.add_argument(
         "data_dir",
-        help="Chemin vers le dossier contenant les fichiers JSON de stats (ex: stats/serveur-2026/data)"
+        help="Chemin vers le dossier contenant les fichiers JSON de stats (ex: stats/<server-name>/data)"
     )
     parser.add_argument(
         "--title", "-t",

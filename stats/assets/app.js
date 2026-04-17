@@ -52,6 +52,7 @@ const T={fr:{
 subtitle:'Dashboard de statistiques du serveur',sync_prefix:'Dernière synchronisation',
 players:'joueurs',hours_played:'h de jeu',blocks_mined_meta:'blocs minés',mobs_killed_meta:'mobs tués',
 nav_overview:mcIcon('new_realm')+' Vue globale',nav_leaderboards:mcIcon('nether_star')+' Classements',
+nav_player_placeholder:'Choisir un joueur…',nav_player_label:'Sélectionner un joueur',
 total_playtime:'Temps de jeu total',blocks_mined:'Blocs minés',mobs_killed:'Mobs tués',items_crafted:'Items craftés',
 chart_playtime:'Temps de jeu par joueur',chart_distance:'Distance totale (km)',
 chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_multi:'Comparaison multi-stats',
@@ -136,6 +137,7 @@ ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres'
 subtitle:'Server statistics dashboard',sync_prefix:'Last sync',
 players:'players',hours_played:'hours played',blocks_mined_meta:'blocks mined',mobs_killed_meta:'mobs killed',
 nav_overview:mcIcon('new_realm')+' Overview',nav_leaderboards:mcIcon('nether_star')+' Leaderboards',
+nav_player_placeholder:'Select a player…',nav_player_label:'Select a player',
 total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
 chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
 chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
@@ -407,20 +409,65 @@ const navEl=document.getElementById('nav');
 const contentEl=document.getElementById('content');
 
 function buildNav(){
-  let h=`<button class="active" data-section="overview">${t('nav_overview')}</button>`;
-  h+=`<button data-section="leaderboards">${t('nav_leaderboards')}</button>`;
+  let h='';
+  h+=`<button class="nav-tab" data-section="overview">${t('nav_overview')}</button>`;
+  h+=`<button class="nav-tab" data-section="leaderboards">${t('nav_leaderboards')}</button>`;
+  h+=`<select class="nav-player-select" id="playerSelect" aria-label="${t('nav_player_label')}">`;
+  h+=`<option value="">${t('nav_player_placeholder')}</option>`;
   playerNames.forEach(name=>{
-    const dot=`<span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>`;
-    h+=`<button data-section="player-${name}">${dot}${name}</button>`;
+    const hrs=PLAYERS_DATA[name].play_hours;
+    h+=`<option value="${name}">${name} — ${hrs}h</option>`;
   });
+  h+=`</select>`;
   navEl.innerHTML=h;
-  navEl.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      navEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      showSection(btn.dataset.section);
-    });
+  navEl.querySelectorAll('.nav-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>navigateTo(btn.dataset.section));
   });
+  document.getElementById('playerSelect').addEventListener('change',e=>{
+    if(e.target.value)navigateTo('player-'+e.target.value);
+  });
+}
+
+function updateNavActive(section){
+  navEl.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+  const sel=document.getElementById('playerSelect');
+  if(!sel)return;
+  if(section.startsWith('player-')){
+    const name=section.replace('player-','');
+    sel.value=name;
+    sel.classList.add('active');
+    sel.style.setProperty('--player-accent',PLAYER_COLORS_MAP[name]||'var(--accent)');
+  }else{
+    sel.value='';
+    sel.classList.remove('active');
+    sel.style.removeProperty('--player-accent');
+  }
+}
+
+function sectionToHash(id){
+  if(id==='leaderboards')return '#leaderboards';
+  if(id.startsWith('player-'))return '#player/'+encodeURIComponent(id.replace('player-',''));
+  return '';
+}
+function hashToSection(hash){
+  const h=(hash||'').replace(/^#/,'');
+  if(!h)return 'overview';
+  if(h==='leaderboards')return 'leaderboards';
+  if(h.startsWith('player/')){
+    const name=decodeURIComponent(h.slice(7));
+    if(playerNames.includes(name))return 'player-'+name;
+  }
+  return 'overview';
+}
+
+function navigateTo(section){
+  showSection(section);
+  updateNavActive(section);
+  const hash=sectionToHash(section);
+  if(hash!==location.hash){
+    if(hash)history.pushState(null,'',hash);
+    else history.pushState(null,'',location.pathname+location.search);
+  }
 }
 
 function showSection(id){
@@ -433,6 +480,15 @@ function showSection(id){
   if(id.startsWith('player-'))renderPlayerCharts(id.replace('player-',''));
   setTimeout(animateCounters,50);
 }
+
+window.addEventListener('hashchange',()=>{
+  const s=hashToSection(location.hash);
+  showSection(s);updateNavActive(s);
+});
+window.addEventListener('popstate',()=>{
+  const s=hashToSection(location.hash);
+  showSection(s);updateNavActive(s);
+});
 
 function buildAllSections(){
   let h='';h+=buildOverview();h+=buildLeaderboards();
@@ -727,6 +783,7 @@ function switchLang(newLang){
   buildNav();
   buildAllSections();
   showSection(currentSection);
+  updateNavActive(currentSection);
 }
 
 // ═══════════════════════════════════════
@@ -737,4 +794,7 @@ document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
 document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
-buildNav();buildAllSections();renderOverviewCharts();animateCounters();
+buildNav();buildAllSections();
+const _initialSection=hashToSection(location.hash);
+showSection(_initialSection);updateNavActive(_initialSection);
+animateCounters();

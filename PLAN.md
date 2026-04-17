@@ -136,7 +136,7 @@
 
 ---
 
-### [ ] Tâche 6 — Supprimer (ou étiqueter) l'estimation du temps de jeu
+### [x] Tâche 6 — Supprimer (ou étiqueter) l'estimation du temps de jeu
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -144,8 +144,8 @@
 - **Problème identifié :**
   > La fonction `estimateTime` (`generate.py:757-785`) invente une répartition (1s/bloc, 10 DPS, scale 85%) présentée comme factuelle. Cette fiction pollue la crédibilité du dashboard.
 - **Action attendue :**
-  - [ ] Décision produit : soit supprimer complètement la card `card_time_est` et son donut, soit renommer en "Répartition ludique (estimée)" avec tooltip explicatif des hypothèses
-  - [ ] Appliquer la décision retenue
+  - [x] Décision produit : soit supprimer complètement la card `card_time_est` et son donut, soit renommer en "Répartition ludique (estimée)" avec tooltip explicatif des hypothèses
+  - [x] Appliquer la décision retenue
 - **Critères d'acceptation :**
   - Plus aucune métrique inventée n'est présentée comme une donnée dure
   - Si conservé : l'utilisateur comprend que c'est une heuristique
@@ -400,6 +400,14 @@
 - `T.en` dans `stats/assets/app.js` ne contient plus que les overrides : ~32 clés identiques à `T.fr` supprimées (p. ex. `axis_kills`, `d_sprint`, `tier_bronze`, `cat_combat`, `b_nether_mole`, `b_all_rounder`, etc.).
 - `t()` et `label()` utilisent désormais `T[lang]?.[k] ?? T.fr[k]` en fallback — le switch EN récupère la valeur FR quand la clé n'existe pas côté EN.
 - Régénération OK : `serveur-2026` (48 458 o), `serveur-2020` (65 063 o) — aucune variation de taille (JSON identique, JS externe). `deno check` OK, `python -m py_compile` OK.
+
+### 2026-04-17 — Tâche 6 : Suppression de l'estimation du temps
+
+- Décision produit retenue (après discussion utilisateur) : **suppression**. Les stats JSON de Minecraft n'exposent que `play_time`, les `*_one_cm` (distances) et quelques compteurs — aucun temps d'activité par catégorie. `estimateTime` posait 1 s/bloc miné, 10 DPS combat, 1.5 s/craft puis rescalait à 85 % du `play_time` : bruit ±300 % sur le minage (break time obsidienne ≈ 9.4 s vs. dirt 0.15 s), indéterminé sur le combat. Le breakdown de déplacement seul serait factuel, mais il double déjà `card_distances`.
+- `stats/assets/app.js` : supprimés — fonction `estimateTime()` (~30 lignes, anciennement 332-362), card `card_time_est` + canvas `chart-time-${name}` dans `buildPlayerSection`, bloc de rendu du donut dans `renderPlayerCharts`, et 6 clés i18n (`card_time_est`, `time_mining`, `time_combat`, `time_travel`, `time_craft`, `time_other`) dans `T.fr` et `T.en`.
+- Layout : la grille qui contenait `[card_time_est | card_distances]` conserve `card_distances` seule (même pattern que `card_killed_by` déjà isolée dans une `grid-2`). Aucune autre card déplacée.
+- Icône `clock` conservée (toujours utilisée par `lb_playtime`). Aucun autre nettoyage hors périmètre.
+- `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération : `serveur-2026` 48 458 o (taille inchangée — on enlève du code JS externe, pas du JSON embarqué), `serveur-2020` 65 063 o. Diff total : 3 fichiers, +4 / -55.
 
 ### 2026-04-17 — Tâche 3 : Badges en Python
 

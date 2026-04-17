@@ -6,7 +6,9 @@ const PLAYERS_DATA = window.PLAYERS_DATA;
 // ═══════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════
-const PALETTE = ['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
+// 8 hues for player identity — intentionally excludes the brand accent (#7c6aef)
+// so the player-dot stays visible on the active nav button.
+const PALETTE = ['#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
 const PLAYER_COLORS_MAP = {};
 const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
 playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);

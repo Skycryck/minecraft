@@ -652,9 +652,11 @@ function buildBadgesHtml(name){
         <div class="badge-header">
           <span class="badge-icon">${b.tier>0?mcIcon(b.icon):'🔒'}</span>
           <span class="badge-name">${t('b_'+b.id)}</span>
-          <span class="badge-tier badge-tier-${tn}">${tl}</span>
         </div>
-        <div class="badge-progress-text"><span>${dv}</span><span>${nt}</span></div>
+        <div class="badge-progress-text">
+          <span class="badge-tier badge-tier-${tn}">${tl}</span>
+          <span class="bpt-vals">${dv} / ${nt}</span>
+        </div>
         <div class="badge-progress"><div class="badge-progress-fill" style="width:${b.progress}%;background:${pc}"></div></div>
       </div>`;
     });

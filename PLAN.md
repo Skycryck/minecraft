@@ -116,7 +116,7 @@
 
 ---
 
-### [ ] Tâche 5 — Réduire la palette à 5 couleurs sémantiques
+### [x] Tâche 5 — Réduire la palette à 5 couleurs sémantiques
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -125,9 +125,9 @@
 - **Problème identifié :**
   > Le `:root` (`generate.py:199-209`) déclare 13 couleurs utilisées sans cohérence : le vert est tantôt "mining" tantôt "déplacement". Aucune couleur ne porte de sens.
 - **Action attendue :**
-  - [ ] Définir 5 variables sémantiques : `--c-mining`, `--c-combat`, `--c-survival`, `--c-travel`, `--c-craft`
-  - [ ] Réassigner chaque stat-tile, leaderboard et icon de card à sa couleur sémantique
-  - [ ] Garder la palette 8 teintes `PALETTE` UNIQUEMENT pour l'identité joueur dans les charts comparatifs
+  - [x] Définir 5 variables sémantiques : `--c-mining`, `--c-combat`, `--c-survival`, `--c-travel`, `--c-craft`
+  - [x] Réassigner chaque stat-tile, leaderboard et icon de card à sa couleur sémantique
+  - [x] Garder la palette 8 teintes `PALETTE` UNIQUEMENT pour l'identité joueur dans les charts comparatifs
 - **Critères d'acceptation :**
   - Chaque catégorie de stat a une couleur unique et cohérente dans tout le dashboard
   - La palette `PALETTE` en JS n'est plus utilisée ailleurs que dans les charts comparatifs
@@ -386,6 +386,14 @@
 - `generate.py` passe de 1167 à 308 lignes. `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0).
 - Régénération OK : `serveur-2026` (7 joueurs, 11 126 o) et `serveur-2020` (9 joueurs, 16 667 o) — la taille chute fortement car le JS n'est plus inliné.
 - Les seules `}}` restantes dans `app.js` sont des fermetures JS imbriquées légitimes (fin d'objet/fonction), pas des escapes f-string.
+
+### 2026-04-17 — Tâche 5 : Palette sémantique
+
+- 5 variables sémantiques ajoutées dans `stats/assets/styles.css` `:root` : `--c-mining` (#3ecf8e), `--c-combat` (#ef6a6a), `--c-survival` (#efaa6a), `--c-travel` (#6aafef), `--c-craft` (#6aefd9). Les 9 anciens vars stat (`--green`, `--red`, `--orange`, `--blue`, `--cyan`, `--yellow`, `--pink`, `--teal`, `--green-dim`) supprimés — plus aucune ambiguïté : chaque catégorie a une couleur unique.
+- Toutes les références mises à jour : stat-tiles overview (4) + joueur (8), leaderboards (12 entrées du tableau `boards`), archétypes (miner/fighter/explorer/builder/farmer), profile-stats (kd, traveled), `mkList` (killed_top10, crafted_top15), `kbHtml`, `.broken-tag .bt-count`, `.tt-tier.tt-done`, gradient du header.
+- `estimateTime` corrigé : `time_mining` passe de #efd96a (yellow) → #3ecf8e (c-mining), `time_travel` de #3ecf8e (green, ambigu) → #6aafef (c-travel). Le vert est maintenant réservé au mining partout.
+- `PALETTE` (identités joueur) inchangée, utilisée uniquement en ligne 12 pour `PLAYER_COLORS_MAP`.
+- `python -m py_compile` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o et `serveur-2020` 65 063 o (tailles identiques à avant, CSS et JS externes).
 
 ### 2026-04-17 — Tâche 4 : Déduplication i18n
 

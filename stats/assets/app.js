@@ -6,10 +6,26 @@ const PLAYERS_DATA = window.PLAYERS_DATA;
 // ═══════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════
-const PALETTE = ['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
+// 8 curated hues for the first 8 players — intentionally excludes the brand
+// accent (#7c6aef) so the player-dot stays visible on the active nav button.
+// The palette already fills most of the hue wheel, so adding *new* hues for
+// overflow players always lands near an existing one. Instead we reuse each
+// palette hue at a very different lightness: pass 1 uses pastels (L=82),
+// pass 2 uses dark (L=40). That gives 24 visually distinct identities before
+// any duplication, without creating indistinguishable near-hues.
+const PALETTE = ['#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
+const _PALETTE_HUES = [153, 0, 29, 209, 321, 170, 50, 268];
+function _hslHex(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l);const f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4)}
+function playerColor(i){
+  if(i<PALETTE.length)return PALETTE[i];
+  const pass=Math.floor(i/PALETTE.length);
+  const h=_PALETTE_HUES[i%PALETTE.length];
+  const l=pass===1?82:pass===2?40:60;
+  return _hslHex(h,70,l);
+}
 const PLAYER_COLORS_MAP = {};
 const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
-playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=PALETTE[i%PALETTE.length]);
+playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=playerColor(i));
 
 // ═══════════════════════════════════════
 // MINECRAFT ITEM ICONS
@@ -219,11 +235,11 @@ function getArchetype(p){
     farmer:(p.animals_bred+p.traded_with_villager+p.fish_caught)/h
   };
   const types={
-    miner:{name:t('arch_miner'),icon:mcIcon('diamond_pickaxe'),color:'var(--yellow)'},
-    fighter:{name:t('arch_fighter'),icon:mcIcon('diamond_sword'),color:'var(--red)'},
-    explorer:{name:t('arch_explorer'),icon:mcIcon('compass'),color:'var(--green)'},
-    builder:{name:t('arch_builder'),icon:mcIcon('oak_planks'),color:'var(--cyan)'},
-    farmer:{name:t('arch_farmer'),icon:mcIcon('wheat'),color:'var(--orange)'}
+    miner:{name:t('arch_miner'),icon:mcIcon('diamond_pickaxe'),color:'var(--c-mining)'},
+    fighter:{name:t('arch_fighter'),icon:mcIcon('diamond_sword'),color:'var(--c-combat)'},
+    explorer:{name:t('arch_explorer'),icon:mcIcon('compass'),color:'var(--c-travel)'},
+    builder:{name:t('arch_builder'),icon:mcIcon('oak_planks'),color:'var(--c-craft)'},
+    farmer:{name:t('arch_farmer'),icon:mcIcon('wheat'),color:'var(--c-survival)'}
   };
   const top=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
   return types[top];
@@ -337,9 +353,9 @@ function estimateTime(p){
   const otherS=Math.max(0,totalS-(miningS+combatS+travelS+craftS));
   const toH=s=>Math.round(s/3600*10)/10;
   return [
-    {label:t('time_mining'),hours:toH(miningS),color:'#efd96a'},
+    {label:t('time_mining'),hours:toH(miningS),color:'#3ecf8e'},
     {label:t('time_combat'),hours:toH(combatS),color:'#ef6a6a'},
-    {label:t('time_travel'),hours:toH(travelS),color:'#3ecf8e'},
+    {label:t('time_travel'),hours:toH(travelS),color:'#6aafef'},
     {label:t('time_craft'),hours:toH(craftS),color:'#6aefd9'},
     {label:t('time_other'),hours:toH(otherS),color:'#5c5c68'}
   ];
@@ -447,10 +463,10 @@ function buildOverview(){
   return `
   <div class="section active" id="overview">
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--accent-light)" data-target="${totalHours.toFixed(0)}" data-suffix="h">0</div><div class="label">${t('total_playtime')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${totalMined}">0</div><div class="label">${t('blocks_mined')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${totalHours.toFixed(0)}" data-suffix="h">0</div><div class="label">${t('total_playtime')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${totalMined}">0</div><div class="label">${t('blocks_mined')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
@@ -502,18 +518,18 @@ function renderOverviewCharts(){
 // ═══════════════════════════════════════
 function buildLeaderboards(){
   const boards=[
-    {key:'play_hours',tkey:'lb_playtime',suffix:'h',color:'var(--accent-light)'},
-    {key:'total_mined',tkey:'lb_mined',suffix:'',color:'var(--green)'},
-    {key:'mob_kills',tkey:'lb_kills',suffix:'',color:'var(--red)'},
-    {key:'deaths',tkey:'lb_deaths',suffix:'',color:'var(--orange)'},
-    {key:'total_distance_km',tkey:'lb_distance',suffix:' km',color:'var(--blue)'},
-    {key:'total_crafted',tkey:'lb_crafted',suffix:'',color:'var(--cyan)'},
-    {key:'player_kills',tkey:'lb_pvp',suffix:'',color:'var(--pink)'},
-    {key:'enchant_item',tkey:'lb_enchant',suffix:'',color:'var(--yellow)'},
-    {key:'fish_caught',tkey:'lb_fish',suffix:'',color:'var(--teal)'},
-    {key:'traded_with_villager',tkey:'lb_trades',suffix:'',color:'var(--accent-light)'},
-    {key:'animals_bred',tkey:'lb_breed',suffix:'',color:'var(--pink)'},
-    {key:'jumps',tkey:'lb_jumps',suffix:'',color:'var(--green)'},
+    {key:'play_hours',tkey:'lb_playtime',suffix:'h',color:'var(--c-survival)'},
+    {key:'total_mined',tkey:'lb_mined',suffix:'',color:'var(--c-mining)'},
+    {key:'mob_kills',tkey:'lb_kills',suffix:'',color:'var(--c-combat)'},
+    {key:'deaths',tkey:'lb_deaths',suffix:'',color:'var(--c-survival)'},
+    {key:'total_distance_km',tkey:'lb_distance',suffix:' km',color:'var(--c-travel)'},
+    {key:'total_crafted',tkey:'lb_crafted',suffix:'',color:'var(--c-craft)'},
+    {key:'player_kills',tkey:'lb_pvp',suffix:'',color:'var(--c-combat)'},
+    {key:'enchant_item',tkey:'lb_enchant',suffix:'',color:'var(--c-craft)'},
+    {key:'fish_caught',tkey:'lb_fish',suffix:'',color:'var(--c-craft)'},
+    {key:'traded_with_villager',tkey:'lb_trades',suffix:'',color:'var(--c-craft)'},
+    {key:'animals_bred',tkey:'lb_breed',suffix:'',color:'var(--c-survival)'},
+    {key:'jumps',tkey:'lb_jumps',suffix:'',color:'var(--c-travel)'},
   ];
   let h=`<div class="section" id="leaderboards"><div class="grid grid-3">`;
   boards.forEach(b=>{
@@ -623,7 +639,7 @@ function buildPlayerSection(name){
   const recBadges=records.length?`<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">${records.map(r=>`<span class="record-badge">${label(r).substring(0,20)}</span>`).join('')}</div>`:'';
 
   const killedBy=Object.entries(p.killed_by||{}).sort((a,b)=>b[1]-a[1]);
-  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--red);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">'+t('no_death')+'</li>';
+  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--c-combat);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">'+t('no_death')+'</li>';
 
   const mkList=(entries,color)=>{
     if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
@@ -652,21 +668,21 @@ function buildPlayerSection(name){
       </div>
       <div class="profile-stats">
         <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">${t('playtime')}</div></div>
-        <div class="profile-stat"><div class="pv" style="color:var(--red)">${kd}</div><div class="pl">${t('kd_ratio')}</div></div>
-        <div class="profile-stat"><div class="pv" style="color:var(--green)">${fmt(p.total_distance_km)} km</div><div class="pl">${t('traveled')}</div></div>
+        <div class="profile-stat"><div class="pv" style="color:var(--c-combat)">${kd}</div><div class="pl">${t('kd_ratio')}</div></div>
+        <div class="profile-stat"><div class="pv" style="color:var(--c-travel)">${fmt(p.total_distance_km)} km</div><div class="pl">${t('traveled')}</div></div>
       </div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--green)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--red)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--orange)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--cyan)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--yellow)" data-target="${p.enchant_item}">0</div><div class="label">${t('enchantments')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--blue)" data-target="${p.open_chest}">0</div><div class="label">${t('chests_opened')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--teal)" data-target="${p.fish_caught}">0</div><div class="label">${t('fish_caught')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--pink)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.enchant_item}">0</div><div class="label">${t('enchantments')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.open_chest}">0</div><div class="label">${t('chests_opened')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.fish_caught}">0</div><div class="label">${t('fish_caught')}</div></div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_time_est')}</h3><div class="chart-wrap"><canvas id="chart-time-${name}"></canvas></div></div>
@@ -684,8 +700,8 @@ function buildPlayerSection(name){
       <ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--red)')}</ol></div>
-      <div class="card"><h3><span class="icon">${mcIcon('crafting_table')}</span> ${t('card_top10_crafted')}</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--cyan)')}</ol></div>
+      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--c-combat)')}</ol></div>
+      <div class="card"><h3><span class="icon">${mcIcon('crafting_table')}</span> ${t('card_top10_crafted')}</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--c-craft)')}</ol></div>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('anvil')}</span> ${t('card_tools_broken')}</h3>${buildBrokenHtml(p.broken)}</div>

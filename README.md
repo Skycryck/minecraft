@@ -1,6 +1,6 @@
-# Minecraft Stats Dashboard
+# Tickstats
 
-Interactive web dashboard that turns raw Minecraft server stats files into visual dashboards, deployed automatically via GitHub Pages.
+Interactive Minecraft stats dashboard that turns raw Minecraft server stats files into visual dashboards, deployed automatically via GitHub Pages.
 
 ## Features
 

@@ -1,12 +1,15 @@
 """
-badges.py — Définitions et calcul des badges du dashboard.
+badges.py — Dashboard badge definitions and computation.
 
-Chaque badge = id + nom + icône + catégorie + seuils (bronze/silver/gold/diamond)
-             + une fonction `val(player)` qui lit le dict joueur normalisé.
+Each badge = id + name + icon + category + thresholds (bronze/silver/gold/diamond)
+           + a `val(player)` function that reads the normalized player dict.
 
-`compute_player_badges(player)` retourne la liste finale (tous les badges +
-les deux badges méta `all_rounder` et `legende`) prête à être sérialisée dans
-le JSON injecté côté client.
+`compute_player_badges(player)` returns the final list (all badges +
+the two meta badges `all_rounder` and `legende`), ready to be serialized
+into the JSON injected on the client side.
+
+Note: badge `name` values are in French on purpose — they are user-facing
+UI labels rendered in the dashboard.
 """
 
 from __future__ import annotations
@@ -105,7 +108,7 @@ META_CATEGORIES = ["mining", "combat", "survival", "exploration", "farming", "cr
 
 
 def get_tier(value, tiers: list) -> int:
-    """Retourne 0 (locked) à 4 (diamond) selon la valeur et les 4 seuils."""
+    """Return 0 (locked) to 4 (diamond) based on value and the 4 thresholds."""
     for i in range(len(tiers) - 1, -1, -1):
         if value >= tiers[i]:
             return i + 1
@@ -113,7 +116,7 @@ def get_tier(value, tiers: list) -> int:
 
 
 def _compute_progress(value, tier: int, tiers: list) -> tuple[int, float]:
-    """Retourne (progress%, nextTarget) selon la valeur courante."""
+    """Return (progress%, nextTarget) based on the current value."""
     if tier >= 4:
         return 100, tiers[3]
     next_target = tiers[tier]
@@ -142,10 +145,10 @@ def _badge_entry(defn: dict, player: dict) -> dict:
 
 
 def compute_player_badges(player: dict) -> list[dict]:
-    """Calcule tous les badges (standards + meta) pour un joueur."""
+    """Compute all badges (standard + meta) for a player."""
     results = [_badge_entry(b, player) for b in BADGES]
 
-    # All-Rounder : catégories où tous les badges ont tier >= bronze
+    # All-Rounder: categories where every badge has tier >= bronze
     complete_cats = 0
     for cid in META_CATEGORIES:
         cat_badges = [r for r in results if r["cat"] == cid]
@@ -160,7 +163,7 @@ def compute_player_badges(player: dict) -> list[dict]:
         "tier": ar_tier, "progress": ar_prog, "nextTarget": ar_next,
     })
 
-    # Légende : nombre de badges au tier >= gold
+    # Légende: number of badges at tier >= gold
     gold_count = sum(1 for r in results if r["tier"] >= 3)
     lg_tiers = [3, 5, 10, 15]
     lg_tier = get_tier(gold_count, lg_tiers)

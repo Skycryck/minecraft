@@ -36,6 +36,7 @@ param(
     [string[]]$Exclude = @(
         "stats/serveur-2026",
         "stats/serveur-2020",
+        "stats/hermitcraft-s10",
         "scripts/sync-stats.ps1",
         "scripts/mirror-to-public.ps1",
         "PLAN.md"

@@ -387,6 +387,20 @@
 - Régénération OK : `serveur-2026` (7 joueurs, 11 126 o) et `serveur-2020` (9 joueurs, 16 667 o) — la taille chute fortement car le JS n'est plus inliné.
 - Les seules `}}` restantes dans `app.js` sont des fermetures JS imbriquées légitimes (fin d'objet/fonction), pas des escapes f-string.
 
+### 2026-04-17 — Tâche 3 : Badges en Python
+
+- Nouveau module `scripts/minecraft/badges.py` : 33 badges standards + 2 méta (`all_rounder`, `legende`), avec `get_tier()` et `compute_player_badges()`.
+- `process_player()` appelle `compute_player_badges(player)` et attache la liste sous la clé `badges` — chaque entrée contient `{id, name, icon, cat, tiers, value, tier, progress, nextTarget}`, avec `icon` stocké comme nom (ex. `diamond_pickaxe`) et non comme HTML.
+- `BADGES`, `getBadgeTier`, `computePlayerBadges` supprimés de `app.js` (~80 lignes). `buildBadgesHtml` lit `p.badges` et appelle `mcIcon(b.icon)` au rendu.
+- Vérif manuelle des valeurs sur `serveur-2026` : thresholds et progress cohérents (ex. Martel0w mineur 58911 → tier 3, progress 18%).
+- `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o, `serveur-2020` 65 063 o (hausse attendue : badges pré-calculés embarqués dans le JSON).
+
+### 2026-04-17 — Tâche 4 : Déduplication i18n
+
+- `T.en` dans `stats/assets/app.js` ne contient plus que les overrides : ~32 clés identiques à `T.fr` supprimées (p. ex. `axis_kills`, `d_sprint`, `tier_bronze`, `cat_combat`, `b_nether_mole`, `b_all_rounder`, etc.).
+- `t()` et `label()` utilisent désormais `T[lang]?.[k] ?? T.fr[k]` en fallback — le switch EN récupère la valeur FR quand la clé n'existe pas côté EN.
+- Régénération OK : `serveur-2026` (48 458 o), `serveur-2020` (65 063 o) — aucune variation de taille (JSON identique, JS externe). `deno check` OK, `python -m py_compile` OK.
+
 ### 2026-04-17 — Tâche 5 : Palette sémantique
 
 - 5 variables sémantiques ajoutées dans `stats/assets/styles.css` `:root` : `--c-mining` (#3ecf8e), `--c-combat` (#ef6a6a), `--c-survival` (#efaa6a), `--c-travel` (#6aafef), `--c-craft` (#6aefd9). Les 9 anciens vars stat (`--green`, `--red`, `--orange`, `--blue`, `--cyan`, `--yellow`, `--pink`, `--teal`, `--green-dim`) supprimés — plus aucune ambiguïté : chaque catégorie a une couleur unique.
@@ -395,12 +409,6 @@
 - `PALETTE` (identités joueur) inchangée, utilisée uniquement en ligne 12 pour `PLAYER_COLORS_MAP`.
 - `python -m py_compile` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o et `serveur-2020` 65 063 o (tailles identiques à avant, CSS et JS externes).
 
-### 2026-04-17 — Tâche 4 : Déduplication i18n
-
-- `T.en` dans `stats/assets/app.js` ne contient plus que les overrides : ~32 clés identiques à `T.fr` supprimées (p. ex. `axis_kills`, `d_sprint`, `tier_bronze`, `cat_combat`, `b_nether_mole`, `b_all_rounder`, etc.).
-- `t()` et `label()` utilisent désormais `T[lang]?.[k] ?? T.fr[k]` en fallback — le switch EN récupère la valeur FR quand la clé n'existe pas côté EN.
-- Régénération OK : `serveur-2026` (48 458 o), `serveur-2020` (65 063 o) — aucune variation de taille (JSON identique, JS externe). `deno check` OK, `python -m py_compile` OK.
-
 ### 2026-04-17 — Tâche 6 : Suppression de l'estimation du temps
 
 - Décision produit retenue (après discussion utilisateur) : **suppression**. Les stats JSON de Minecraft n'exposent que `play_time`, les `*_one_cm` (distances) et quelques compteurs — aucun temps d'activité par catégorie. `estimateTime` posait 1 s/bloc miné, 10 DPS combat, 1.5 s/craft puis rescalait à 85 % du `play_time` : bruit ±300 % sur le minage (break time obsidienne ≈ 9.4 s vs. dirt 0.15 s), indéterminé sur le combat. Le breakdown de déplacement seul serait factuel, mais il double déjà `card_distances`.
@@ -408,14 +416,6 @@
 - Layout : la grille qui contenait `[card_time_est | card_distances]` conserve `card_distances` seule (même pattern que `card_killed_by` déjà isolée dans une `grid-2`). Aucune autre card déplacée.
 - Icône `clock` conservée (toujours utilisée par `lb_playtime`). Aucun autre nettoyage hors périmètre.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération : `serveur-2026` 48 458 o (taille inchangée — on enlève du code JS externe, pas du JSON embarqué), `serveur-2020` 65 063 o. Diff total : 3 fichiers, +4 / -55.
-
-### 2026-04-17 — Tâche 3 : Badges en Python
-
-- Nouveau module `scripts/minecraft/badges.py` : 33 badges standards + 2 méta (`all_rounder`, `legende`), avec `get_tier()` et `compute_player_badges()`.
-- `process_player()` appelle `compute_player_badges(player)` et attache la liste sous la clé `badges` — chaque entrée contient `{id, name, icon, cat, tiers, value, tier, progress, nextTarget}`, avec `icon` stocké comme nom (ex. `diamond_pickaxe`) et non comme HTML.
-- `BADGES`, `getBadgeTier`, `computePlayerBadges` supprimés de `app.js` (~80 lignes). `buildBadgesHtml` lit `p.badges` et appelle `mcIcon(b.icon)` au rendu.
-- Vérif manuelle des valeurs sur `serveur-2026` : thresholds et progress cohérents (ex. Martel0w mineur 58911 → tier 3, progress 18%).
-- `python -m py_compile` OK ; `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o, `serveur-2020` 65 063 o (hausse attendue : badges pré-calculés embarqués dans le JSON).
 
 ---
 

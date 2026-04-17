@@ -192,7 +192,7 @@
 
 ---
 
-### [ ] Tâche 9 — Archiver des snapshots horodatés des stats
+### [x] Tâche 9 — Archiver des snapshots horodatés des stats
 
 - **Priorité :** 🔴 Haute
 - **Fichiers concernés :**
@@ -202,9 +202,9 @@
 - **Problème identifié :**
   > Le dashboard n'a aucune dimension temporelle : il affiche uniquement un snapshot. Toutes les viz d'évolution (courbes, deltas, streaks) sont impossibles sans historique.
 - **Action attendue :**
-  - [ ] Modifier `sync-stats.ps1` pour copier aussi les JSON dans `stats/serveur-2026/snapshots/YYYY-MM-DD/` après la copie normale
-  - [ ] Ne créer le dossier daté que s'il n'existe pas déjà (1 snapshot/jour max)
-  - [ ] Vérifier que le pipeline git + workflow continue de fonctionner
+  - [x] Modifier `sync-stats.ps1` pour copier aussi les JSON dans `stats/serveur-2026/snapshots/YYYY-MM-DD/` après la copie normale
+  - [x] Ne créer le dossier daté que s'il n'existe pas déjà (1 snapshot/jour max)
+  - [x] Vérifier que le pipeline git + workflow continue de fonctionner
 - **Critères d'acceptation :**
   - Après une exécution, `stats/serveur-2026/snapshots/2026-04-17/` contient les mêmes JSON que `data/`
   - Aucune régression dans `generate.py`
@@ -433,6 +433,13 @@
 - Layout : la grille qui contenait `[card_time_est | card_distances]` conserve `card_distances` seule (même pattern que `card_killed_by` déjà isolée dans une `grid-2`). Aucune autre card déplacée.
 - Icône `clock` conservée (toujours utilisée par `lb_playtime`). Aucun autre nettoyage hors périmètre.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération : `serveur-2026` 48 458 o (taille inchangée — on enlève du code JS externe, pas du JSON embarqué), `serveur-2020` 65 063 o. Diff total : 3 fichiers, +4 / -55.
+
+### 2026-04-17 — Tâche 9 : Snapshots horodatés
+
+- `scripts/sync-stats.ps1` : bloc snapshot ajouté juste après le log de copie, avant le git add. Calcule `$snapshotDate = yyyy-MM-dd`, cible `stats\serveur-2026\snapshots\$snapshotDate`. Si absent → `New-Item` + `Copy-Item (data\*.json) -> snapshotDir`. Si présent → log jaune « skip ». Garantit donc 1 snapshot/jour max, capture du contenu complet de `data/` (pas seulement les fichiers modifiés par la passe courante).
+- `git add` étendu à `stats/serveur-2026/snapshots` en plus de `data/*.json` : le dossier ajoute sa propre ligne dans le commit quotidien. Le workflow `update-stats.yml` ne se déclenche que sur `stats/*/data/**`, donc les nouveaux commits qui ne modifient que `snapshots/` n'entraîneraient aucun rebuild — mais en pratique les snapshots ne sont créés qu'après au moins une nouvelle version de `data/*.json`, donc les deux changements cohabitent dans un même commit et le workflow se déclenche normalement.
+- Test dry-run (script PS isolé sur ce worktree) : crée `snapshots/2026-04-17/` avec les 7 JSON, 2ᵉ exécution → branche « skip ». Puis `python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"` : OK, 7 joueurs, 194h, 48 498 o → `generate.py` ignore bien le sous-dossier `snapshots/` (lecture limitée au dossier passé en argument). `powershell [PSParser]::Tokenize` : OK sur le script modifié.
+- Premier snapshot committé tel quel (7 fichiers, ~164 KB) — bootstrap minimal pour la tâche 10 (`history.py` lira le plus proche ≥6 jours). Pas de `.gitignore` ajouté, les snapshots doivent persister dans le repo.
 
 ---
 

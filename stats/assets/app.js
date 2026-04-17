@@ -69,12 +69,10 @@ d_climb:'Escalade',d_crouch:'Accroupi',d_fall:'Chute',
 d_walk_on_water:"Sur l'eau",d_walk_under_water:"Sous l'eau",
 arch_new:'Nouveau',arch_miner:'Mineur',arch_fighter:'Combattant',
 arch_explorer:'Explorateur',arch_builder:'Bâtisseur',arch_farmer:'Fermier',
-time_mining:'⛏ Minage',time_combat:'⚔ Combat',time_travel:'🚶 Déplacement',
-time_craft:'🔨 Craft',time_other:'💤 Autre',
 playtime:'Temps de jeu',kd_ratio:'K/D ratio',traveled:'Parcourus',per_hour:'/h',
 deaths:'Morts',enchantments:'Enchantements',chests_opened:'Coffres ouverts',
 fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
-card_time_est:'Répartition du temps estimée',card_distances:'Distances parcourues',
+card_distances:'Distances parcourues',
 card_killed_by:'Tué par',card_treemap:'Blocs minés — Treemap',
 card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
 card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
@@ -154,12 +152,10 @@ d_climb:'Climbing',d_crouch:'Crouching',d_fall:'Falling',
 d_walk_on_water:'On water',d_walk_under_water:'Underwater',
 arch_new:'Newcomer',arch_miner:'Miner',arch_fighter:'Fighter',
 arch_explorer:'Explorer',arch_builder:'Builder',arch_farmer:'Farmer',
-time_mining:'⛏ Mining',time_travel:'🚶 Travel',
-time_craft:'🔨 Crafting',time_other:'💤 Other',
 playtime:'Playtime',traveled:'Traveled',
 deaths:'Deaths',enchantments:'Enchantments',chests_opened:'Chests opened',
 fish_caught:'Fish caught',npc_trades:'NPC trades',
-card_time_est:'Estimated time breakdown',card_distances:'Distances traveled',
+card_distances:'Distances traveled',
 card_killed_by:'Killed by',card_treemap:'Blocks mined — Treemap',
 card_top15_mined:'Top 15 blocks mined',card_top10_killed:'Top 10 mobs killed',
 card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',
@@ -326,39 +322,6 @@ function buildBrokenHtml(broken){
   return `<div class="broken-grid">${entries.map(([k,v])=>
     `<span class="broken-tag">${label(k)} <span class="bt-count">×${v}</span></span>`
   ).join('')}</div>`;
-}
-
-// ═══════════════════════════════════════
-// TIME ESTIMATION
-// ═══════════════════════════════════════
-function estimateTime(p){
-  const h=p.play_hours;if(h<1)return null;
-  const totalS=h*3600;
-  // Minage: ~1s par bloc
-  let miningS=p.total_mined;
-  // Combat: damage / 10 DPS moyen
-  let combatS=p.damage_dealt/10;
-  // Déplacement: distance / vitesse
-  const speeds={walk:4.3,sprint:5.6,swim:2.2,fly:10.9,aviate:33,boat:8,horse:9.9,minecart:8,climb:2.4,crouch:1.3,fall:20,walk_on_water:4.3,walk_under_water:2.2};
-  let travelS=0;
-  Object.entries(p.distances||{}).forEach(([mode,km])=>{travelS+=(km*1000)/(speeds[mode]||4.3)});
-  // Craft: ~1.5s par opération
-  let craftS=p.total_crafted*1.5;
-  // Normaliser si dépasse 85% du temps
-  const estTotal=miningS+combatS+travelS+craftS;
-  if(estTotal>totalS*0.85){
-    const scale=(totalS*0.85)/estTotal;
-    miningS*=scale;combatS*=scale;travelS*=scale;craftS*=scale;
-  }
-  const otherS=Math.max(0,totalS-(miningS+combatS+travelS+craftS));
-  const toH=s=>Math.round(s/3600*10)/10;
-  return [
-    {label:t('time_mining'),hours:toH(miningS),color:'#3ecf8e'},
-    {label:t('time_combat'),hours:toH(combatS),color:'#ef6a6a'},
-    {label:t('time_travel'),hours:toH(travelS),color:'#6aafef'},
-    {label:t('time_craft'),hours:toH(craftS),color:'#6aefd9'},
-    {label:t('time_other'),hours:toH(otherS),color:'#5c5c68'}
-  ];
 }
 
 // ═══════════════════════════════════════
@@ -685,7 +648,6 @@ function buildPlayerSection(name){
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_time_est')}</h3><div class="chart-wrap"><canvas id="chart-time-${name}"></canvas></div></div>
       <div class="card"><h3><span class="icon">${mcIcon('leather_boots')}</span> ${t('card_distances')}</h3><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
@@ -713,19 +675,6 @@ function buildPlayerSection(name){
 
 function renderPlayerCharts(name){
   const p=PLAYERS_DATA[name];
-
-  // Time estimation donut
-  const timeId=`chart-time-${name}`;
-  destroyChart(timeId);
-  const timeData=estimateTime(p);
-  if(timeData&&document.getElementById(timeId)){
-    charts[timeId]=new Chart(document.getElementById(timeId),{type:'doughnut',data:{
-      labels:timeData.map(d=>d.label),
-      datasets:[{data:timeData.map(d=>d.hours),backgroundColor:timeData.map(d=>d.color+'cc'),borderColor:'#16161a',borderWidth:2}]
-    },options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
-      plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}},
-        tooltip:{callbacks:{label:ctx=>{const d=timeData[ctx.dataIndex];const total=timeData.reduce((s,x)=>s+x.hours,0);return ` ${d.hours}h (${(d.hours/total*100).toFixed(0)}%)`}}}}}});
-  }
 
   // Distance bar
   const distId=`chart-dist-${name}`;

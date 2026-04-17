@@ -32,8 +32,7 @@ Interactive Minecraft stats dashboard that turns raw Minecraft server stats file
 │   ├── generate.py          # Main generator (JSON → HTML)
 │   ├── minecraft/
 │   │   └── badges.py        # Badge definitions + per-player tier computation
-│   ├── build_icons.py       # Pre-renders local Minecraft icon PNGs (stdlib only)
-│   └── sync-stats.ps1       # Windows sync script
+│   └── build_icons.py       # Pre-renders local Minecraft icon PNGs (stdlib only)
 ├── stats/
 │   ├── assets/
 │   │   ├── icons/           # Pre-rendered 256×256 Minecraft icon PNGs (committed)
@@ -64,18 +63,14 @@ python scripts/generate.py stats/<server-name>/data --title "Server Name"
 
 The file `stats/<server-name>/index.html` is generated automatically.
 
-### Sync stats from a server (Windows)
+### Sync stats from a server
 
-```powershell
-.\scripts\sync-stats.ps1
-```
-
-This script copies modified JSON files from Crafty Controller, writes a dated snapshot under `stats/<server>/snapshots/YYYY-MM-DD/` (once per day), then commits and pushes to GitHub.
+Copy your Minecraft server's raw player stat files into `stats/<server-name>/data/`, commit, and push. Automate the copy however suits your setup (cron, rsync, a PowerShell scheduled task, etc.). A dated snapshot under `stats/<server-name>/snapshots/YYYY-MM-DD/` is optional but lets you backfill history later.
 
 ### CI/CD pipeline
 
-1. `sync-stats.ps1` copies the JSON files and pushes to GitHub
-2. GitHub Actions (`update-stats.yml`) detects changes in `stats/*/data/`
+1. You push changes under `stats/*/data/**`
+2. GitHub Actions (`update-stats.yml`) detects the changed servers
 3. `generate.py` regenerates the `index.html` files
 4. GitHub Actions (`static.yml`) deploys to GitHub Pages
 

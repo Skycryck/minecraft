@@ -172,7 +172,7 @@
 
 ---
 
-### [ ] Tâche 8 — Mettre les joueurs dans un combobox avec recherche
+### [x] Tâche 8 — Mettre les joueurs dans un combobox avec recherche
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -180,9 +180,9 @@
 - **Problème identifié :**
   > La navigation (`generate.py:848-855`) affiche tous les joueurs en boutons horizontaux. À 10+ joueurs ou sur mobile, cela crée 3 rangées de boutons et aucune recherche n'est possible.
 - **Action attendue :**
-  - [ ] Garder les 2 onglets fixes "Vue globale" et "Classements"
-  - [ ] Remplacer les boutons joueurs par un `<select>` natif (ou combobox filtrant) listant les joueurs triés par heures
-  - [ ] Synchroniser avec `location.hash` pour permettre les deep-links (`#player/Jules`)
+  - [x] Garder les 2 onglets fixes "Vue globale" et "Classements"
+  - [x] Remplacer les boutons joueurs par un `<select>` natif (ou combobox filtrant) listant les joueurs triés par heures
+  - [x] Synchroniser avec `location.hash` pour permettre les deep-links (`#player/Jules`)
 - **Critères d'acceptation :**
   - L'URL reflète la section affichée
   - On peut partager un lien vers un profil joueur
@@ -416,6 +416,15 @@
 - Grep des autres hex gris : seul `--text-dim:#8b8b96` est utilisé comme texte — ratio 5.72 sur `--bg`, déjà AA, inchangé. `#5c5c68` dans `app.js:706` est une couleur de dataset de chart (pas du texte), laissée telle quelle.
 - Usages touchés automatiquement (via `var(--text-muted)`) : `.sync-date`, `.header .meta span`, `.card h3`, `.stat-tile .label`, `.leaderboard .rank`, `.profile-info .uuid`, `.profile-stat .pl`, `.badges-cat-header`, `.badge-progress-text`, `.badge-tier-locked`, `.tt-tier`. Aucun texte blanc brutal : l'écart reste perceptible (violet clair/gris moyen/gris foncé).
 - `python -m py_compile` OK. Régénération : `serveur-2026` 48 458 o, `serveur-2020` 65 063 o (tailles identiques — seul le CSS change).
+
+### 2026-04-17 — Tâche 8 : Combobox joueur + deep-links
+
+- Nav refondue dans `stats/assets/app.js` : 2 onglets fixes (`Vue globale`, `Classements`) + un `<select id="playerSelect">` qui liste les joueurs triés par heures (`Name — 47.6h`). Chaque option `value=name` ; option vide au début (`Choisir un joueur…`).
+- Router hash minimal : `sectionToHash` / `hashToSection` supportent `` (overview), `#leaderboards`, `#player/<name>`. `navigateTo()` fait `showSection` + `updateNavActive` + `history.pushState` pour ne pas déclencher `hashchange` quand l'action vient du dashboard. Listeners `hashchange` + `popstate` synchronisent l'UI si l'utilisateur modifie l'URL ou utilise back/forward. Init lit `location.hash` pour router au chargement → deep-links `#player/Jules` fonctionnent.
+- `updateNavActive()` bascule `.active` sur le bon onglet ; si la section est un joueur, positionne `select.value=name`, ajoute la classe `.active` et colorie le select via `--player-accent` = `PLAYER_COLORS_MAP[name]`. Sinon remet `value=''` et retire la classe.
+- 2 clés i18n ajoutées (`nav_player_placeholder`, `nav_player_label`) dans `T.fr` et `T.en`.
+- CSS (`stats/assets/styles.css`) : `.nav-player-select` reprend le style des boutons nav (pilule, min-height 50px), caret SVG inline, variante `.active` (fond coloré joueur, caret blanc), pleine largeur sur mobile. La rangée de nav ne peut donc plus déborder : 2 boutons + 1 select ≤ 3 cellules au lieu de 2+N.
+- `python -m py_compile` OK, `deno check stats/assets/app.js` OK. Régénération : `serveur-2026` 48 458 o (inchangé), `serveur-2020` 65 087 o (+24 o : JSON identique, seul `index.html` change d'une poussière). JS externe → pas de hausse du HTML.
 
 ### 2026-04-17 — Tâche 6 : Suppression de l'estimation du temps
 

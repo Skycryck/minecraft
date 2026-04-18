@@ -271,7 +271,7 @@
 
 ---
 
-### [ ] Tâche 13 — Remplacer le faux treemap par un vrai squarified treemap
+### [x] Tâche 13 — Remplacer le faux treemap par un vrai squarified treemap
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -279,8 +279,8 @@
 - **Problème identifié :**
   > `buildTreemapHtml` (`generate.py:731-741`) utilise un simple `flex` : les items inégaux deviennent illisibles, sans ratio 2D correct.
 - **Action attendue :**
-  - [ ] Implémenter un vrai algorithme squarified (30 lignes JS) OU charger `d3-hierarchy` via CDN
-  - [ ] Remplacer la sortie HTML flex par un `<svg>` ou un container positionné en absolu
+  - [x] Implémenter un vrai algorithme squarified (30 lignes JS) OU charger `d3-hierarchy` via CDN
+  - [x] Remplacer la sortie HTML flex par un `<svg>` ou un container positionné en absolu
 - **Critères d'acceptation :**
   - Les 15 blocs les plus minés sont visibles avec des aires proportionnelles correctes
   - Le treemap est responsive
@@ -457,6 +457,14 @@
 - `stats/assets/styles.css` — bloc `.lb-subnav` / `.lb-tab` (variantes hover et `.active` ; icônes 20×20 pour distinguer de la nav principale 32×32) + règles `.lb-wrap[data-active-cat="X"] .lb-card[data-lbcats~="X"]{display:block}` pour filtrer. L'attribut `~=` matche le mot complet, donc une card `top production` est bien visible sur les deux onglets.
 - Vérif preview navigateur (serveur-2026, FR puis EN) : onglet Top affiche 3 cards, Combat 3+chart, Exploration 2+chart, Économie 4, Production 3. Chart death-causes se redimensionne proprement après bascule (1 frame de delay sans flash 0×0 grâce au `setTimeout`). Aucune erreur console. Classements ne dépasse plus 1 écran — avant 4 rangées de 3 boards + 1 rangée de 2 charts = ~5 écrans de scroll ; après ~1 écran selon l'onglet.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. Régénération : `serveur-2026` 49 186 o (inchangé ; JS externe), `serveur-2020` 65 191 o (inchangé), `hermitcraft-s10` 378 481 o (inchangé).
+
+### 2026-04-18 — Tâche 13 : Vrai treemap squarified
+
+- `stats/assets/app.js` — ancienne `buildTreemapHtml` (simple `flex` 1D avec `flex:${area}` sur les 15 items) remplacée par l'algorithme squarified de Bruls/Huijing/van Wijk 2000 implémenté en ~35 lignes (`squarifyLayout`). Chaque bloc obtient ses `x/y/w/h` en coords abstraites `W=200, H=100` (aspect 2:1) convertis ensuite en % pour le rendu CSS absolu. Le critère `worst(row)` évalue le pire aspect ratio (`max(side²·maxA/s², s²/(side²·minA))`) et ajoute l'item suivant tant qu'il améliore ou n'aggrave pas la ratio, sinon finalise la strip le long de la **plus courte** dimension de la zone restante et récursive sur le rectangle libre.
+- `stats/assets/styles.css` — `.treemap` passe de `display:flex; flex-wrap:wrap; gap:2px; min-height:180px` à `position:relative; aspect-ratio:2/1; width:100%` (responsive, ratio fixe cohérent avec l'espace abstrait). `.treemap-item` passe de `position:relative; min-width/height:28px` à `position:absolute; box-sizing:border-box; border:1px solid var(--bg)` — le border interne crée le séparateur 2px visuel entre rects adjacents (remplace le `gap:2px` qui n'existe pas en absolu) et `overflow:hidden` coupe les labels trop longs.
+- Labels : seuil de `p>4%` (ancien critère 1D) remplacé par `areaFrac>0.035` (fraction d'aire 2D réelle) — plus pertinent car un item long mais fin ne devait pas forcément afficher son label. Les plus petits rects conservent le tooltip `title=…` complet.
+- Vérif numérique (deno eval) sur 15 valeurs décroissantes `[12000..300]` : 15/15 rects émis, somme des aires = 20000 (soit exactement W×H, couverture 100%), worst aspect ratio 1.96 (≈2 — excellent pour squarified, très loin des bandelettes 1D de l'ancien flex où le dernier item pouvait atteindre 30:1).
+- `python -m py_compile` OK, `deno check stats/assets/app.js` exit 0. Régénération : `serveur-2026` 49 186 o, `serveur-2020` 65 191 o, `hermitcraft-s10` 378 481 o (tailles identiques — JS externe).
 
 ### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
 

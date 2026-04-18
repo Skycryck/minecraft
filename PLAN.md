@@ -289,7 +289,7 @@
 
 ---
 
-### [ ] Tâche 14 — Générer `MC_ICONS_HR` depuis `build_icons.py`
+### [x] Tâche 14 — Générer `MC_ICONS_HR` depuis `build_icons.py`
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -299,10 +299,10 @@
 - **Problème identifié :**
   > `MC_ICONS_HR` dans `generate.py:461` et `ICONS`/`WIKI_HIRES` dans `build_icons.py` doivent être synchronisés manuellement (documenté dans CLAUDE.md). Source récurrente d'incohérences.
 - **Action attendue :**
-  - [ ] `build_icons.py` écrit `stats/assets/icons/manifest.json` avec la liste des icônes produites
-  - [ ] `generate.py` lit ce manifest au runtime et injecte la liste dans le JS
-  - [ ] Supprimer la constante `MC_ICONS_HR` hardcodée
-  - [ ] Mettre à jour CLAUDE.md pour retirer l'étape manuelle
+  - [x] `build_icons.py` écrit `stats/assets/icons/manifest.json` avec la liste des icônes produites
+  - [x] `generate.py` lit ce manifest au runtime et injecte la liste dans le JS
+  - [x] Supprimer la constante `MC_ICONS_HR` hardcodée
+  - [x] Mettre à jour CLAUDE.md pour retirer l'étape manuelle
 - **Critères d'acceptation :**
   - Ajouter une icône = 1 seule modification (dans `build_icons.py`)
   - Aucune icône ne bascule par erreur en fallback CDN
@@ -475,6 +475,15 @@
 - Vérif manuelle Skycryck (serveur-2026, baseline 12/04 → snapshot 18/04, 6 jours) : `play_hours 47.8 → 61.3 (+13.5)`, `total_mined 26771 → 31211 (+4440)`, `mob_kills 7713 → 8068 (+355)`, `total_crafted 21476 → 25637 (+4161)`. Affichage cohérent : tile mined `↑ +4.4k (7j)`, tile kills `↑ +355 (7j)`, tile crafted `↑ +4.2k (7j)`. Overview : `↑ +32,9h (7j)` / `+15.3k` / `+1.8k` / `+9.9k`.
 - Edge case `serveur-2020` (pas de dossier `snapshots/`) : `BASELINE_DATE = null`, aucun `delta_7d` injecté, `deltaSub()` renvoie `''` partout, dashboard rendu identique à avant. `hermitcraft-s10` : pareil.
 - `python -m py_compile` OK ; `deno check stats/assets/app.js` OK ; aucune erreur console côté navigateur (preview FR + EN). Tailles : `serveur-2026` 49 188 o (+730 o : 4×FR + 4×EN deltas embarqués), `serveur-2020` 65 191 o (+128 o : `BASELINE_DATE=null`), `hermitcraft-s10` 378 475 o.
+
+### 2026-04-18 — Tâche 14 : Manifest d'icônes auto-généré
+
+- `scripts/build_icons.py` — après le `[NORMALIZE]`, écriture de `stats/assets/icons/manifest.json` (liste triée des stems des `*.png` effectivement sur disque). Choix de lister le contenu réel plutôt que `ICONS` + `WIKI_HIRES` : si une icône échoue au fetch, elle n'apparaît pas dans le manifest → pas de faux hi-res qui partirait en 404.
+- `scripts/generate.py` — nouvelle constante `ICONS_MANIFEST_PATH`, fonction `load_icons_manifest()` (retourne `[]` + warning si absent), injection via `window.ICONS_HR = {icons_json}` dans le template HTML. Si le manifest manque, la génération n'échoue pas — le site retombe en tout-CDN.
+- `stats/assets/app.js` — `MC_ICONS_HR` n'est plus un `new Set([...51 valeurs])` hardcodé mais `new Set(window.ICONS_HR || [])`. Le commentaire pointe désormais vers `manifest.json` + `build_icons.py` comme source unique. `mcIcon()` inchangé.
+- `manifest.json` initial généré depuis le contenu actuel de `stats/assets/icons/` (51 icônes — identique à l'ancien hardcode). Après régénération des 3 dashboards (serveur-2026 49 846 o, serveur-2020 65 851 o, hermitcraft-s10 379 141 o), `grep window.ICONS_HR` confirme l'injection correcte.
+- CLAUDE.md mis à jour : la section "Icon rendering" et la règle "Adding a new icon" ne mentionnent plus de synchronisation manuelle — ajouter une icône = 1 modif dans `build_icons.py` + run, puis commit du PNG et du manifest régénéré.
+- `python -m py_compile` OK sur `generate.py` et `build_icons.py` ; `deno check stats/assets/app.js` exit 0.
 
 ---
 

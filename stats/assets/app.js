@@ -34,7 +34,7 @@ const _MI='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.
 const _HR='../assets/icons/';
 // Icons pre-rendered at 256x256 (nearest-neighbor upscale of native source).
 // See scripts/build_icons.py — keep ICONS list there in sync with this set.
-const MC_ICONS_HR=new Set(['diamond_pickaxe','diamond_axe','diamond_sword','netherite_sword','iron_sword','iron_chestplate','shield','bow','crossbow','elytra','fishing_rod','diamond','blaze_rod','ender_pearl','emerald','nether_star','golden_apple','paper','saddle','clock','compass','filled_map','new_realm','enchanted_book','knowledge_book','feather','wheat','wheat_seeds','rabbit_foot','leather_boots','diamond_boots','gold_ingot','iron_ingot','copper_ingot','rotten_flesh','skeleton_skull','totem_of_undying','oak_boat','egg','torch','cod','oak_sapling','oak_door','oak_planks','netherrack','ancient_debris','crafting_table','chest','white_bed','anvil','tnt','target']);
+const MC_ICONS_HR=new Set(['diamond_pickaxe','diamond_axe','diamond_sword','netherite_sword','iron_sword','iron_chestplate','shield','bow','crossbow','elytra','fishing_rod','diamond','blaze_rod','ender_pearl','emerald','nether_star','golden_apple','paper','saddle','recovery_compass','compass','filled_map','new_realm','enchanted_book','knowledge_book','feather','wheat','wheat_seeds','rabbit_foot','diamond_boots','gold_ingot','iron_ingot','copper_ingot','rotten_flesh','skeleton_skull','totem_of_undying','oak_boat','egg','torch','cod','oak_sapling','oak_door','oak_planks','netherrack','ancient_debris','crafting_table','chest','white_bed','anvil','tnt','target']);
 function mcIcon(name){
   if(MC_ICONS_HR.has(name)){
     return '<img class="mc-icon-hr" src="'+_HR+name+'.png" alt="'+name+'" loading="lazy">';
@@ -59,7 +59,8 @@ chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_
 axis_hours:'Heures',axis_blocks:'Blocs',axis_kills:'Kills',axis_km:'km',
 radar_playtime:'Temps de jeu',radar_mined:'Blocs minés',radar_kills:'Mobs tués',
 radar_distance:'Distance',radar_crafted:'Items craftés',radar_deaths:'Morts',
-lb_playtime:mcIcon('clock')+' Temps de jeu',lb_mined:mcIcon('diamond_pickaxe')+' Blocs minés',lb_kills:mcIcon('diamond_sword')+' Mobs tués',
+radar_avg:'Moyenne serveur',
+lb_playtime:mcIcon('recovery_compass')+' Temps de jeu',lb_mined:mcIcon('diamond_pickaxe')+' Blocs minés',lb_kills:mcIcon('diamond_sword')+' Mobs tués',
 lb_deaths:mcIcon('skeleton_skull')+' Morts',lb_distance:mcIcon('filled_map')+' Distance',lb_crafted:mcIcon('crafting_table')+' Items craftés',
 lb_pvp:mcIcon('iron_sword')+' PvP Kills',lb_enchant:mcIcon('enchanted_book')+' Enchantements',lb_fish:mcIcon('cod')+' Poissons',
 lb_trades:mcIcon('emerald')+' Échanges PNJ',lb_breed:mcIcon('egg')+' Élevage',lb_jumps:mcIcon('rabbit_foot')+' Sauts',
@@ -129,8 +130,9 @@ ff_tools:(n)=>`A cassé ${n} outils — pas très soigneux`,
 ff_mob_kills:(n,kph)=>`${n} mobs tués — soit ${kph} par heure`,
 ff_breeding:(n)=>`A élevé ${n} animaux — fermier dans l'âme`,
 ff_fishing:(n)=>`A pêché ${n} poissons — le pêcheur du serveur`,
-ff_total_dist:(km,eq)=>`${km} km parcourus au total — l'équivalent d'un ${eq}`,
-ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres'
+ff_total_dist:(km,n,eq)=>`${km} km parcourus au total — soit ${n} allers ${eq}`,
+ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres',
+other_slice:'Autres'
 },en:{
 // EN contains only overrides where the translation differs from FR.
 // Identical values fall through to T.fr via the ?? lookup in t() / label().
@@ -144,7 +146,8 @@ chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart
 axis_hours:'Hours',axis_blocks:'Blocks',
 radar_playtime:'Playtime',radar_mined:'Blocks mined',radar_kills:'Mobs killed',
 radar_crafted:'Items crafted',radar_deaths:'Deaths',
-lb_playtime:mcIcon('clock')+' Playtime',lb_mined:mcIcon('diamond_pickaxe')+' Blocks mined',lb_kills:mcIcon('diamond_sword')+' Mobs killed',
+radar_avg:'Server average',
+lb_playtime:mcIcon('recovery_compass')+' Playtime',lb_mined:mcIcon('diamond_pickaxe')+' Blocks mined',lb_kills:mcIcon('diamond_sword')+' Mobs killed',
 lb_deaths:mcIcon('skeleton_skull')+' Deaths',lb_crafted:mcIcon('crafting_table')+' Items crafted',
 lb_enchant:mcIcon('enchanted_book')+' Enchantments',lb_fish:mcIcon('cod')+' Fish caught',
 lb_trades:mcIcon('emerald')+' NPC trades',lb_breed:mcIcon('egg')+' Breeding',lb_jumps:mcIcon('rabbit_foot')+' Jumps',
@@ -213,8 +216,9 @@ ff_tools:(n)=>`Broke ${n} tools — not very careful`,
 ff_mob_kills:(n,kph)=>`${n} mobs killed — that's ${kph} per hour`,
 ff_breeding:(n)=>`Bred ${n} animals — farmer at heart`,
 ff_fishing:(n)=>`Caught ${n} fish — the server's angler`,
-ff_total_dist:(km,eq)=>`${km} km traveled in total — the equivalent of a ${eq}`,
-ff_equiv_long:'Paris-Barcelona',ff_equiv_short:'Paris-London'
+ff_total_dist:(km,n,eq)=>`${km} km traveled in total — that's ${n} ${eq} trips`,
+ff_equiv_long:'Paris-Barcelona',ff_equiv_short:'Paris-London',
+other_slice:'Others'
 }};
 function t(k){const a=[].slice.call(arguments,1);const v=T[lang]?.[k]??T.fr[k];return typeof v==='function'?v.apply(null,a):(v||k)}
 function label(k){const dl=T[lang]?.['d_'+k]??T.fr['d_'+k];if(dl)return dl;return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
@@ -260,13 +264,13 @@ function getFunFacts(name,p){
   const facts=[];const h=p.play_hours;if(h<0.5)return facts;
 
   const ek=p.killed_top10?.enderman||0;
-  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),icon:mcIcon('ender_pearl'),text:t('ff_endermen',fmt(ek),Math.floor(ek/64))});
+  if(ek>50)facts.push({score:ek/_maxOf(p=>p.killed_top10?.enderman||0),icon:mcIcon('ender_pearl'),text:t('ff_endermen',fmt(ek),Math.floor(ek/128))});
 
   if(p.deaths>3&&h>1){const mpd=Math.round(h*60/p.deaths);const deathRate=p.deaths/h;
     facts.push({score:deathRate/_maxOf(p=>p.play_hours>1?p.deaths/p.play_hours:0),icon:mcIcon('skeleton_skull'),text:t('ff_death_rate',mpd)})}
 
   const wk=p.distances?.walk||0;
-  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),icon:mcIcon('leather_boots'),text:t('ff_walk',wk.toFixed(0),(wk/42.195).toFixed(1))});
+  if(wk>20)facts.push({score:wk/_maxOf(p=>p.distances?.walk||0),icon:mcIcon('diamond_boots'),text:t('ff_walk',wk.toFixed(0),(wk/42.195).toFixed(1))});
 
   if(p.jumps>500&&h>1)facts.push({score:p.jumps/_maxOf(p=>p.jumps||0),icon:mcIcon('rabbit_foot'),text:t('ff_jumps',Math.round(p.jumps/h))});
 
@@ -280,7 +284,7 @@ function getFunFacts(name,p){
   if(pvpD>3)facts.push({score:pvpD/_maxOf(p=>(p.killed_by?.player)||0),icon:mcIcon('bow'),text:t('ff_pvp_target',pvpD)});
 
   const ely=p.distances?.aviate||0;
-  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),icon:mcIcon('elytra'),text:t('ff_elytra',ely.toFixed(0),Math.round(ely/6))});
+  if(ely>50)facts.push({score:ely/_maxOf(p=>p.distances?.aviate||0),icon:mcIcon('elytra'),text:t('ff_elytra',ely.toFixed(0),Math.round(ely/10))});
 
   if(p.damage_dealt>10000)facts.push({score:p.damage_dealt/_maxOf(p=>p.damage_dealt||0),icon:mcIcon('netherite_sword'),text:t('ff_damage',fmt(Math.round(p.damage_dealt/20)))});
 
@@ -296,7 +300,10 @@ function getFunFacts(name,p){
   if(p.fish_caught>10)facts.push({score:p.fish_caught/_maxOf(p=>p.fish_caught||0),icon:mcIcon('fishing_rod'),text:t('ff_fishing',p.fish_caught)});
 
   const totalDist=p.total_distance_km;
-  if(totalDist>100)facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),icon:mcIcon('compass'),text:t('ff_total_dist',totalDist.toFixed(0),totalDist>1000?t('ff_equiv_long'):t('ff_equiv_short'))});
+  if(totalDist>100){
+    const isLong=totalDist>1000;const refKm=isLong?1040:345;
+    facts.push({score:totalDist/_maxOf(p=>p.total_distance_km||0),icon:mcIcon('compass'),text:t('ff_total_dist',totalDist.toFixed(0),(totalDist/refKm).toFixed(1),isLong?t('ff_equiv_long'):t('ff_equiv_short'))});
+  }
 
   facts.sort((a,b)=>b.score-a.score);
   return facts.slice(0,5);
@@ -508,8 +515,8 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div></div>
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div></div>
     </div>
-    <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
+    <div class="grid grid-2-fixed">
+      <div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
       <div class="card"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
       <div class="card"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
       <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
@@ -521,14 +528,31 @@ function buildOverview(){
 }
 
 function renderOverviewCharts(){
-  const barOpts=(lbl)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{y:{title:{display:true,text:lbl},grid:{color:'rgba(42,42,53,0.3)'}},x:{grid:{display:false}}}});
+  const useHorizontal=playerNames.length>8;
+  const padAxis=(scale)=>{scale.width+=8};
+  const barOpts=(lbl)=>useHorizontal?{
+    responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
+    scales:{x:{title:{display:true,text:lbl},grid:{color:'rgba(42,42,53,0.3)'}},
+      y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}},afterFit:padAxis}}
+  }:{
+    responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:lbl},grid:{color:'rgba(42,42,53,0.3)'}},
+      x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:60,minRotation:45,font:{size:10}}}}
+  };
   const mkBar=(id,data,tooltipSuffix,yLabel)=>{
     destroyChart(id);
-    charts[id]=new Chart(document.getElementById(id),{type:'bar',data:{
+    const canvas=document.getElementById(id);
+    if(useHorizontal){
+      canvas.parentNode.style.height=Math.max(350,playerNames.length*28)+'px';
+      canvas.parentNode.style.maxHeight='none';
+    }else{
+      canvas.parentNode.style.height='';
+      canvas.parentNode.style.maxHeight='';
+    }
+    charts[id]=new Chart(canvas,{type:'bar',data:{
       labels:playerNames,datasets:[{data,backgroundColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]+'cc'),
         borderColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]),borderWidth:1,borderRadius:4}]
-    },options:{...barOpts(yLabel),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+(tooltipSuffix||'')}}}}});
+    },options:{...barOpts(yLabel),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed[useHorizontal?'x':'y']+(tooltipSuffix||'')}}}}});
   };
   mkBar('chart-playtime',playerNames.map(n=>PLAYERS_DATA[n].play_hours),'h',t('axis_hours'));
   mkBar('chart-distance',playerNames.map(n=>PLAYERS_DATA[n].total_distance_km),' km',t('axis_km'));
@@ -540,16 +564,23 @@ function renderOverviewCharts(){
   const rm=['play_hours','total_mined','mob_kills','total_distance_km','total_crafted','deaths'];
   const rl=[t('radar_playtime'),t('radar_mined'),t('radar_kills'),t('radar_distance'),t('radar_crafted'),t('radar_deaths')];
   const mx=rm.map(m=>Math.max(...playerNames.map(n=>PLAYERS_DATA[n][m]||0)));
+  const avg=rm.map(m=>playerNames.reduce((s,n)=>s+(PLAYERS_DATA[n][m]||0),0)/playerNames.length);
+  const avgLabel=t('radar_avg');
+  const avgDataset={label:avgLabel,
+    data:rm.map((m,i)=>mx[i]?(avg[i]/mx[i]*100):0),
+    borderColor:'#8b8b96',backgroundColor:'transparent',borderDash:[6,4],
+    borderWidth:2,pointRadius:2,pointBackgroundColor:'#8b8b96'};
   charts['chart-radar']=new Chart(document.getElementById('chart-radar'),{type:'radar',data:{
     labels:rl,datasets:top5.map(name=>({label:name,
       data:rm.map((m,i)=>mx[i]?((PLAYERS_DATA[name][m]||0)/mx[i]*100):0),
       borderColor:PLAYER_COLORS_MAP[name],backgroundColor:PLAYER_COLORS_MAP[name]+'22',
-      borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[name]}))
+      borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[name]})).concat([avgDataset])
   },options:{responsive:true,maintainAspectRatio:false,
     scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},ticks:{display:false},pointLabels:{font:{size:12}}}},
     plugins:{tooltip:{callbacks:{label:ctx=>{
-      const idx=ctx.dataIndex;const name=ctx.dataset.label;const raw=PLAYERS_DATA[name][rm[idx]]||0;
-      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(raw)}`;
+      const idx=ctx.dataIndex;const name=ctx.dataset.label;
+      const raw=name===avgLabel?avg[idx]:(PLAYERS_DATA[name]?.[rm[idx]]||0);
+      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(Math.round(raw))}`;
     }}}}}});
 }
 
@@ -574,13 +605,12 @@ function buildLeaderboards(){
   let h=`<div class="section" id="leaderboards"><div class="grid grid-3">`;
   boards.forEach(b=>{
     const sorted=[...playerNames].sort((a,c)=>(PLAYERS_DATA[c][b.key]||0)-(PLAYERS_DATA[a][b.key]||0));
-    const maxVal=PLAYERS_DATA[sorted[0]][b.key]||1;
     h+=`<div class="card"><h3>${t(b.tkey)}</h3><ol class="leaderboard">`;
     sorted.forEach((name,i)=>{
-      const val=PLAYERS_DATA[name][b.key]||0;const w=pct(val,maxVal);const isRec=i===0&&val>0;
+      const val=PLAYERS_DATA[name][b.key]||0;const isRec=i===0&&val>0;
       h+=`<li><span class="rank">${i+1}</span>
-        <span class="name"><span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>${name}${isRec?'<span class="record-badge">RECORD</span>':''}</span>
-        <span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${b.color}"></span></span>
+        <span class="name"><span class="player-dot" style="background:${PLAYER_COLORS_MAP[name]}"></span>${name}</span>
+        ${isRec?'<span class="record-badge">RECORD</span>':''}
         <span class="val">${typeof val==='number'&&val%1?val.toFixed(1):fmt(val)}${b.suffix}</span></li>`;
     });
     h+=`</ol></div>`;
@@ -596,20 +626,41 @@ function buildLeaderboards(){
 function renderLeaderboardCharts(){
   destroyChart('chart-deathcauses');
   const da={};playerNames.forEach(n=>{const kb=PLAYERS_DATA[n].killed_by||{};Object.entries(kb).forEach(([m,c])=>{da[m]=(da[m]||0)+c})});
-  const ds=Object.entries(da).sort((a,b)=>b[1]-a[1]);
+  const sorted=Object.entries(da).sort((a,b)=>b[1]-a[1]);
+  const daTotal=sorted.reduce((s,[,v])=>s+v,0);
+  const threshold=daTotal*0.01;
+  const main=[];let otherSum=0;
+  sorted.forEach(([k,v])=>{if(v>=threshold)main.push([k,v]);else otherSum+=v});
+  const ds=otherSum>0?main.concat([['__other__',otherSum]]):main;
   const dc=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
   charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{type:'doughnut',data:{
-    labels:ds.map(d=>label(d[0])),datasets:[{data:ds.map(d=>d[1]),backgroundColor:ds.map((_,i)=>dc[i%dc.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
+    labels:ds.map(d=>d[0]==='__other__'?t('other_slice'):label(d[0])),
+    datasets:[{data:ds.map(d=>d[1]),backgroundColor:ds.map((d,i)=>d[0]==='__other__'?'#5c5c6888':dc[i%dc.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
 
   destroyChart('chart-dist-stacked');
   const dt=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
   const dco=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
   const fp=playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>5);
-  charts['chart-dist-stacked']=new Chart(document.getElementById('chart-dist-stacked'),{type:'bar',data:{
+  const distHorizontal=fp.length>8;
+  const distCanvas=document.getElementById('chart-dist-stacked');
+  if(distHorizontal){
+    distCanvas.parentNode.style.height=Math.max(350,fp.length*24)+'px';
+    distCanvas.parentNode.style.maxHeight='none';
+  }else{
+    distCanvas.parentNode.style.height='';
+    distCanvas.parentNode.style.maxHeight='';
+  }
+  charts['chart-dist-stacked']=new Chart(distCanvas,{type:'bar',data:{
     labels:fp,datasets:dt.map((t,i)=>({label:label(t),data:fp.map(n=>PLAYERS_DATA[n].distances?.[t]||0),backgroundColor:dco[i]+'aa',borderWidth:0}))
-  },options:{responsive:true,maintainAspectRatio:false,
-    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}},
+  },options:{responsive:true,maintainAspectRatio:false,indexAxis:distHorizontal?'y':'x',
+    scales:distHorizontal?{
+      y:{stacked:true,grid:{display:false},ticks:{autoSkip:false,font:{size:10}},afterFit:(s)=>{s.width+=8}},
+      x:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}
+    }:{
+      x:{stacked:true,grid:{display:false},ticks:{autoSkip:false,maxRotation:60,minRotation:45,font:{size:10}}},
+      y:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}
+    },
     plugins:{legend:{position:'bottom',labels:{font:{size:9}}}}}});
 }
 
@@ -685,8 +736,12 @@ function buildPlayerSection(name){
 
   const mkList=(entries,color)=>{
     if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
-    const mx=entries[0]?.[1]||1;
-    return entries.map(([k,v])=>{const w=pct(v,mx);return `<li><span class="name">${label(k)}</span><span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span><span class="val">${fmt(v)}</span></li>`}).join('');
+    const vals=entries.map(e=>e[1]);
+    const mn=Math.min(...vals),mx=Math.max(...vals);const range=mx-mn;
+    return entries.map(([k,v])=>{
+      const w=range>0?Math.round((v-mn)/range*90+10):100;
+      return `<li><span class="name">${label(k)}</span><span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span><span class="val">${fmt(v)}</span></li>`;
+    }).join('');
   };
 
   const kd=p.deaths>0?(p.mob_kills/p.deaths).toFixed(1):'∞';
@@ -727,7 +782,7 @@ function buildPlayerSection(name){
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.traded_with_villager}">0</div><div class="label">${t('npc_trades')}</div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('leather_boots')}</span> ${t('card_distances')}</h3><div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem">${t('travel_time_sub',totalTravelHours(p.distances).toFixed(1),p.play_hours>0?Math.round(totalTravelHours(p.distances)/p.play_hours*100):0)}</div><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
+      <div class="card"><h3><span class="icon">${mcIcon('diamond_boots')}</span> ${t('card_distances')}</h3><div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem">${t('travel_time_sub',totalTravelHours(p.distances).toFixed(1),p.play_hours>0?Math.round(totalTravelHours(p.distances)/p.play_hours*100):0)}</div><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
@@ -800,3 +855,7 @@ buildNav();buildAllSections();
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);
 animateCounters();
+// Re-render current section once fonts finish loading. Chart.js' first pass
+// may measure labels with the fallback font (shorter glyphs) and clip the
+// longest y-axis label once the real font kicks in.
+if(document.fonts?.ready)document.fonts.ready.then(()=>showSection(currentSection));

@@ -136,7 +136,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .profile-stat .pl{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-mono)}
 .section{display:none}
 .section.active{display:block}
-.lb-subnav{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.lb-subnav{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.75rem 0 1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
 .lb-tab{
   font-family:var(--font-mono);font-size:.72rem;
   padding:.4rem .9rem;border-radius:16px;border:1px solid var(--border);

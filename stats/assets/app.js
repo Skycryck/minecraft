@@ -721,7 +721,7 @@ function buildBadgesHtml(name){
       const tl=b.tier>0?tierLabel(b.tier):t('tier_locked');
       const tc=b.tier>0?'tier-'+tn:'locked';
       const pc=TIER_COLORS[Math.max(b.tier,1)];
-      const dv=b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value)));
+      const dv=b.value==null?'—':(b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value))));
       const nt=b.tier>=4?'MAX':fmt(b.nextTarget);
       const desc=t('bd_'+b.id);
       const ttTiers=b.tiers.map((th,i)=>{const cls=i<b.tier?'tt-done':(i===b.tier&&b.tier<4?'tt-next':'');return `<span class="tt-tier ${cls}">${TIER_EMOJIS[i]} ${fmt(th)}</span>`}).join(' · ');

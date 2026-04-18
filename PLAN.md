@@ -234,7 +234,7 @@
 
 ---
 
-### [ ] Tâche 11 — Corriger l'edge case du badge `increvable`
+### [x] Tâche 11 — Corriger l'edge case du badge `increvable`
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -242,8 +242,8 @@
 - **Problème identifié :**
   > `generate.py:1034` : `val = deaths>0 ? hours/deaths : (hours>=1 ? 999 : 0)`. Un joueur à 0h a un score de 0 et débloque artificiellement un tier `locked` correct, mais la logique est fragile et peu lisible.
 - **Action attendue :**
-  - [ ] Simplifier : renvoyer `None` si `hours < 1` (badge non applicable), sinon `hours / max(deaths, 1)`
-  - [ ] Afficher "—" dans le badge si la valeur est `None`
+  - [x] Simplifier : renvoyer `None` si `hours < 1` (badge non applicable), sinon `hours / max(deaths, 1)`
+  - [x] Afficher "—" dans le badge si la valeur est `None`
 - **Critères d'acceptation :**
   - Un joueur à 0 mort ET 0 heure n'affiche plus de badge `increvable`
   - Un joueur à 5h / 0 mort affiche toujours le tier Diamond
@@ -440,6 +440,14 @@
 - `git add` étendu à `stats/serveur-2026/snapshots` en plus de `data/*.json` : le dossier ajoute sa propre ligne dans le commit quotidien. Le workflow `update-stats.yml` ne se déclenche que sur `stats/*/data/**`, donc les nouveaux commits qui ne modifient que `snapshots/` n'entraîneraient aucun rebuild — mais en pratique les snapshots ne sont créés qu'après au moins une nouvelle version de `data/*.json`, donc les deux changements cohabitent dans un même commit et le workflow se déclenche normalement.
 - Test dry-run (script PS isolé sur ce worktree) : crée `snapshots/2026-04-17/` avec les 7 JSON, 2ᵉ exécution → branche « skip ». Puis `python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"` : OK, 7 joueurs, 194h, 48 498 o → `generate.py` ignore bien le sous-dossier `snapshots/` (lecture limitée au dossier passé en argument). `powershell [PSParser]::Tokenize` : OK sur le script modifié.
 - Premier snapshot committé tel quel (7 fichiers, ~164 KB) — bootstrap minimal pour la tâche 10 (`history.py` lira le plus proche ≥6 jours). Pas de `.gitignore` ajouté, les snapshots doivent persister dans le repo.
+
+### 2026-04-18 — Tâche 11 : Edge case badge `increvable`
+
+- `scripts/minecraft/badges.py` — `_increvable()` simplifié : retourne `None` si `hours < 1` (badge non applicable), `999` si `deaths == 0` et `hours ≥ 1` (sentinel ∞ → tier Diamond, préserve l'affichage existant), sinon `round(hours/deaths, 1)`. Avant : la branche `hours=0, deaths=0` renvoyait `0` (tier locked OK mais via une valeur numérique factice — fragile car confondait "pas assez joué" et "aucun ratio possible").
+- `_badge_entry()` — court-circuit ajouté : si `value is None`, retourne `tier=0`, `progress=0`, `nextTarget=tiers[0]` sans appeler `get_tier()`/`_compute_progress()` (qui échoueraient sur `None >= int`). Les autres badges ne sont pas impactés (aucun ne retourne `None` aujourd'hui, mais le support est générique).
+- `stats/assets/app.js:724` — `buildBadgesHtml` : `dv` préfixé par `b.value==null?'—':...` pour afficher `—` dans la ligne `<dv> / <nextTarget>`. La règle `∞` pour `value>=999` (0 morts + 1h+) est conservée.
+- Vérif serveur-2026 : `bareme` (0.3h, 0 morts) → `value=None, tier=0, progress=0` ✓ — plus de Diamond artificiel. `Industh` (0.2h, 2 morts) → `None` aussi (passe avant la branche deaths). `SkycryckII` (1.1h, 5 morts) → `0.2`, locked (<2). `Skycryck` (64.9h, 14 morts) → `4.6`, Bronze 87% (inchangé vs. avant). Joueur à 5h/0 mort → sentinel `999`, Diamond garanti (cas d'acceptance respecté).
+- `python -m py_compile` OK sur les 3 fichiers, `deno check stats/assets/app.js` exit 0. Régénération : `serveur-2026` 49 186 o (-2 o), `serveur-2020` 65 191 o (inchangé — aucun joueur <1h), `hermitcraft-s10` 378 481 o (+6 o, quelques valeurs passent à `null`).
 
 ### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
 

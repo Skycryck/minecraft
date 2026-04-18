@@ -28,11 +28,13 @@ def _dist(player: dict, key: str) -> float:
 
 
 def _increvable(player: dict):
-    deaths = _get(player, "deaths")
     hours = _get(player, "play_hours")
-    if deaths > 0:
-        return round(hours / deaths, 1)
-    return 999 if hours >= 1 else 0
+    if hours < 1:
+        return None
+    deaths = _get(player, "deaths")
+    if deaths == 0:
+        return 999
+    return round(hours / deaths, 1)
 
 
 BADGES: list[dict] = [
@@ -129,8 +131,11 @@ def _compute_progress(value, tier: int, tiers: list) -> tuple[int, float]:
 
 def _badge_entry(defn: dict, player: dict) -> dict:
     value = defn["val"](player)
-    tier = get_tier(value, defn["tiers"])
-    progress, next_target = _compute_progress(value, tier, defn["tiers"])
+    if value is None:
+        tier, progress, next_target = 0, 0, defn["tiers"][0]
+    else:
+        tier = get_tier(value, defn["tiers"])
+        progress, next_target = _compute_progress(value, tier, defn["tiers"])
     return {
         "id": defn["id"],
         "name": defn["name"],

@@ -13,6 +13,11 @@
     If the public-main branch does not exist, it is created as an orphan
     (zero shared history with main).
 
+    Each mirror commit embeds a changelog body listing the commits on
+    SourceBranch since the previous mirror, filtered to ignore commits
+    that only touch paths in -Exclude (so sync-stats auto-commits and
+    similar noise don't appear on the public repo).
+
 .USAGE
     .\scripts\mirror-to-public.ps1
     .\scripts\mirror-to-public.ps1 -Push            # mirror + git push public
@@ -64,10 +69,42 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# -- Switch to TargetBranch (created as orphan if missing) --
+# -- Does TargetBranch already exist? --
 git show-ref --verify --quiet "refs/heads/$TargetBranch"
 $targetExists = ($LASTEXITCODE -eq 0)
 
+# -- Build changelog body from commits on SourceBranch since the previous mirror --
+# This runs BEFORE any checkout so it reads refs, not the working tree.
+$commitBody = $null
+if ($targetExists) {
+    $lastMirrorMsg = git log $TargetBranch --format=%B -n 1 2>$null
+    if ($LASTEXITCODE -eq 0 -and $lastMirrorMsg -match "mirror from \S+ @ ([0-9a-f]+)") {
+        $candidateSha = $Matches[1]
+        # Verify the referenced commit still exists (main may have been rewritten)
+        git rev-parse --verify --quiet "$candidateSha^{commit}" 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            # Collect commit subjects on SourceBranch reachable since $candidateSha,
+            # skipping merge commits and any commit that only touches excluded paths.
+            $excludeSpecs = $Exclude | ForEach-Object { ":(exclude)$_" }
+            $logArgs = @(
+                'log',
+                '--format=- %h %s',
+                '--no-merges',
+                "$candidateSha..$SourceBranch",
+                '--', '.'
+            ) + $excludeSpecs
+            $logLines = & git @logArgs 2>$null
+            if ($LASTEXITCODE -eq 0 -and $logLines) {
+                $nonEmpty = @($logLines | Where-Object { $_ -match '\S' })
+                if ($nonEmpty.Count -gt 0) {
+                    $commitBody = "Changes since previous mirror:`n`n" + ($nonEmpty -join "`n")
+                }
+            }
+        }
+    }
+}
+
+# -- Switch to TargetBranch (created as orphan if missing) --
 if (-not $targetExists) {
     Write-Host "Creating orphan branch $TargetBranch..." -ForegroundColor Cyan
     git checkout --orphan $TargetBranch
@@ -95,8 +132,14 @@ git add -A
 if (git diff --staged --quiet) {
     Write-Host "No changes since the previous mirror." -ForegroundColor Yellow
 } else {
-    git commit -m "mirror from $SourceBranch @ $sourceSha" | Out-Null
-    Write-Host "public-main updated." -ForegroundColor Green
+    $commitTitle = "mirror from $SourceBranch @ $sourceSha"
+    if ($commitBody) {
+        git commit -m $commitTitle -m $commitBody | Out-Null
+        Write-Host "public-main updated (with changelog body)." -ForegroundColor Green
+    } else {
+        git commit -m $commitTitle | Out-Null
+        Write-Host "public-main updated." -ForegroundColor Green
+    }
 }
 
 # -- Back to initial branch --

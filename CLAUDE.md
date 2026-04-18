@@ -144,7 +144,7 @@ This repo has **two remotes**: `origin` (private-ish personal data hosted via Pa
 
 ### What's excluded from the public mirror
 
-- `stats/serveur-2026/`, `stats/serveur-2020/` — personal server data + snapshots
+- `stats/serveur-2026/`, `stats/serveur-2020/`, `stats/hermitcraft-s10/` — personal and demo server data + snapshots
 - `scripts/sync-stats.ps1` — Crafty-specific + Windows-specific, too niche for a template
 - `PLAN.md` — internal dev planning log
 

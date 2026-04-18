@@ -64,6 +64,8 @@ lb_playtime:mcIcon('recovery_compass')+' Temps de jeu',lb_mined:mcIcon('diamond_
 lb_deaths:mcIcon('skeleton_skull')+' Morts',lb_distance:mcIcon('filled_map')+' Distance',lb_crafted:mcIcon('crafting_table')+' Items craftés',
 lb_pvp:mcIcon('iron_sword')+' PvP Kills',lb_enchant:mcIcon('enchanted_book')+' Enchantements',lb_fish:mcIcon('cod')+' Poissons',
 lb_trades:mcIcon('emerald')+' Échanges PNJ',lb_breed:mcIcon('egg')+' Élevage',lb_jumps:mcIcon('rabbit_foot')+' Sauts',
+lb_cat_top:mcIcon('nether_star')+' Top',lb_cat_combat:mcIcon('diamond_sword')+' Combat',lb_cat_exploration:mcIcon('compass')+' Exploration',
+lb_cat_economy:mcIcon('emerald')+' Économie',lb_cat_production:mcIcon('diamond_pickaxe')+' Production',
 chart_deathcauses:'Causes de mort (tous)',chart_dist_type:'Distances par type',
 d_walk:'Marche',d_sprint:'Sprint',d_swim:'Nage',d_fly:'Vol créatif',
 d_aviate:'Elytra',d_boat:'Bateau',d_horse:'Cheval',d_minecart:'Minecart',
@@ -152,6 +154,7 @@ lb_playtime:mcIcon('recovery_compass')+' Playtime',lb_mined:mcIcon('diamond_pick
 lb_deaths:mcIcon('skeleton_skull')+' Deaths',lb_crafted:mcIcon('crafting_table')+' Items crafted',
 lb_enchant:mcIcon('enchanted_book')+' Enchantments',lb_fish:mcIcon('cod')+' Fish caught',
 lb_trades:mcIcon('emerald')+' NPC trades',lb_breed:mcIcon('egg')+' Breeding',lb_jumps:mcIcon('rabbit_foot')+' Jumps',
+lb_cat_economy:mcIcon('emerald')+' Economy',lb_cat_production:mcIcon('diamond_pickaxe')+' Production',
 chart_deathcauses:'Death causes (all)',chart_dist_type:'Distance by type',
 d_walk:'Walk',d_swim:'Swim',d_fly:'Creative flight',
 d_boat:'Boat',d_horse:'Horse',
@@ -616,23 +619,30 @@ function renderOverviewCharts(){
 // ═══════════════════════════════════════
 function buildLeaderboards(){
   const boards=[
-    {key:'play_hours',tkey:'lb_playtime',suffix:'h',color:'var(--c-survival)'},
-    {key:'total_mined',tkey:'lb_mined',suffix:'',color:'var(--c-mining)'},
-    {key:'mob_kills',tkey:'lb_kills',suffix:'',color:'var(--c-combat)'},
-    {key:'deaths',tkey:'lb_deaths',suffix:'',color:'var(--c-survival)'},
-    {key:'total_distance_km',tkey:'lb_distance',suffix:' km',color:'var(--c-travel)'},
-    {key:'total_crafted',tkey:'lb_crafted',suffix:'',color:'var(--c-craft)'},
-    {key:'player_kills',tkey:'lb_pvp',suffix:'',color:'var(--c-combat)'},
-    {key:'enchant_item',tkey:'lb_enchant',suffix:'',color:'var(--c-craft)'},
-    {key:'fish_caught',tkey:'lb_fish',suffix:'',color:'var(--c-craft)'},
-    {key:'traded_with_villager',tkey:'lb_trades',suffix:'',color:'var(--c-craft)'},
-    {key:'animals_bred',tkey:'lb_breed',suffix:'',color:'var(--c-survival)'},
-    {key:'jumps',tkey:'lb_jumps',suffix:'',color:'var(--c-travel)'},
+    {key:'play_hours',tkey:'lb_playtime',suffix:'h',color:'var(--c-survival)',cat:'production',top:true},
+    {key:'total_mined',tkey:'lb_mined',suffix:'',color:'var(--c-mining)',cat:'production',top:true},
+    {key:'mob_kills',tkey:'lb_kills',suffix:'',color:'var(--c-combat)',cat:'combat',top:true},
+    {key:'deaths',tkey:'lb_deaths',suffix:'',color:'var(--c-survival)',cat:'combat'},
+    {key:'total_distance_km',tkey:'lb_distance',suffix:' km',color:'var(--c-travel)',cat:'exploration'},
+    {key:'total_crafted',tkey:'lb_crafted',suffix:'',color:'var(--c-craft)',cat:'production'},
+    {key:'player_kills',tkey:'lb_pvp',suffix:'',color:'var(--c-combat)',cat:'combat'},
+    {key:'enchant_item',tkey:'lb_enchant',suffix:'',color:'var(--c-craft)',cat:'economy'},
+    {key:'fish_caught',tkey:'lb_fish',suffix:'',color:'var(--c-craft)',cat:'economy'},
+    {key:'traded_with_villager',tkey:'lb_trades',suffix:'',color:'var(--c-craft)',cat:'economy'},
+    {key:'animals_bred',tkey:'lb_breed',suffix:'',color:'var(--c-survival)',cat:'economy'},
+    {key:'jumps',tkey:'lb_jumps',suffix:'',color:'var(--c-travel)',cat:'exploration'},
   ];
-  let h=`<div class="section" id="leaderboards"><div class="grid grid-3">`;
+  const cats=['top','combat','exploration','economy','production'];
+  let h=`<div class="section" id="leaderboards"><div class="lb-wrap" data-active-cat="top">`;
+  h+=`<div class="lb-subnav" role="tablist">`;
+  cats.forEach(c=>{
+    h+=`<button class="lb-tab${c==='top'?' active':''}" data-lbcat="${c}" role="tab">${t('lb_cat_'+c)}</button>`;
+  });
+  h+=`</div><div class="grid grid-3 lb-grid">`;
   boards.forEach(b=>{
+    const lbcats=b.top?`top ${b.cat}`:b.cat;
     const sorted=[...playerNames].sort((a,c)=>(PLAYERS_DATA[c][b.key]||0)-(PLAYERS_DATA[a][b.key]||0));
-    h+=`<div class="card"><h3>${t(b.tkey)}</h3><ol class="leaderboard">`;
+    h+=`<div class="card lb-card" data-lbcats="${lbcats}"><h3>${t(b.tkey)}</h3><ol class="leaderboard">`;
     sorted.forEach((name,i)=>{
       const val=PLAYERS_DATA[name][b.key]||0;const isRec=i===0&&val>0;
       h+=`<li><span class="rank">${i+1}</span>
@@ -643,11 +653,26 @@ function buildLeaderboards(){
     h+=`</ol></div>`;
   });
   h+=`</div>
-    <div class="grid grid-2" style="margin-top:1rem">
-      <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
-      <div class="card"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
-    </div></div>`;
+    <div class="grid grid-2 lb-charts" style="margin-top:1rem">
+      <div class="card lb-card" data-lbcats="combat"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
+      <div class="card lb-card" data-lbcats="exploration"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+    </div></div></div>`;
   return h;
+}
+
+function initLeaderboardTabs(){
+  const wrap=document.querySelector('#leaderboards .lb-wrap');
+  if(!wrap)return;
+  wrap.querySelectorAll('.lb-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const cat=btn.dataset.lbcat;
+      wrap.dataset.activeCat=cat;
+      wrap.querySelectorAll('.lb-tab').forEach(b=>b.classList.toggle('active',b===btn));
+      setTimeout(()=>{
+        ['chart-deathcauses','chart-dist-stacked'].forEach(id=>{if(charts[id])charts[id].resize()});
+      },0);
+    });
+  });
 }
 
 function renderLeaderboardCharts(){
@@ -866,6 +891,7 @@ function switchLang(newLang){
   updateGlobalMeta();
   buildNav();
   buildAllSections();
+  initLeaderboardTabs();
   showSection(currentSection);
   updateNavActive(currentSection);
 }
@@ -878,7 +904,7 @@ document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
 document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
-buildNav();buildAllSections();
+buildNav();buildAllSections();initLeaderboardTabs();
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);
 animateCounters();

@@ -638,7 +638,12 @@ function buildLeaderboards(){
   cats.forEach(c=>{
     h+=`<button class="lb-tab${c==='top'?' active':''}" data-lbcat="${c}" role="tab">${t('lb_cat_'+c)}</button>`;
   });
-  h+=`</div><div class="grid grid-3 lb-grid">`;
+  h+=`</div>
+    <div class="grid grid-2 lb-charts">
+      <div class="card lb-card" data-lbcats="combat"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
+      <div class="card lb-card" data-lbcats="exploration"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+    </div>
+    <div class="grid grid-3 lb-grid">`;
   boards.forEach(b=>{
     const lbcats=b.top?`top ${b.cat}`:b.cat;
     const sorted=[...playerNames].sort((a,c)=>(PLAYERS_DATA[c][b.key]||0)-(PLAYERS_DATA[a][b.key]||0));
@@ -652,11 +657,7 @@ function buildLeaderboards(){
     });
     h+=`</ol></div>`;
   });
-  h+=`</div>
-    <div class="grid grid-2 lb-charts" style="margin-top:1rem">
-      <div class="card lb-card" data-lbcats="combat"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
-      <div class="card lb-card" data-lbcats="exploration"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
-    </div></div></div>`;
+  h+=`</div></div></div>`;
   return h;
 }
 

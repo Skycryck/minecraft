@@ -146,6 +146,8 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .lb-tab:hover{border-color:var(--accent);color:var(--text)}
 .lb-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .lb-tab img.mc-icon,.lb-tab img.mc-icon-hr{width:20px;height:20px}
+.lb-charts{margin-bottom:1rem}
+.lb-wrap[data-active-cat="top"] .lb-charts{margin-bottom:0}
 .lb-wrap .lb-card{display:none}
 .lb-wrap[data-active-cat="top"] .lb-card[data-lbcats~="top"],
 .lb-wrap[data-active-cat="combat"] .lb-card[data-lbcats~="combat"],

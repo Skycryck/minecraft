@@ -252,7 +252,7 @@
 
 ---
 
-### [ ] Tâche 12 — Grouper les 12 leaderboards en 4 catégories à onglets
+### [x] Tâche 12 — Grouper les 12 leaderboards en 4 catégories à onglets
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -260,9 +260,9 @@
 - **Problème identifié :**
   > `generate.py:942-977` empile 12 leaderboards en grille 3 colonnes. L'utilisateur est submergé ; aucune hiérarchie ne permet de comparer rapidement les joueurs sur une thématique.
 - **Action attendue :**
-  - [ ] Regrouper en 4 catégories : Combat (kills, pvp, deaths), Exploration (distance, jumps), Économie (enchant, fish, trades, breed), Production (mined, crafted, playtime)
-  - [ ] Ajouter des sous-onglets dans la section Classements
-  - [ ] Le premier sous-onglet "Top" reste la vue d'ensemble (3 leaderboards phares)
+  - [x] Regrouper en 4 catégories : Combat (kills, pvp, deaths), Exploration (distance, jumps), Économie (enchant, fish, trades, breed), Production (mined, crafted, playtime)
+  - [x] Ajouter des sous-onglets dans la section Classements
+  - [x] Le premier sous-onglet "Top" reste la vue d'ensemble (3 leaderboards phares)
 - **Critères d'acceptation :**
   - Les 12 leaderboards restent accessibles
   - La section Classements ne dépasse plus 1 écran au premier abord
@@ -448,6 +448,15 @@
 - `stats/assets/app.js:724` — `buildBadgesHtml` : `dv` préfixé par `b.value==null?'—':...` pour afficher `—` dans la ligne `<dv> / <nextTarget>`. La règle `∞` pour `value>=999` (0 morts + 1h+) est conservée.
 - Vérif serveur-2026 : `bareme` (0.3h, 0 morts) → `value=None, tier=0, progress=0` ✓ — plus de Diamond artificiel. `Industh` (0.2h, 2 morts) → `None` aussi (passe avant la branche deaths). `SkycryckII` (1.1h, 5 morts) → `0.2`, locked (<2). `Skycryck` (64.9h, 14 morts) → `4.6`, Bronze 87% (inchangé vs. avant). Joueur à 5h/0 mort → sentinel `999`, Diamond garanti (cas d'acceptance respecté).
 - `python -m py_compile` OK sur les 3 fichiers, `deno check stats/assets/app.js` exit 0. Régénération : `serveur-2026` 49 186 o (-2 o), `serveur-2020` 65 191 o (inchangé — aucun joueur <1h), `hermitcraft-s10` 378 481 o (+6 o, quelques valeurs passent à `null`).
+
+### 2026-04-18 — Tâche 12 : Sous-onglets Classements
+
+- `stats/assets/app.js` — `buildLeaderboards()` : chaque entrée de `boards` porte un champ `cat` (`combat` / `exploration` / `economy` / `production`), les 3 phares (playtime, mined, kills) portent `top:true`. Un `<div class="lb-wrap" data-active-cat="top">` enveloppe la sous-nav + la grille + la rangée de charts ; chaque card reçoit `data-lbcats="<cat> [top]"`. Nouvelle fonction `initLeaderboardTabs()` (appelée après `buildAllSections()` au boot ET au switch de langue) délègue le clic : elle bascule `wrap.dataset.activeCat`, met à jour `.active` sur les `.lb-tab`, et appelle `charts['chart-deathcauses'|'chart-dist-stacked'].resize()` dans un `setTimeout(0)` — nécessaire car Chart.js ne détecte pas la sortie de `display:none` et se retrouverait dessiné à 0×0.
+- Mapping final : **Top** → playtime + mined + kills (3 phares, pas de charts) ; **Combat** → kills + deaths + pvp + chart death-causes ; **Exploration** → distance + jumps + chart dist-by-type ; **Économie** → enchant + fish + trades + breed ; **Production** → playtime + mined + crafted. Les 12 leaderboards restent accessibles, répartis sans duplication sauf sur Top (réutilise les cards top par CSS, pas de double rendu).
+- 5 clés i18n ajoutées : `lb_cat_top` (🟣 Top), `lb_cat_combat` (⚔️ Combat), `lb_cat_exploration` (🧭 Exploration), `lb_cat_economy` (💠 Économie/Economy), `lb_cat_production` (⛏️ Production). EN n'ajoute que les 2 overrides nécessaires (economy/production) — top/combat/exploration fallback sur `T.fr` via le lookup `T[lang]?.[k] ?? T.fr[k]` (identiques entre les deux langues).
+- `stats/assets/styles.css` — bloc `.lb-subnav` / `.lb-tab` (variantes hover et `.active` ; icônes 20×20 pour distinguer de la nav principale 32×32) + règles `.lb-wrap[data-active-cat="X"] .lb-card[data-lbcats~="X"]{display:block}` pour filtrer. L'attribut `~=` matche le mot complet, donc une card `top production` est bien visible sur les deux onglets.
+- Vérif preview navigateur (serveur-2026, FR puis EN) : onglet Top affiche 3 cards, Combat 3+chart, Exploration 2+chart, Économie 4, Production 3. Chart death-causes se redimensionne proprement après bascule (1 frame de delay sans flash 0×0 grâce au `setTimeout`). Aucune erreur console. Classements ne dépasse plus 1 écran — avant 4 rangées de 3 boards + 1 rangée de 2 charts = ~5 écrans de scroll ; après ~1 écran selon l'onglet.
+- `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. Régénération : `serveur-2026` 49 186 o (inchangé ; JS externe), `serveur-2020` 65 191 o (inchangé), `hermitcraft-s10` 378 481 o (inchangé).
 
 ### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
 

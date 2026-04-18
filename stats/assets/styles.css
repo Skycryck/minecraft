@@ -136,6 +136,24 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .profile-stat .pl{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-mono)}
 .section{display:none}
 .section.active{display:block}
+.lb-subnav{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.75rem 0 1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.lb-tab{
+  font-family:var(--font-mono);font-size:.72rem;
+  padding:.4rem .9rem;border-radius:16px;border:1px solid var(--border);
+  background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:.35rem;
+}
+.lb-tab:hover{border-color:var(--accent);color:var(--text)}
+.lb-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.lb-tab img.mc-icon,.lb-tab img.mc-icon-hr{width:20px;height:20px}
+.lb-charts{margin-bottom:1rem}
+.lb-wrap[data-active-cat="top"] .lb-charts{margin-bottom:0}
+.lb-wrap .lb-card{display:none}
+.lb-wrap[data-active-cat="top"] .lb-card[data-lbcats~="top"],
+.lb-wrap[data-active-cat="combat"] .lb-card[data-lbcats~="combat"],
+.lb-wrap[data-active-cat="exploration"] .lb-card[data-lbcats~="exploration"],
+.lb-wrap[data-active-cat="economy"] .lb-card[data-lbcats~="economy"],
+.lb-wrap[data-active-cat="production"] .lb-card[data-lbcats~="production"]{display:block}
 .record-badge{
   display:inline-block;padding:.1rem .4rem;border-radius:10px;font-size:.6rem;font-weight:700;margin-left:.3rem;
   background:linear-gradient(135deg,#ffd700,#b8860b);color:#000;

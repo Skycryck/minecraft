@@ -213,7 +213,7 @@
 
 ---
 
-### [ ] Tâche 10 — Ajouter des deltas 7j sur les stat-tiles principales
+### [x] Tâche 10 — Ajouter des deltas 7j sur les stat-tiles principales
 
 - **Priorité :** 🟡 Moyenne
 - **Fichiers concernés :**
@@ -223,9 +223,9 @@
 - **Problème identifié :**
   > Les stat-tiles affichent des totaux sans contexte. Un utilisateur ne peut pas voir "qui a joué cette semaine" ni "qui progresse le plus vite".
 - **Action attendue :**
-  - [ ] Créer `history.py` qui lit le snapshot le plus proche de 7 jours en arrière
-  - [ ] Calculer `delta_7d` pour `play_hours`, `total_mined`, `mob_kills`, `total_crafted` et injecter dans le JSON
-  - [ ] Afficher `↑ +12h` en `<div class="sub">` dans les stat-tiles concernées
+  - [x] Créer `history.py` qui lit le snapshot le plus proche de 7 jours en arrière
+  - [x] Calculer `delta_7d` pour `play_hours`, `total_mined`, `mob_kills`, `total_crafted` et injecter dans le JSON
+  - [x] Afficher `↑ +12h` en `<div class="sub">` dans les stat-tiles concernées
 - **Critères d'acceptation :**
   - Si aucun snapshot ≥ 6 jours n'existe, les deltas sont masqués sans erreur
   - Les deltas affichés sont mathématiquement corrects (vérif manuelle 1 joueur)
@@ -433,6 +433,16 @@
 - Layout : la grille qui contenait `[card_time_est | card_distances]` conserve `card_distances` seule (même pattern que `card_killed_by` déjà isolée dans une `grid-2`). Aucune autre card déplacée.
 - Icône `clock` conservée (toujours utilisée par `lb_playtime`). Aucun autre nettoyage hors périmètre.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération : `serveur-2026` 48 458 o (taille inchangée — on enlève du code JS externe, pas du JSON embarqué), `serveur-2020` 65 063 o. Diff total : 3 fichiers, +4 / -55.
+
+### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
+
+- Nouveau module `scripts/minecraft/history.py` : `find_baseline_snapshot()` (cherche le dossier `snapshots/YYYY-MM-DD/` le plus proche de J-7, avec un seuil minimum à 6 jours pour éviter les "deltas hebdo" sur 2 jours), `load_baseline_metrics()` (mappe UUID → 4 métriques via `_extract_metrics()`), `compute_deltas()` (renvoie `None` si pas de baseline). 4 clés trackées : `play_hours`, `total_mined`, `mob_kills`, `total_crafted`.
+- `generate.py` : import `history`, lookup baseline dans `data_dir.parent / "snapshots"`, calcul du delta par joueur attaché sous `player["delta_7d"]` (clé absente si pas de baseline). Nouvelle injection `window.BASELINE_DATE` (ISO date ou `null`). Logs `[HIST] Baseline snapshot: 2026-04-12 (7 players)` ou `No baseline snapshot >= 6 days old - deltas hidden`.
+- `app.js` : helper `deltaSub(value, suffix)` rend `↑ +X<suffix> (7j)` dans un `<div class="sub delta-sub">`, retourne `''` si `value` null/≤0. `deltaTotals` agrège la somme inter-joueurs pour les 4 tiles overview. Tiles touchées : overview (4 tiles : play_hours, total_mined, mob_kills, total_crafted) et joueur (3 tiles : total_mined, mob_kills, total_crafted — la tile play_hours n'existe pas en section joueur, c'est un profile-stat). Pour total_mined / mob_kills, le delta s'ajoute en 2ᵉ ligne sous le sub mph/kph existant.
+- 1 clé i18n ajoutée (`delta_window` : `7j` en FR, `7d` en EN). CSS : `.stat-tile .delta-sub { color: var(--c-mining); font-weight:600 }` — vert sémantique de la catégorie mining (positif = progression).
+- Vérif manuelle Skycryck (serveur-2026, baseline 12/04 → snapshot 18/04, 6 jours) : `play_hours 47.8 → 61.3 (+13.5)`, `total_mined 26771 → 31211 (+4440)`, `mob_kills 7713 → 8068 (+355)`, `total_crafted 21476 → 25637 (+4161)`. Affichage cohérent : tile mined `↑ +4.4k (7j)`, tile kills `↑ +355 (7j)`, tile crafted `↑ +4.2k (7j)`. Overview : `↑ +32,9h (7j)` / `+15.3k` / `+1.8k` / `+9.9k`.
+- Edge case `serveur-2020` (pas de dossier `snapshots/`) : `BASELINE_DATE = null`, aucun `delta_7d` injecté, `deltaSub()` renvoie `''` partout, dashboard rendu identique à avant. `hermitcraft-s10` : pareil.
+- `python -m py_compile` OK ; `deno check stats/assets/app.js` OK ; aucune erreur console côté navigateur (preview FR + EN). Tailles : `serveur-2026` 49 188 o (+730 o : 4×FR + 4×EN deltas embarqués), `serveur-2020` 65 191 o (+128 o : `BASELINE_DATE=null`), `hermitcraft-s10` 378 475 o.
 
 ### 2026-04-17 — Tâche 9 : Snapshots horodatés
 

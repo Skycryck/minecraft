@@ -26,7 +26,8 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 ├── scripts/
 │   ├── generate.py          # Main generator: JSON → HTML dashboard
 │   ├── minecraft/
-│   │   └── badges.py        # Badge definitions + per-player tier computation
+│   │   ├── badges.py        # Badge definitions + per-player tier computation
+│   │   └── history.py       # 7-day deltas from snapshot archive (drives stat-tile sub-lines)
 │   ├── build_icons.py       # Pre-renders Minecraft icon PNGs (stdlib only)
 │   └── sync-stats.ps1       # Windows: copy stats from Crafty + git push
 ├── stats/
@@ -48,7 +49,8 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 
 1. **UUID resolution** — Mojang API with local `.uuid_cache.json` to avoid rate limits (0.5s delay between calls)
 2. **Stats extraction** — `process_player()` normalizes Minecraft JSON: ticks→hours, cm→km, strips `minecraft:` prefixes, then calls `compute_player_badges()` and attaches the result under the `badges` key
-3. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` then loads `../assets/styles.css` and `../assets/app.js`. CSS/JS are not embedded — they ship as static files under `stats/assets/`.
+3. **7-day deltas** — `main()` calls `find_baseline_snapshot()` once, loads the baseline metrics, then attaches `delta_7d` to each player dict via `compute_deltas()` (key absent when no usable baseline)
+4. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` / `window.BASELINE_DATE` then loads `../assets/styles.css` and `../assets/app.js`. CSS/JS are not embedded — they ship as static files under `stats/assets/`.
 
 ### build_icons.py internals
 
@@ -74,13 +76,21 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - `compute_player_badges(player)` returns the list embedded in each player dict under `badges` (icon stored as a name like `diamond_pickaxe`, not rendered HTML).
 - `app.js` is a dumb renderer — `buildBadgesHtml` reads `p.badges` directly and calls `mcIcon(b.icon)`. No badge thresholds or tier logic live in JS.
 
+### history.py internals
+
+- `DELTA_KEYS` — the four metrics tracked: `play_hours`, `total_mined`, `mob_kills`, `total_crafted`. Adding a new tracked key requires updating this tuple **and** the renderers in `app.js` (`deltaTotals` + the matching tile).
+- `find_baseline_snapshot(snapshots_root, target_days=7, min_days=6, max_days=30)` — scans `snapshots/YYYY-MM-DD/` directories, keeps those whose age ∈ `[min_days, max_days]`, returns the one closest to `target_days`. Returns `None` if no candidate qualifies (empty dir, only fresh snapshots, or all snapshots > 30 days old).
+- `load_baseline_metrics(snapshot_dir)` — reads each `<uuid>.json` and runs `_extract_metrics()`, mirroring `process_player()`'s conversions for the 4 tracked keys (ticks→hours, sums for mined/crafted).
+- `compute_deltas(current, baseline)` — returns `{key: round(current - baseline, 1)}` or `None` when baseline is missing. `None` is the contract that lets callers omit `player["delta_7d"]` entirely so the JS side can hide the sub-line cleanly (no misleading `+0` displayed).
+- The actual baseline window may differ from 7 days — `app.js` reads `BASELINE_DATE` and labels the sub-line with the real day count (e.g. `↑ +13.5h (6j)` for a 6-day-old snapshot), keeping the figure honest after gaps in the snapshot cadence.
+
 ### Snapshots archive
 
 - `sync-stats.ps1` writes a full copy of `data/*.json` into `stats/<server-name>/snapshots/YYYY-MM-DD/` after the normal sync. Only created if the dated folder doesn't already exist (1 snapshot/day max, first run of the day wins).
 - Date is `Get-Date -Format 'yyyy-MM-dd'` (local time, which is Europe/Paris on the dev machine — consistent with the project tz convention).
 - `git add` covers both `data/*.json` and `snapshots/` so each daily sync commit carries the archive.
 - `update-stats.yml` only triggers on `stats/*/data/**`, so a snapshot-only commit (unlikely in practice) would not rebuild the dashboard — the sync script always touches `data/` when it writes a snapshot.
-- `generate.py` is unaffected: it only scans the directory passed as argument, never siblings. The snapshots are pure archive, not part of the build.
+- `generate.py` reads the snapshots through `history.py` (sibling `snapshots/` dir) to compute the 7-day deltas exposed on the dashboard stat-tiles. Without snapshots the build still succeeds — `find_baseline_snapshot()` returns `None` and the deltas are omitted client-side.
 
 ### Navigation & routing (app.js)
 
@@ -129,6 +139,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - **`[skip ci]` in commit message** — update-stats.yml commits with `[skip ci]` to avoid infinite loops. The deploy is triggered via `workflow_run`, not the push.
 - **Icon PNGs are committed, not fetched at runtime** — `stats/assets/icons/*.png` (~100 KB total) ship with the repo so the dashboard is self-contained. Rebuild with `python scripts/build_icons.py` after editing the `ICONS` / `WIKI_HIRES` dicts.
 - **Adding a new icon** — add its name to `ICONS` (or `WIKI_HIRES`) in `build_icons.py`, run the script, then add the same name to `MC_ICONS_HR` in `generate.py` so the dashboard uses the local hi-res file instead of the CDN fallback.
+- **Delta window is `[6, 30]` days** — too-recent snapshots produce noisy "weekly" deltas; snapshots older than 30 days mislead after a long pause. The label shows the **actual** baseline age (computed JS-side from `window.BASELINE_DATE`), never a hardcoded `7j` — so a 6-day baseline labels itself `(6j)`.
 
 ## Public template repo
 

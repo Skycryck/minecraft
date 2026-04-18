@@ -71,7 +71,7 @@ d_climb:'Escalade',d_crouch:'Accroupi',d_fall:'Chute',
 d_walk_on_water:"Sur l'eau",d_walk_under_water:"Sous l'eau",
 arch_new:'Nouveau',arch_miner:'Mineur',arch_fighter:'Combattant',
 arch_explorer:'Explorateur',arch_builder:'Bâtisseur',arch_farmer:'Fermier',
-playtime:'Temps de jeu',kd_ratio:'K/D ratio',traveled:'Parcourus',per_hour:'/h',delta_window:'7j',
+playtime:'Temps de jeu',kd_ratio:'K/D ratio',traveled:'Parcourus',per_hour:'/h',delta_unit:'j',
 deaths:'Morts',enchantments:'Enchantements',chests_opened:'Coffres ouverts',
 fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
 card_distances:'Distances parcourues',
@@ -141,7 +141,7 @@ players:'players',hours_played:'hours played',blocks_mined_meta:'blocks mined',m
 nav_overview:mcIcon('new_realm')+' Overview',nav_leaderboards:mcIcon('nether_star')+' Leaderboards',
 nav_player_placeholder:'Select a player…',nav_player_label:'Select a player',
 total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
-delta_window:'7d',
+delta_unit:'d',
 chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
 chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
 axis_hours:'Hours',axis_blocks:'Blocks',
@@ -401,19 +401,30 @@ const totalDeaths=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].deaths,0);
 const totalDist=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_distance_km,0);
 const totalCrafted=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_crafted,0);
 
-// 7-day deltas: sum across players for the overview tiles, per-player elsewhere.
-// `null` = no baseline old enough → callers hide the sub line entirely.
+// "7-day" deltas: sum across players for the overview tiles, per-player
+// elsewhere. The actual baseline window may differ from 7 days when the
+// closest qualifying snapshot is older (e.g. after a multi-day pause); we
+// display the real number of days in the label so the figure stays honest.
+// `null` = no baseline in the [6, 30] days window → hide the sub line.
 const _hasBaseline=playerNames.some(n=>PLAYERS_DATA[n].delta_7d);
+const _baselineISO=window.BASELINE_DATE;
+// Use whole-date arithmetic (zeroed midnight) so the window matches Python's
+// (today - snapshot_date).days — avoids "6.6 days → rounds to 7" off-by-one.
+const _baselineDays=(()=>{
+  if(!_baselineISO)return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  return Math.round((today-new Date(_baselineISO+'T00:00:00'))/86400000);
+})();
 function _sumDelta(key){return _hasBaseline?playerNames.reduce((s,n)=>s+(PLAYERS_DATA[n].delta_7d?.[key]??0),0):null}
 const deltaTotals=_hasBaseline?{
   play_hours:_sumDelta('play_hours'),total_mined:_sumDelta('total_mined'),
   mob_kills:_sumDelta('mob_kills'),total_crafted:_sumDelta('total_crafted'),
 }:null;
-// Render a "↑ +12h (7j)" sub-line; returns '' if delta missing or ≤ 0.
+// Render a "↑ +12h (6j)" sub-line; returns '' if delta missing or ≤ 0.
 function deltaSub(value,suffix=''){
-  if(value==null||value<=0)return'';
+  if(value==null||value<=0||!_baselineDays)return'';
   const v=Number.isInteger(value)?fmt(value):fmt(Math.round(value*10)/10);
-  return `<div class="sub delta-sub">↑ +${v}${suffix} (${t('delta_window')})</div>`;
+  return `<div class="sub delta-sub">↑ +${v}${suffix} (${_baselineDays}${t('delta_unit')})</div>`;
 }
 
 function updateGlobalMeta(){

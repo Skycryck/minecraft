@@ -46,13 +46,17 @@ def find_baseline_snapshot(
     snapshots_root: Path,
     target_days: int = 7,
     min_days: int = 6,
+    max_days: int = 30,
     today: date | None = None,
 ) -> Path | None:
     """Return the snapshot directory closest to `target_days` ago.
 
-    Only directories named `YYYY-MM-DD` and at least `min_days` old are
-    considered — too-recent snapshots would produce misleading "weekly"
-    deltas. Returns None if no snapshot qualifies.
+    Only directories named `YYYY-MM-DD` whose age (in days) falls in
+    `[min_days, max_days]` are considered — too-recent snapshots would
+    produce noisy "weekly" deltas, and too-old ones would be misleading
+    after a long pause (e.g. 2-week hiatus). Returns None if no snapshot
+    qualifies. The actual window may differ from `target_days`; callers
+    should display it via the snapshot directory name.
     """
     if not snapshots_root.exists() or not snapshots_root.is_dir():
         return None
@@ -67,7 +71,7 @@ def find_baseline_snapshot(
         except ValueError:
             continue
         age_days = (today - snap_date).days
-        if age_days < min_days:
+        if age_days < min_days or age_days > max_days:
             continue
         candidates.append((abs((snap_date - target_date).days), d))
     if not candidates:

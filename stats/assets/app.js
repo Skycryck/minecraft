@@ -314,17 +314,63 @@ function getFunFacts(name,p){
 }
 
 // ═══════════════════════════════════════
-// TREEMAP BUILDER
+// TREEMAP BUILDER — squarified layout (Bruls, Huijing, van Wijk 2000)
 // ═══════════════════════════════════════
+// Layout happens in abstract coords W×H (aspect 2:1, matched by CSS).
+// Each rect is emitted as an absolutely-positioned % box so the card scales.
+function squarifyLayout(items, x, y, w, h){
+  const out=[];
+  const worst=(row,side)=>{
+    if(!row.length) return Infinity;
+    let s=0,mx=0,mn=Infinity;
+    for(const r of row){ s+=r.area; if(r.area>mx) mx=r.area; if(r.area<mn) mn=r.area; }
+    const s2=s*s, side2=side*side;
+    return Math.max(side2*mx/s2, s2/(side2*mn));
+  };
+  const layoutRow=(row,x,y,w,h)=>{
+    const horizontal=w>=h;
+    const side=horizontal?h:w;
+    const s=row.reduce((a,r)=>a+r.area,0);
+    const thickness=s/side;
+    let cursor=0;
+    for(const r of row){
+      const len=r.area/thickness;
+      if(horizontal) out.push({...r,x:x,y:y+cursor,w:thickness,h:len});
+      else out.push({...r,x:x+cursor,y:y,w:len,h:thickness});
+      cursor+=len;
+    }
+    return horizontal ? {x:x+thickness,y:y,w:w-thickness,h:h} : {x:x,y:y+thickness,w:w,h:h-thickness};
+  };
+  const queue=items.slice().sort((a,b)=>b.area-a.area);
+  let row=[];
+  while(queue.length){
+    const side=Math.min(w,h);
+    const next=queue[0];
+    if(!row.length || worst(row.concat([next]),side) <= worst(row,side)){
+      row.push(next); queue.shift();
+    } else {
+      ({x,y,w,h}=layoutRow(row,x,y,w,h));
+      row=[];
+    }
+  }
+  if(row.length) layoutRow(row,x,y,w,h);
+  return out;
+}
+
 function buildTreemapHtml(entries){
   if(!entries.length)return '<div style="color:var(--text-muted);padding:1rem;font-family:var(--font-mono);font-size:.8rem">'+t('no_blocks')+'</div>';
-  const total=entries.reduce((s,[_,v])=>s+v,0);
+  const data=entries.slice(0,15);
+  const total=data.reduce((s,[_,v])=>s+v,0);
   const colors=['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#6aefd9','#efd96a','#ef6ac0','#a86aef','#5a9e6f','#9e5a5a','#5a6f9e','#9e8b5a','#5a9e9e','#8b8b96'];
-  return `<div class="treemap">${entries.slice(0,15).map(([k,v],i)=>{
-    const p=(v/total*100);const area=Math.max(p,2.5);
-    const showLabel=p>4;
-    return `<div class="treemap-item" style="flex:${area};background:${colors[i%colors.length]}" title="${label(k)}: ${fmt(v)} (${p.toFixed(1)}%)">
-      <span>${showLabel?label(k)+'<br><span class=tm-count>'+fmt(v)+'</span>':fmt(v)}</span></div>`;
+  const W=200,H=100;
+  const items=data.map(([k,v],i)=>({k,v,color:colors[i%colors.length],area:v/total*W*H}));
+  const rects=squarifyLayout(items,0,0,W,H);
+  const pct=(n,tot)=>(n/tot*100).toFixed(3);
+  return `<div class="treemap">${rects.map(r=>{
+    const p=r.v/total*100;
+    const areaFrac=(r.w*r.h)/(W*H);
+    const showLabel=areaFrac>0.035;
+    return `<div class="treemap-item" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" title="${label(r.k)}: ${fmt(r.v)} (${p.toFixed(1)}%)">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
   }).join('')}</div>`;
 }
 

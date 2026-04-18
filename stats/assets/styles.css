@@ -179,10 +179,10 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
   font-family:var(--font-mono);font-size:.72rem;padding:.25rem .7rem;border-radius:16px;
   display:inline-flex;align-items:center;gap:.35rem;margin-top:.4rem;border:1px solid;
 }
-.treemap{display:flex;flex-wrap:wrap;gap:2px;border-radius:var(--radius-sm);overflow:hidden;min-height:180px}
+.treemap{position:relative;width:100%;aspect-ratio:2/1;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg)}
 .treemap-item{
-  position:relative;display:flex;align-items:flex-end;padding:5px 6px;
-  min-width:28px;min-height:28px;cursor:default;transition:opacity .15s;border-radius:3px;overflow:hidden;
+  position:absolute;display:flex;align-items:flex-end;padding:5px 6px;box-sizing:border-box;
+  border:1px solid var(--bg);cursor:default;transition:opacity .15s;overflow:hidden;
 }
 .treemap-item:hover{opacity:.8}
 .treemap-item span{font-family:var(--font-mono);font-size:.58rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);line-height:1.15;word-break:break-word}

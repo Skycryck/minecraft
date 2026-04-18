@@ -314,18 +314,155 @@ function getFunFacts(name,p){
 }
 
 // ═══════════════════════════════════════
-// TREEMAP BUILDER
+// BLOCK → COLOR MAP — approximate in-game hue per block id
 // ═══════════════════════════════════════
+// Used by the treemap so rects hint at what you're looking at (grey for
+// stone, green for grass, dark red for netherrack, …). Explicit entries
+// cover the blocks most commonly mined; suffix helpers catch colored
+// variants (16 wools × 3 material families = 48 keys we don't list by
+// hand) and wood / leaf families. Unknowns fall back to the rainbow
+// palette so variety is preserved.
+const DYE_COLORS={white:'#f0f0f0',orange:'#f9801d',magenta:'#c74ebd',light_blue:'#3ab3da',yellow:'#fed83d',lime:'#80c71f',pink:'#f38baa',gray:'#474f52',light_gray:'#9d9d97',cyan:'#169c9c',purple:'#8932b8',blue:'#3c44aa',brown:'#835432',green:'#5e7c16',red:'#b02e26',black:'#1d1d21'};
+const WOOD_COLORS={oak:'#b08a50',spruce:'#725232',birch:'#d7cfa0',jungle:'#b08545',acacia:'#b8713e',dark_oak:'#402919',mangrove:'#763431',cherry:'#e2aba2',pale_oak:'#d4c6a8',bamboo:'#c4b962',crimson:'#6a2e46',warped:'#2d8b7f'};
+const LEAF_COLORS={oak:'#4a7829',spruce:'#4b6440',birch:'#6d8a4a',jungle:'#2f8a1b',acacia:'#4e802e',dark_oak:'#365923',mangrove:'#78aa3f',cherry:'#e49dbc',pale_oak:'#a8b3a0',azalea:'#6aa03b',flowering_azalea:'#e493cb'};
+const BLOCK_COLORS={
+  stone:'#7e7e7e',cobblestone:'#6e6e6e',deepslate:'#494b4d',cobbled_deepslate:'#3f4143',
+  tuff:'#6a6966',andesite:'#888784',diorite:'#c9c8c3',granite:'#9d6b56',calcite:'#d8d8d4',
+  basalt:'#4e4e54',smooth_basalt:'#52525a',blackstone:'#2e292e',stone_bricks:'#7a7a7a',
+  dripstone_block:'#876d5e',amethyst_block:'#866cb6',
+  dirt:'#8b6a3f',grass_block:'#6aa03b',coarse_dirt:'#7c5a36',rooted_dirt:'#916b4d',
+  podzol:'#6b4a2a',mycelium:'#847581',mud:'#3e3127',sand:'#dbd0a6',red_sand:'#b8552a',
+  gravel:'#828282',clay:'#a3a8b3',packed_mud:'#9c7c5b',mud_bricks:'#8c6e4f',
+  farmland:'#524022',dirt_path:'#7a5f2f',
+  netherrack:'#6b2a26',nether_gold_ore:'#7d3a2e',ancient_debris:'#513431',
+  crimson_nylium:'#841919',warped_nylium:'#1f7566',soul_sand:'#3f2f23',soul_soil:'#4e3929',
+  nether_quartz_ore:'#9a7a70',nether_wart_block:'#751413',warped_wart_block:'#167272',
+  snow:'#fafefe',snow_block:'#f5fcff',ice:'#8ec3e8',packed_ice:'#85b6df',blue_ice:'#6fa4e8',
+  coal_ore:'#373737',iron_ore:'#c6ad97',gold_ore:'#d6bc4d',diamond_ore:'#5ecfd5',
+  emerald_ore:'#2cb85c',lapis_ore:'#3058bb',redstone_ore:'#c13c3c',copper_ore:'#c27a4b',
+  deepslate_coal_ore:'#2a2d30',deepslate_iron_ore:'#796e5c',deepslate_gold_ore:'#a4883b',
+  deepslate_diamond_ore:'#3a8e94',deepslate_emerald_ore:'#208a48',deepslate_lapis_ore:'#2e4d90',
+  deepslate_redstone_ore:'#8c2d2d',deepslate_copper_ore:'#8a5535',
+  sculk:'#111828',sculk_vein:'#0e1621',moss_block:'#5d743c',short_grass:'#7c9b4c',
+  sugar_cane:'#82b84a',wheat:'#d8ca6e',bamboo:'#879430',pumpkin:'#d88926',melon:'#a5ca2a',
+  sandstone:'#d6ca79',red_sandstone:'#a9481f',
+  terracotta:'#975c42',obsidian:'#110d1b',end_stone:'#e0dba1',scaffolding:'#c6a477',
+  torch:'#e3b94a',glowstone:'#d2ab55',brown_mushroom_block:'#966e56',red_mushroom_block:'#c64a42',
+  mangrove_roots:'#5a4131',bamboo_block:'#6f7a26'
+};
+const DYE_SUFFIXES=['_wool','_concrete','_concrete_powder','_terracotta','_stained_glass','_stained_glass_pane','_glazed_terracotta','_carpet','_shulker_box','_candle','_bed'];
+const WOOD_SUFFIXES=['_log','_wood','_planks','_stem','_hyphae','_fence','_door','_slab','_stairs','_trapdoor'];
+function blockColor(key,fallback){
+  if(BLOCK_COLORS[key]) return BLOCK_COLORS[key];
+  const bare=key.startsWith('stripped_')?key.slice(9):key;
+  for(const suf of WOOD_SUFFIXES){
+    if(bare.endsWith(suf)){
+      const sp=bare.slice(0,-suf.length);
+      if(WOOD_COLORS[sp]) return WOOD_COLORS[sp];
+    }
+  }
+  if(key.endsWith('_leaves')){
+    const sp=key.slice(0,-7);
+    if(LEAF_COLORS[sp]) return LEAF_COLORS[sp];
+  }
+  for(const suf of DYE_SUFFIXES){
+    if(key.endsWith(suf)){
+      const sp=key.slice(0,-suf.length);
+      if(DYE_COLORS[sp]) return DYE_COLORS[sp];
+    }
+  }
+  return fallback;
+}
+
+// ═══════════════════════════════════════
+// TREEMAP BUILDER — squarified layout (Bruls, Huijing, van Wijk 2000)
+// ═══════════════════════════════════════
+// Layout happens in abstract coords W×H (aspect 2:1, matched by CSS).
+// Each rect is emitted as an absolutely-positioned % box so the card scales.
+function squarifyLayout(items, x, y, w, h){
+  const out=[];
+  const worst=(row,side)=>{
+    if(!row.length) return Infinity;
+    let s=0,mx=0,mn=Infinity;
+    for(const r of row){ s+=r.area; if(r.area>mx) mx=r.area; if(r.area<mn) mn=r.area; }
+    const s2=s*s, side2=side*side;
+    return Math.max(side2*mx/s2, s2/(side2*mn));
+  };
+  const layoutRow=(row,x,y,w,h)=>{
+    const horizontal=w>=h;
+    const side=horizontal?h:w;
+    const s=row.reduce((a,r)=>a+r.area,0);
+    const thickness=s/side;
+    let cursor=0;
+    for(const r of row){
+      const len=r.area/thickness;
+      if(horizontal) out.push({...r,x:x,y:y+cursor,w:thickness,h:len});
+      else out.push({...r,x:x+cursor,y:y,w:len,h:thickness});
+      cursor+=len;
+    }
+    return horizontal ? {x:x+thickness,y:y,w:w-thickness,h:h} : {x:x,y:y+thickness,w:w,h:h-thickness};
+  };
+  const queue=items.slice().sort((a,b)=>b.area-a.area);
+  let row=[];
+  while(queue.length){
+    const side=Math.min(w,h);
+    const next=queue[0];
+    if(!row.length || worst(row.concat([next]),side) <= worst(row,side)){
+      row.push(next); queue.shift();
+    } else {
+      ({x,y,w,h}=layoutRow(row,x,y,w,h));
+      row=[];
+    }
+  }
+  if(row.length) layoutRow(row,x,y,w,h);
+  return out;
+}
+
 function buildTreemapHtml(entries){
   if(!entries.length)return '<div style="color:var(--text-muted);padding:1rem;font-family:var(--font-mono);font-size:.8rem">'+t('no_blocks')+'</div>';
-  const total=entries.reduce((s,[_,v])=>s+v,0);
-  const colors=['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#6aefd9','#efd96a','#ef6ac0','#a86aef','#5a9e6f','#9e5a5a','#5a6f9e','#9e8b5a','#5a9e9e','#8b8b96'];
-  return `<div class="treemap">${entries.slice(0,15).map(([k,v],i)=>{
-    const p=(v/total*100);const area=Math.max(p,2.5);
-    const showLabel=p>4;
-    return `<div class="treemap-item" style="flex:${area};background:${colors[i%colors.length]}" title="${label(k)}: ${fmt(v)} (${p.toFixed(1)}%)">
-      <span>${showLabel?label(k)+'<br><span class=tm-count>'+fmt(v)+'</span>':fmt(v)}</span></div>`;
+  const data=entries.slice(0,15);
+  const total=data.reduce((s,[_,v])=>s+v,0);
+  const fallback=['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#6aefd9','#efd96a','#ef6ac0','#a86aef','#5a9e6f','#9e5a5a','#5a6f9e','#9e8b5a','#5a9e9e','#8b8b96'];
+  const W=200,H=100;
+  const items=data.map(([k,v],i)=>({k,v,color:blockColor(k,fallback[i%fallback.length]),area:v/total*W*H}));
+  const rects=squarifyLayout(items,0,0,W,H);
+  const pct=(n,tot)=>(n/tot*100).toFixed(3);
+  return `<div class="treemap">${rects.map(r=>{
+    const p=r.v/total*100;
+    // Label threshold uses min dimension rather than area: a rect with enough
+    // width AND height can fit the 2-line label regardless of its total area.
+    // An area-based check mis-hides tall+narrow rects that have room for text.
+    const showLabel=r.w>=10 && r.h>=9;
+    const tip=`${label(r.k)} · ${fmt(r.v)} (${p.toFixed(1)}%)`;
+    return `<div class="treemap-item" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
   }).join('')}</div>`;
+}
+
+// Floating tooltip shared across all treemap items — lives on <body>
+// so it escapes the .treemap overflow:hidden clip. Native `title=` is
+// kept as a11y fallback but shows with a ~1.5s OS delay and is clipped
+// out of view on small rects.
+function initTreemapTooltip(){
+  let tip=null;
+  const ensure=()=>{
+    if(tip) return tip;
+    tip=document.createElement('div');
+    tip.className='tm-tooltip';
+    document.body.appendChild(tip);
+    return tip;
+  };
+  document.addEventListener('mouseover',e=>{
+    const el=e.target.closest?.('.treemap-item');
+    const node=ensure();
+    if(el){ node.textContent=el.dataset.tmLabel||''; node.classList.add('visible'); }
+    else { node.classList.remove('visible'); }
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!tip||!tip.classList.contains('visible')) return;
+    const x=Math.min(e.clientX+14, window.innerWidth-tip.offsetWidth-8);
+    const y=Math.min(e.clientY+14, window.innerHeight-tip.offsetHeight-8);
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  });
 }
 
 // ═══════════════════════════════════════
@@ -905,7 +1042,7 @@ document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
 document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
-buildNav();buildAllSections();initLeaderboardTabs();
+buildNav();buildAllSections();initLeaderboardTabs();initTreemapTooltip();
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);
 animateCounters();

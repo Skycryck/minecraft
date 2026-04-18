@@ -28,6 +28,11 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from minecraft.badges import compute_player_badges
+from minecraft.history import (
+    compute_deltas,
+    find_baseline_snapshot,
+    load_baseline_metrics,
+)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -182,9 +187,10 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
 # 3. HTML GENERATION
 # ═══════════════════════════════════════════════════════════
 
-def generate_html(players_data: dict, title: str) -> str:
+def generate_html(players_data: dict, title: str, baseline_date: str | None = None) -> str:
     """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
+    baseline_json = json.dumps(baseline_date)
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
     sync_date_en = now.strftime("%Y-%m-%d at %H:%M")
@@ -214,6 +220,7 @@ def generate_html(players_data: dict, title: str) -> str:
 <script>
 window.PLAYERS_DATA = {data_json};
 window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
+window.BASELINE_DATE = {baseline_json};
 </script>
 <script src="../assets/app.js"></script>
 </body>
@@ -285,6 +292,16 @@ def main():
     print("\n[UUID] Resolving Mojang usernames...")
     uuid_to_name = resolve_all_uuids(uuids, cache_path)
 
+    # 7-day baseline (snapshots/YYYY-MM-DD/) for stat-tile deltas
+    snapshots_dir = data_dir.parent / "snapshots"
+    baseline_dir = find_baseline_snapshot(snapshots_dir)
+    baseline_metrics = load_baseline_metrics(baseline_dir) if baseline_dir else {}
+    baseline_date = baseline_dir.name if baseline_dir else None
+    if baseline_date:
+        print(f"[HIST] Baseline snapshot: {baseline_date} ({len(baseline_metrics)} players)")
+    else:
+        print(f"[HIST] No baseline snapshot >= 6 days old - deltas hidden")
+
     # Process stats
     print("\n[STATS] Processing statistics...")
     players_data = {}
@@ -292,12 +309,15 @@ def main():
         uuid = json_file.stem
         name = uuid_to_name[uuid]
         player = process_player(uuid, name, str(json_file))
+        delta = compute_deltas(player, baseline_metrics.get(uuid))
+        if delta is not None:
+            player["delta_7d"] = delta
         players_data[name] = player
         print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocks, {player['mob_kills']} kills")
 
     # Generate HTML
     print(f"\n[HTML] Generating HTML...")
-    html = generate_html(players_data, title)
+    html = generate_html(players_data, title, baseline_date)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

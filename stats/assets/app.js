@@ -32,9 +32,9 @@ playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=playerColor(i));
 // ═══════════════════════════════════════
 const _MI='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/';
 const _HR='../assets/icons/';
-// Icons pre-rendered at 256x256 (nearest-neighbor upscale of native source).
-// See scripts/build_icons.py — keep ICONS list there in sync with this set.
-const MC_ICONS_HR=new Set(['diamond_pickaxe','diamond_axe','diamond_sword','netherite_sword','iron_sword','iron_chestplate','shield','bow','crossbow','elytra','fishing_rod','diamond','blaze_rod','ender_pearl','emerald','nether_star','golden_apple','paper','saddle','recovery_compass','compass','filled_map','new_realm','enchanted_book','knowledge_book','feather','wheat','wheat_seeds','rabbit_foot','diamond_boots','gold_ingot','iron_ingot','copper_ingot','rotten_flesh','skeleton_skull','totem_of_undying','oak_boat','egg','torch','cod','oak_sapling','oak_door','oak_planks','netherrack','ancient_debris','crafting_table','chest','white_bed','anvil','tnt','target']);
+// Hi-res local icons — list injected by generate.py from stats/assets/icons/manifest.json
+// (written by scripts/build_icons.py). Anything outside the set falls back to the CDN.
+const MC_ICONS_HR=new Set(window.ICONS_HR||[]);
 function mcIcon(name){
   if(MC_ICONS_HR.has(name)){
     return '<img class="mc-icon-hr" src="'+_HR+name+'.png" alt="'+name+'" loading="lazy">';

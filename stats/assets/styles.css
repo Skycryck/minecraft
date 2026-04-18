@@ -41,7 +41,7 @@ a{color:var(--accent-light);text-decoration:none}
 .nav{
   display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;
   padding:1rem 0;position:sticky;top:0;z-index:100;
-  background:rgba(12,12,15,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:transparent;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);margin-bottom:1.5rem;
 }
 .nav button{
@@ -92,6 +92,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .nav button img.mc-icon,.nav button img.mc-icon-hr{width:32px;height:32px}
 .grid{display:grid;gap:1rem}
 .grid-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.grid-2-fixed{grid-template-columns:repeat(2,minmax(0,1fr))}
 .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .grid-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .stat-tile{
@@ -115,9 +116,9 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .leaderboard li:nth-child(1) .rank{background:linear-gradient(135deg,#ffd700,#b8860b);color:#000;border:none}
 .leaderboard li:nth-child(2) .rank{background:linear-gradient(135deg,#c0c0c0,#808080);color:#000;border:none}
 .leaderboard li:nth-child(3) .rank{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;border:none}
-.leaderboard .name{flex:1;color:var(--text)}
+.leaderboard .name{flex:1;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .leaderboard .val{color:var(--accent-light);font-weight:600}
-.leaderboard .bar-bg{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;min-width:60px}
+.leaderboard .bar-bg{flex:0 1 70px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;min-width:30px}
 .leaderboard .bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
 .chart-wrap{position:relative;width:100%;max-height:350px}
 .chart-wrap canvas{width:100%!important}
@@ -141,7 +142,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .player-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 @media(max-width:768px){
   .header h1{font-size:1.6rem}
-  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .grid-2,.grid-2-fixed,.grid-3,.grid-4{grid-template-columns:1fr}
   .profile-header{flex-direction:column;align-items:flex-start}
   .profile-stats{margin-left:0}
   .stat-tile .value{font-size:1.3rem}

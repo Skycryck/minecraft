@@ -100,7 +100,7 @@ BADGES: list[dict] = [
      "tiers": [10, 50, 150, 300], "val": lambda p: _get(p, "sleep_in_bed")},
     {"id": "kangourou", "name": "Kangourou", "icon": "rabbit_foot", "cat": "daily",
      "tiers": [5000, 20000, 50000, 80000], "val": lambda p: _get(p, "jumps")},
-    {"id": "no_life", "name": "No-Life", "icon": "clock", "cat": "prestige",
+    {"id": "no_life", "name": "No-Life", "icon": "recovery_compass", "cat": "prestige",
      "tiers": [10, 50, 100, 200], "val": lambda p: _get(p, "play_hours")},
 ]
 

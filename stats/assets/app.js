@@ -370,8 +370,36 @@ function buildTreemapHtml(entries){
     const p=r.v/total*100;
     const areaFrac=(r.w*r.h)/(W*H);
     const showLabel=areaFrac>0.035;
-    return `<div class="treemap-item" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" title="${label(r.k)}: ${fmt(r.v)} (${p.toFixed(1)}%)">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
+    const tip=`${label(r.k)} · ${fmt(r.v)} (${p.toFixed(1)}%)`;
+    return `<div class="treemap-item" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
   }).join('')}</div>`;
+}
+
+// Floating tooltip shared across all treemap items — lives on <body>
+// so it escapes the .treemap overflow:hidden clip. Native `title=` is
+// kept as a11y fallback but shows with a ~1.5s OS delay and is clipped
+// out of view on small rects.
+function initTreemapTooltip(){
+  let tip=null;
+  const ensure=()=>{
+    if(tip) return tip;
+    tip=document.createElement('div');
+    tip.className='tm-tooltip';
+    document.body.appendChild(tip);
+    return tip;
+  };
+  document.addEventListener('mouseover',e=>{
+    const el=e.target.closest?.('.treemap-item');
+    const node=ensure();
+    if(el){ node.textContent=el.dataset.tmLabel||''; node.classList.add('visible'); }
+    else { node.classList.remove('visible'); }
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!tip||!tip.classList.contains('visible')) return;
+    const x=Math.min(e.clientX+14, window.innerWidth-tip.offsetWidth-8);
+    const y=Math.min(e.clientY+14, window.innerHeight-tip.offsetHeight-8);
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  });
 }
 
 // ═══════════════════════════════════════
@@ -951,7 +979,7 @@ document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
 document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
-buildNav();buildAllSections();initLeaderboardTabs();
+buildNav();buildAllSections();initLeaderboardTabs();initTreemapTooltip();
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);
 animateCounters();

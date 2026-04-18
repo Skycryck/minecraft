@@ -187,6 +187,8 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .treemap-item:hover{opacity:.8}
 .treemap-item span{font-family:var(--font-mono);font-size:.58rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);line-height:1.15;word-break:break-word}
 .treemap-item .tm-count{opacity:.7;font-size:.52rem}
+.tm-tooltip{position:fixed;left:0;top:0;pointer-events:none;padding:.35rem .6rem;background:rgba(12,12,15,.95);color:#fff;border:1px solid var(--c-craft);border-radius:4px;font-family:var(--font-mono);font-size:.72rem;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5);opacity:0;transition:opacity .12s;z-index:9999}
+.tm-tooltip.visible{opacity:1}
 .fun-facts{display:flex;flex-direction:column;gap:.5rem}
 .fun-fact{
   display:flex;align-items:flex-start;gap:.6rem;padding:.6rem .8rem;

@@ -77,8 +77,12 @@ $targetExists = ($LASTEXITCODE -eq 0)
 # This runs BEFORE any checkout so it reads refs, not the working tree.
 $commitBody = $null
 if ($targetExists) {
-    $lastMirrorMsg = git log $TargetBranch --format=%B -n 1 2>$null
-    if ($LASTEXITCODE -eq 0 -and $lastMirrorMsg -match "mirror from \S+ @ ([0-9a-f]+)") {
+    # `git log --format=%B -n 1` returns the commit message as multiple stdout
+    # lines, which PowerShell captures as an array. `-match` on an array filters
+    # instead of capturing, leaving $Matches null - so we flatten first.
+    $lastMirrorMsg = (git log $TargetBranch --format=%B -n 1 2>$null) -join "`n"
+    if ($LASTEXITCODE -eq 0 -and $lastMirrorMsg -and
+        ($lastMirrorMsg -match "mirror from \S+ @ ([0-9a-f]+)")) {
         $candidateSha = $Matches[1]
         # Verify the referenced commit still exists (main may have been rewritten)
         git rev-parse --verify --quiet "$candidateSha^{commit}" 2>$null | Out-Null

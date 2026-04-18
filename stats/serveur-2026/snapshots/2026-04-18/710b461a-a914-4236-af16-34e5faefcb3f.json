@@ -1,0 +1,51 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:oak_sapling": 1,
+      "minecraft:wheat_seeds": 12
+    },
+    "minecraft:picked_up": {
+      "minecraft:egg": 30,
+      "minecraft:apple": 1,
+      "minecraft:oak_log": 5,
+      "minecraft:stick": 2,
+      "minecraft:polished_basalt": 4,
+      "minecraft:wheat_seeds": 33,
+      "minecraft:wheat": 12,
+      "minecraft:leather": 8,
+      "minecraft:oak_sapling": 1,
+      "minecraft:beef": 17
+    },
+    "minecraft:dropped": {
+      "minecraft:stick": 2,
+      "minecraft:polished_basalt": 4
+    },
+    "minecraft:mined": {
+      "minecraft:oak_leaves": 5,
+      "minecraft:oak_log": 5,
+      "minecraft:wheat": 12
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 20312,
+      "minecraft:walk_one_cm": 87923,
+      "minecraft:leave_game": 1,
+      "minecraft:walk_under_water_one_cm": 76,
+      "minecraft:damage_dealt": 100,
+      "minecraft:play_time": 20312,
+      "minecraft:jump": 189,
+      "minecraft:time_since_death": 20312,
+      "minecraft:drop": 6,
+      "minecraft:sprint_one_cm": 45486,
+      "minecraft:open_chest": 1,
+      "minecraft:fall_one_cm": 4798,
+      "minecraft:swim_one_cm": 2762,
+      "minecraft:total_world_time": 20312,
+      "minecraft:fly_one_cm": 38983,
+      "minecraft:walk_on_water_one_cm": 83,
+      "minecraft:crouch_one_cm": 3236,
+      "minecraft:sneak_time": 914,
+      "minecraft:animals_bred": 5
+    }
+  },
+  "DataVersion": 4788
+}

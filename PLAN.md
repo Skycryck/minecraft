@@ -289,7 +289,7 @@
 
 ---
 
-### [ ] Tâche 14 — Générer `MC_ICONS_HR` depuis `build_icons.py`
+### [x] Tâche 14 — Générer `MC_ICONS_HR` depuis `build_icons.py`
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -299,10 +299,10 @@
 - **Problème identifié :**
   > `MC_ICONS_HR` dans `generate.py:461` et `ICONS`/`WIKI_HIRES` dans `build_icons.py` doivent être synchronisés manuellement (documenté dans CLAUDE.md). Source récurrente d'incohérences.
 - **Action attendue :**
-  - [ ] `build_icons.py` écrit `stats/assets/icons/manifest.json` avec la liste des icônes produites
-  - [ ] `generate.py` lit ce manifest au runtime et injecte la liste dans le JS
-  - [ ] Supprimer la constante `MC_ICONS_HR` hardcodée
-  - [ ] Mettre à jour CLAUDE.md pour retirer l'étape manuelle
+  - [x] `build_icons.py` écrit `stats/assets/icons/manifest.json` avec la liste des icônes produites
+  - [x] `generate.py` lit ce manifest au runtime et injecte la liste dans le JS
+  - [x] Supprimer la constante `MC_ICONS_HR` hardcodée
+  - [x] Mettre à jour CLAUDE.md pour retirer l'étape manuelle
 - **Critères d'acceptation :**
   - Ajouter une icône = 1 seule modification (dans `build_icons.py`)
   - Aucune icône ne bascule par erreur en fallback CDN
@@ -434,12 +434,22 @@
 - CSS (`stats/assets/styles.css`) : `.nav-player-select` reprend le style des boutons nav (pilule, min-height 50px), caret SVG inline, variante `.active` (fond coloré joueur, caret blanc), pleine largeur sur mobile. La rangée de nav ne peut donc plus déborder : 2 boutons + 1 select ≤ 3 cellules au lieu de 2+N.
 - `python -m py_compile` OK, `deno check stats/assets/app.js` OK. Régénération : `serveur-2026` 48 458 o (inchangé), `serveur-2020` 65 087 o (+24 o : JSON identique, seul `index.html` change d'une poussière). JS externe → pas de hausse du HTML.
 
-## 2026-04-17 — Tâche 9 : Snapshots horodatés
+### 2026-04-17 — Tâche 9 : Snapshots horodatés
 
 - `scripts/sync-stats.ps1` : bloc snapshot ajouté juste après le log de copie, avant le git add. Calcule `$snapshotDate = yyyy-MM-dd`, cible `stats\serveur-2026\snapshots\$snapshotDate`. Si absent → `New-Item` + `Copy-Item (data\*.json) -> snapshotDir`. Si présent → log jaune « skip ». Garantit donc 1 snapshot/jour max, capture du contenu complet de `data/` (pas seulement les fichiers modifiés par la passe courante).
 - `git add` étendu à `stats/serveur-2026/snapshots` en plus de `data/*.json` : le dossier ajoute sa propre ligne dans le commit quotidien. Le workflow `update-stats.yml` ne se déclenche que sur `stats/*/data/**`, donc les nouveaux commits qui ne modifient que `snapshots/` n'entraîneraient aucun rebuild — mais en pratique les snapshots ne sont créés qu'après au moins une nouvelle version de `data/*.json`, donc les deux changements cohabitent dans un même commit et le workflow se déclenche normalement.
 - Test dry-run (script PS isolé sur ce worktree) : crée `snapshots/2026-04-17/` avec les 7 JSON, 2ᵉ exécution → branche « skip ». Puis `python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"` : OK, 7 joueurs, 194h, 48 498 o → `generate.py` ignore bien le sous-dossier `snapshots/` (lecture limitée au dossier passé en argument). `powershell [PSParser]::Tokenize` : OK sur le script modifié.
 - Premier snapshot committé tel quel (7 fichiers, ~164 KB) — bootstrap minimal pour la tâche 10 (`history.py` lira le plus proche ≥6 jours). Pas de `.gitignore` ajouté, les snapshots doivent persister dans le repo.
+
+### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
+
+- Nouveau module `scripts/minecraft/history.py` : `find_baseline_snapshot()` (cherche le dossier `snapshots/YYYY-MM-DD/` le plus proche de J-7, avec un seuil minimum à 6 jours pour éviter les "deltas hebdo" sur 2 jours), `load_baseline_metrics()` (mappe UUID → 4 métriques via `_extract_metrics()`), `compute_deltas()` (renvoie `None` si pas de baseline). 4 clés trackées : `play_hours`, `total_mined`, `mob_kills`, `total_crafted`.
+- `generate.py` : import `history`, lookup baseline dans `data_dir.parent / "snapshots"`, calcul du delta par joueur attaché sous `player["delta_7d"]` (clé absente si pas de baseline). Nouvelle injection `window.BASELINE_DATE` (ISO date ou `null`). Logs `[HIST] Baseline snapshot: 2026-04-12 (7 players)` ou `No baseline snapshot >= 6 days old - deltas hidden`.
+- `app.js` : helper `deltaSub(value, suffix)` rend `↑ +X<suffix> (7j)` dans un `<div class="sub delta-sub">`, retourne `''` si `value` null/≤0. `deltaTotals` agrège la somme inter-joueurs pour les 4 tiles overview. Tiles touchées : overview (4 tiles : play_hours, total_mined, mob_kills, total_crafted) et joueur (3 tiles : total_mined, mob_kills, total_crafted — la tile play_hours n'existe pas en section joueur, c'est un profile-stat). Pour total_mined / mob_kills, le delta s'ajoute en 2ᵉ ligne sous le sub mph/kph existant.
+- 1 clé i18n ajoutée (`delta_window` : `7j` en FR, `7d` en EN). CSS : `.stat-tile .delta-sub { color: var(--c-mining); font-weight:600 }` — vert sémantique de la catégorie mining (positif = progression).
+- Vérif manuelle Skycryck (serveur-2026, baseline 12/04 → snapshot 18/04, 6 jours) : `play_hours 47.8 → 61.3 (+13.5)`, `total_mined 26771 → 31211 (+4440)`, `mob_kills 7713 → 8068 (+355)`, `total_crafted 21476 → 25637 (+4161)`. Affichage cohérent : tile mined `↑ +4.4k (7j)`, tile kills `↑ +355 (7j)`, tile crafted `↑ +4.2k (7j)`. Overview : `↑ +32,9h (7j)` / `+15.3k` / `+1.8k` / `+9.9k`.
+- Edge case `serveur-2020` (pas de dossier `snapshots/`) : `BASELINE_DATE = null`, aucun `delta_7d` injecté, `deltaSub()` renvoie `''` partout, dashboard rendu identique à avant. `hermitcraft-s10` : pareil.
+- `python -m py_compile` OK ; `deno check stats/assets/app.js` OK ; aucune erreur console côté navigateur (preview FR + EN). Tailles : `serveur-2026` 49 188 o (+730 o : 4×FR + 4×EN deltas embarqués), `serveur-2020` 65 191 o (+128 o : `BASELINE_DATE=null`), `hermitcraft-s10` 378 475 o.
 
 ### 2026-04-18 — Tâche 11 : Edge case badge `increvable`
 
@@ -466,15 +476,14 @@
 - Vérif numérique (deno eval) sur 15 valeurs décroissantes `[12000..300]` : 15/15 rects émis, somme des aires = 20000 (soit exactement W×H, couverture 100%), worst aspect ratio 1.96 (≈2 — excellent pour squarified, très loin des bandelettes 1D de l'ancien flex où le dernier item pouvait atteindre 30:1).
 - `python -m py_compile` OK, `deno check stats/assets/app.js` exit 0. Régénération : `serveur-2026` 49 186 o, `serveur-2020` 65 191 o, `hermitcraft-s10` 378 481 o (tailles identiques — JS externe).
 
-### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
+### 2026-04-18 — Tâche 14 : Manifest d'icônes auto-généré
 
-- Nouveau module `scripts/minecraft/history.py` : `find_baseline_snapshot()` (cherche le dossier `snapshots/YYYY-MM-DD/` le plus proche de J-7, avec un seuil minimum à 6 jours pour éviter les "deltas hebdo" sur 2 jours), `load_baseline_metrics()` (mappe UUID → 4 métriques via `_extract_metrics()`), `compute_deltas()` (renvoie `None` si pas de baseline). 4 clés trackées : `play_hours`, `total_mined`, `mob_kills`, `total_crafted`.
-- `generate.py` : import `history`, lookup baseline dans `data_dir.parent / "snapshots"`, calcul du delta par joueur attaché sous `player["delta_7d"]` (clé absente si pas de baseline). Nouvelle injection `window.BASELINE_DATE` (ISO date ou `null`). Logs `[HIST] Baseline snapshot: 2026-04-12 (7 players)` ou `No baseline snapshot >= 6 days old - deltas hidden`.
-- `app.js` : helper `deltaSub(value, suffix)` rend `↑ +X<suffix> (7j)` dans un `<div class="sub delta-sub">`, retourne `''` si `value` null/≤0. `deltaTotals` agrège la somme inter-joueurs pour les 4 tiles overview. Tiles touchées : overview (4 tiles : play_hours, total_mined, mob_kills, total_crafted) et joueur (3 tiles : total_mined, mob_kills, total_crafted — la tile play_hours n'existe pas en section joueur, c'est un profile-stat). Pour total_mined / mob_kills, le delta s'ajoute en 2ᵉ ligne sous le sub mph/kph existant.
-- 1 clé i18n ajoutée (`delta_window` : `7j` en FR, `7d` en EN). CSS : `.stat-tile .delta-sub { color: var(--c-mining); font-weight:600 }` — vert sémantique de la catégorie mining (positif = progression).
-- Vérif manuelle Skycryck (serveur-2026, baseline 12/04 → snapshot 18/04, 6 jours) : `play_hours 47.8 → 61.3 (+13.5)`, `total_mined 26771 → 31211 (+4440)`, `mob_kills 7713 → 8068 (+355)`, `total_crafted 21476 → 25637 (+4161)`. Affichage cohérent : tile mined `↑ +4.4k (7j)`, tile kills `↑ +355 (7j)`, tile crafted `↑ +4.2k (7j)`. Overview : `↑ +32,9h (7j)` / `+15.3k` / `+1.8k` / `+9.9k`.
-- Edge case `serveur-2020` (pas de dossier `snapshots/`) : `BASELINE_DATE = null`, aucun `delta_7d` injecté, `deltaSub()` renvoie `''` partout, dashboard rendu identique à avant. `hermitcraft-s10` : pareil.
-- `python -m py_compile` OK ; `deno check stats/assets/app.js` OK ; aucune erreur console côté navigateur (preview FR + EN). Tailles : `serveur-2026` 49 188 o (+730 o : 4×FR + 4×EN deltas embarqués), `serveur-2020` 65 191 o (+128 o : `BASELINE_DATE=null`), `hermitcraft-s10` 378 475 o.
+- `scripts/build_icons.py` — après le `[NORMALIZE]`, écriture de `stats/assets/icons/manifest.json` (liste triée des stems des `*.png` effectivement sur disque). Choix de lister le contenu réel plutôt que `ICONS` + `WIKI_HIRES` : si une icône échoue au fetch, elle n'apparaît pas dans le manifest → pas de faux hi-res qui partirait en 404.
+- `scripts/generate.py` — nouvelle constante `ICONS_MANIFEST_PATH`, fonction `load_icons_manifest()` (retourne `[]` + warning si absent), injection via `window.ICONS_HR = {icons_json}` dans le template HTML. Si le manifest manque, la génération n'échoue pas — le site retombe en tout-CDN.
+- `stats/assets/app.js` — `MC_ICONS_HR` n'est plus un `new Set([...51 valeurs])` hardcodé mais `new Set(window.ICONS_HR || [])`. Le commentaire pointe désormais vers `manifest.json` + `build_icons.py` comme source unique. `mcIcon()` inchangé.
+- `manifest.json` initial généré depuis le contenu actuel de `stats/assets/icons/` (51 icônes — identique à l'ancien hardcode). Après régénération des 3 dashboards (serveur-2026 49 846 o, serveur-2020 65 851 o, hermitcraft-s10 379 141 o), `grep window.ICONS_HR` confirme l'injection correcte.
+- CLAUDE.md mis à jour : la section "Icon rendering" et la règle "Adding a new icon" ne mentionnent plus de synchronisation manuelle — ajouter une icône = 1 modif dans `build_icons.py` + run, puis commit du PNG et du manifest régénéré.
+- `python -m py_compile` OK sur `generate.py` et `build_icons.py` ; `deno check stats/assets/app.js` exit 0.
 
 ---
 

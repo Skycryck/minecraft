@@ -3,8 +3,11 @@ One-shot builder: downloads Minecraft icons, upscales with nearest-neighbor
 to 256x256, writes to stats/assets/icons/. Uses pure Python stdlib.
 
 Run once after changing the ICONS dict below. Commit the output PNGs.
+Also writes manifest.json listing every icon shipped in the folder —
+generate.py reads it to drive the hi-res vs CDN-fallback decision in app.js.
 """
 
+import json
 import struct
 import zlib
 import sys
@@ -388,6 +391,13 @@ def main():
             png_path.write_bytes(write_rgba_png(new_rgba, nw, nh))
         except Exception as e:
             print(f'  [ERR] {png_path.name}: {e}')
+    # Manifest: list every icon present on disk (stems sorted alphabetically).
+    # Consumed by generate.py which injects it as window.ICONS_HR so app.js
+    # can pick hi-res local PNGs vs CDN fallback without a hardcoded list.
+    manifest = sorted(p.stem for p in OUT_DIR.glob('*.png'))
+    manifest_path = OUT_DIR / 'manifest.json'
+    manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    print(f'[MANIFEST] {manifest_path.relative_to(OUT_DIR.parent.parent.parent)} ({len(manifest)} icons)')
     print(f'\n[DONE] {total - len(errors)}/{total} icons ready in {OUT_DIR}')
     if errors:
         print(f'[FAILED] {len(errors)}:')

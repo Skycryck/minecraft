@@ -61,9 +61,10 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 
 ### Icon rendering in generate.py
 
-- `MC_ICONS_HR` (set) lists icons shipped locally under `stats/assets/icons/` — rendered via `<img class="mc-icon-hr">` with `image-rendering: auto` (bilinear, crisp at fractional DPRs like Windows 125%)
+- `stats/assets/icons/manifest.json` lists every hi-res icon present on disk — it's written by `build_icons.py` at the end of its run. `generate.py` loads it via `load_icons_manifest()` and injects it as `window.ICONS_HR` into the HTML. `app.js` builds `MC_ICONS_HR = new Set(window.ICONS_HR || [])` and icons in the set render via `<img class="mc-icon-hr">` with `image-rendering: auto` (bilinear, crisp at fractional DPRs like Windows 125%)
 - Anything not in that set falls back to a CDN `<img class="mc-icon">` with `image-rendering: pixelated` (works correctly only at integer DPRs)
 - Display size is 32×32 for both classes; hi-res sources are 256×256 so they downscale smoothly
+- No manual sync needed: adding an icon to `ICONS` / `WIKI_HIRES` in `build_icons.py` and running the script updates the PNG folder **and** the manifest in one pass
 
 ### Workflow chain
 
@@ -137,8 +138,8 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - **sync-stats.ps1 takes params with local defaults** — `-Source` (Crafty stats folder), `-Repo` (repo root), `-ServerName` (sub-folder under `stats/`). Defaults point at the dev machine's paths; override at call site when running elsewhere. The script writes `stats/<ServerName>/snapshots/YYYY-MM-DD/` (1/day max) and includes it in the daily commit.
 - **Workflow title match matters** — `static.yml` triggers on `workflow_run` matching the exact `name:` of `update-stats.yml` ("Update Minecraft Stats Dashboard")
 - **`[skip ci]` in commit message** — update-stats.yml commits with `[skip ci]` to avoid infinite loops. The deploy is triggered via `workflow_run`, not the push.
-- **Icon PNGs are committed, not fetched at runtime** — `stats/assets/icons/*.png` (~100 KB total) ship with the repo so the dashboard is self-contained. Rebuild with `python scripts/build_icons.py` after editing the `ICONS` / `WIKI_HIRES` dicts.
-- **Adding a new icon** — add its name to `ICONS` (or `WIKI_HIRES`) in `build_icons.py`, run the script, then add the same name to `MC_ICONS_HR` in `generate.py` so the dashboard uses the local hi-res file instead of the CDN fallback.
+- **Icon PNGs are committed, not fetched at runtime** — `stats/assets/icons/*.png` (~100 KB total) ship with the repo so the dashboard is self-contained. Rebuild with `python scripts/build_icons.py` after editing the `ICONS` / `WIKI_HIRES` dicts. The script also rewrites `stats/assets/icons/manifest.json`, which `generate.py` reads at build time to tell `app.js` which icons are local.
+- **Adding a new icon** — add its name to `ICONS` (or `WIKI_HIRES`) in `build_icons.py`, run the script, commit the new PNG + the updated `manifest.json`. No other file needs editing — `generate.py` picks up the manifest automatically on the next run.
 - **Delta window is `[6, 30]` days** — too-recent snapshots produce noisy "weekly" deltas; snapshots older than 30 days mislead after a long pause. The label shows the **actual** baseline age (computed JS-side from `window.BASELINE_DATE`), never a hardcoded `7j` — so a 6-day baseline labels itself `(6j)`.
 
 ## Public template repo

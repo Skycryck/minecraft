@@ -187,10 +187,23 @@ def process_player(uuid: str, name: str, filepath: str) -> dict:
 # 3. HTML GENERATION
 # ═══════════════════════════════════════════════════════════
 
+ICONS_MANIFEST_PATH = Path(__file__).resolve().parent.parent / "stats" / "assets" / "icons" / "manifest.json"
+
+
+def load_icons_manifest() -> list[str]:
+    """Return the list of hi-res icons shipped locally (written by build_icons.py)."""
+    if not ICONS_MANIFEST_PATH.exists():
+        print(f"[WARN] Icons manifest not found at {ICONS_MANIFEST_PATH} — all icons will use CDN fallback")
+        return []
+    with open(ICONS_MANIFEST_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+
 def generate_html(players_data: dict, title: str, baseline_date: str | None = None) -> str:
     """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
     baseline_json = json.dumps(baseline_date)
+    icons_json = json.dumps(load_icons_manifest(), separators=(",", ":"))
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
     sync_date_en = now.strftime("%Y-%m-%d at %H:%M")
@@ -221,6 +234,7 @@ def generate_html(players_data: dict, title: str, baseline_date: str | None = No
 window.PLAYERS_DATA = {data_json};
 window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
 window.BASELINE_DATE = {baseline_json};
+window.ICONS_HR = {icons_json};
 </script>
 <script src="../assets/app.js"></script>
 </body>

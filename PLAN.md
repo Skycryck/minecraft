@@ -409,6 +409,14 @@
 - `PALETTE` (identités joueur) inchangée, utilisée uniquement en ligne 12 pour `PLAYER_COLORS_MAP`.
 - `python -m py_compile` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération OK : `serveur-2026` 48 458 o et `serveur-2020` 65 063 o (tailles identiques à avant, CSS et JS externes).
 
+### 2026-04-17 — Tâche 6 : Suppression de l'estimation du temps
+
+- Décision produit retenue (après discussion utilisateur) : **suppression**. Les stats JSON de Minecraft n'exposent que `play_time`, les `*_one_cm` (distances) et quelques compteurs — aucun temps d'activité par catégorie. `estimateTime` posait 1 s/bloc miné, 10 DPS combat, 1.5 s/craft puis rescalait à 85 % du `play_time` : bruit ±300 % sur le minage (break time obsidienne ≈ 9.4 s vs. dirt 0.15 s), indéterminé sur le combat. Le breakdown de déplacement seul serait factuel, mais il double déjà `card_distances`.
+- `stats/assets/app.js` : supprimés — fonction `estimateTime()` (~30 lignes, anciennement 332-362), card `card_time_est` + canvas `chart-time-${name}` dans `buildPlayerSection`, bloc de rendu du donut dans `renderPlayerCharts`, et 6 clés i18n (`card_time_est`, `time_mining`, `time_combat`, `time_travel`, `time_craft`, `time_other`) dans `T.fr` et `T.en`.
+- Layout : la grille qui contenait `[card_time_est | card_distances]` conserve `card_distances` seule (même pattern que `card_killed_by` déjà isolée dans une `grid-2`). Aucune autre card déplacée.
+- Icône `clock` conservée (toujours utilisée par `lb_playtime`). Aucun autre nettoyage hors périmètre.
+- `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération : `serveur-2026` 48 458 o (taille inchangée — on enlève du code JS externe, pas du JSON embarqué), `serveur-2020` 65 063 o. Diff total : 3 fichiers, +4 / -55.
+
 ### 2026-04-17 — Tâche 7 : Contraste `--text-muted` AA
 
 - `--text-muted` passe de `#5c5c68` à `#8080a0` dans `stats/assets/styles.css` `:root`.
@@ -426,13 +434,12 @@
 - CSS (`stats/assets/styles.css`) : `.nav-player-select` reprend le style des boutons nav (pilule, min-height 50px), caret SVG inline, variante `.active` (fond coloré joueur, caret blanc), pleine largeur sur mobile. La rangée de nav ne peut donc plus déborder : 2 boutons + 1 select ≤ 3 cellules au lieu de 2+N.
 - `python -m py_compile` OK, `deno check stats/assets/app.js` OK. Régénération : `serveur-2026` 48 458 o (inchangé), `serveur-2020` 65 087 o (+24 o : JSON identique, seul `index.html` change d'une poussière). JS externe → pas de hausse du HTML.
 
-### 2026-04-17 — Tâche 6 : Suppression de l'estimation du temps
+## 2026-04-17 — Tâche 9 : Snapshots horodatés
 
-- Décision produit retenue (après discussion utilisateur) : **suppression**. Les stats JSON de Minecraft n'exposent que `play_time`, les `*_one_cm` (distances) et quelques compteurs — aucun temps d'activité par catégorie. `estimateTime` posait 1 s/bloc miné, 10 DPS combat, 1.5 s/craft puis rescalait à 85 % du `play_time` : bruit ±300 % sur le minage (break time obsidienne ≈ 9.4 s vs. dirt 0.15 s), indéterminé sur le combat. Le breakdown de déplacement seul serait factuel, mais il double déjà `card_distances`.
-- `stats/assets/app.js` : supprimés — fonction `estimateTime()` (~30 lignes, anciennement 332-362), card `card_time_est` + canvas `chart-time-${name}` dans `buildPlayerSection`, bloc de rendu du donut dans `renderPlayerCharts`, et 6 clés i18n (`card_time_est`, `time_mining`, `time_combat`, `time_travel`, `time_craft`, `time_other`) dans `T.fr` et `T.en`.
-- Layout : la grille qui contenait `[card_time_est | card_distances]` conserve `card_distances` seule (même pattern que `card_killed_by` déjà isolée dans une `grid-2`). Aucune autre card déplacée.
-- Icône `clock` conservée (toujours utilisée par `lb_playtime`). Aucun autre nettoyage hors périmètre.
-- `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` OK (exit 0). Régénération : `serveur-2026` 48 458 o (taille inchangée — on enlève du code JS externe, pas du JSON embarqué), `serveur-2020` 65 063 o. Diff total : 3 fichiers, +4 / -55.
+- `scripts/sync-stats.ps1` : bloc snapshot ajouté juste après le log de copie, avant le git add. Calcule `$snapshotDate = yyyy-MM-dd`, cible `stats\serveur-2026\snapshots\$snapshotDate`. Si absent → `New-Item` + `Copy-Item (data\*.json) -> snapshotDir`. Si présent → log jaune « skip ». Garantit donc 1 snapshot/jour max, capture du contenu complet de `data/` (pas seulement les fichiers modifiés par la passe courante).
+- `git add` étendu à `stats/serveur-2026/snapshots` en plus de `data/*.json` : le dossier ajoute sa propre ligne dans le commit quotidien. Le workflow `update-stats.yml` ne se déclenche que sur `stats/*/data/**`, donc les nouveaux commits qui ne modifient que `snapshots/` n'entraîneraient aucun rebuild — mais en pratique les snapshots ne sont créés qu'après au moins une nouvelle version de `data/*.json`, donc les deux changements cohabitent dans un même commit et le workflow se déclenche normalement.
+- Test dry-run (script PS isolé sur ce worktree) : crée `snapshots/2026-04-17/` avec les 7 JSON, 2ᵉ exécution → branche « skip ». Puis `python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"` : OK, 7 joueurs, 194h, 48 498 o → `generate.py` ignore bien le sous-dossier `snapshots/` (lecture limitée au dossier passé en argument). `powershell [PSParser]::Tokenize` : OK sur le script modifié.
+- Premier snapshot committé tel quel (7 fichiers, ~164 KB) — bootstrap minimal pour la tâche 10 (`history.py` lira le plus proche ≥6 jours). Pas de `.gitignore` ajouté, les snapshots doivent persister dans le repo.
 
 ### 2026-04-18 — Tâche 10 : Deltas 7j sur les stat-tiles
 
@@ -443,13 +450,6 @@
 - Vérif manuelle Skycryck (serveur-2026, baseline 12/04 → snapshot 18/04, 6 jours) : `play_hours 47.8 → 61.3 (+13.5)`, `total_mined 26771 → 31211 (+4440)`, `mob_kills 7713 → 8068 (+355)`, `total_crafted 21476 → 25637 (+4161)`. Affichage cohérent : tile mined `↑ +4.4k (7j)`, tile kills `↑ +355 (7j)`, tile crafted `↑ +4.2k (7j)`. Overview : `↑ +32,9h (7j)` / `+15.3k` / `+1.8k` / `+9.9k`.
 - Edge case `serveur-2020` (pas de dossier `snapshots/`) : `BASELINE_DATE = null`, aucun `delta_7d` injecté, `deltaSub()` renvoie `''` partout, dashboard rendu identique à avant. `hermitcraft-s10` : pareil.
 - `python -m py_compile` OK ; `deno check stats/assets/app.js` OK ; aucune erreur console côté navigateur (preview FR + EN). Tailles : `serveur-2026` 49 188 o (+730 o : 4×FR + 4×EN deltas embarqués), `serveur-2020` 65 191 o (+128 o : `BASELINE_DATE=null`), `hermitcraft-s10` 378 475 o.
-
-### 2026-04-17 — Tâche 9 : Snapshots horodatés
-
-- `scripts/sync-stats.ps1` : bloc snapshot ajouté juste après le log de copie, avant le git add. Calcule `$snapshotDate = yyyy-MM-dd`, cible `stats\serveur-2026\snapshots\$snapshotDate`. Si absent → `New-Item` + `Copy-Item (data\*.json) -> snapshotDir`. Si présent → log jaune « skip ». Garantit donc 1 snapshot/jour max, capture du contenu complet de `data/` (pas seulement les fichiers modifiés par la passe courante).
-- `git add` étendu à `stats/serveur-2026/snapshots` en plus de `data/*.json` : le dossier ajoute sa propre ligne dans le commit quotidien. Le workflow `update-stats.yml` ne se déclenche que sur `stats/*/data/**`, donc les nouveaux commits qui ne modifient que `snapshots/` n'entraîneraient aucun rebuild — mais en pratique les snapshots ne sont créés qu'après au moins une nouvelle version de `data/*.json`, donc les deux changements cohabitent dans un même commit et le workflow se déclenche normalement.
-- Test dry-run (script PS isolé sur ce worktree) : crée `snapshots/2026-04-17/` avec les 7 JSON, 2ᵉ exécution → branche « skip ». Puis `python scripts/generate.py stats/serveur-2026/data --title "Serveur 2026"` : OK, 7 joueurs, 194h, 48 498 o → `generate.py` ignore bien le sous-dossier `snapshots/` (lecture limitée au dossier passé en argument). `powershell [PSParser]::Tokenize` : OK sur le script modifié.
-- Premier snapshot committé tel quel (7 fichiers, ~164 KB) — bootstrap minimal pour la tâche 10 (`history.py` lira le plus proche ≥6 jours). Pas de `.gitignore` ajouté, les snapshots doivent persister dans le repo.
 
 ---
 

@@ -513,6 +513,14 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 5 (refreshed plan) : Tests unitaires history.py
+
+- **Branche :** `refactor/task-5-tests-history`
+- **Commits :** `7682bd6` test(history): add unit tests for find_baseline_snapshot, compute_daily_play_hours, compute_deltas ; `6ea66d3` docs(readme): document how to run tests
+- **Résumé :** 13 tests couvrant `find_baseline_snapshot` (6), `load_baseline_metrics` (2), `compute_daily_play_hours` (2), `compute_deltas` (3). Fixtures construites à la volée via `tempfile.TemporaryDirectory` + helper `_make_snapshot` qui écrit le schéma minimal attendu par `_extract_metrics` (ticks = heures × 72 000). Tous passent : `Ran 13 tests in 0.018s — OK`.
+- **Effets de bord :** nouveau dossier `tests/` (`__init__.py` + `test_history.py`, stdlib uniquement) ; section "Running tests" ajoutée au README ; aucune modif de `scripts/minecraft/history.py` (tests en boîte noire).
+- **Clarifications en écrivant les tests :** le contrat `not baseline` de `compute_deltas` absorbe à la fois `None` et `{}` — les deux renvoient `None`, c'est testé explicitement. Le cas de tie-break exact (ages équidistants de la cible) n'est pas testé : le résultat dépend de l'ordre d'itération de `Path.iterdir()` (filesystem-dependent), un test déterministe sans toucher au module a été écarté. Le cas sans ambiguïté (`target=7`, ages 6/10/14 → 6) est testé à la place.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

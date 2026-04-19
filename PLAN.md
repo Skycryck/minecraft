@@ -384,6 +384,18 @@
 - **Résumé :** Déplacement de `T` (fr+en), `t()`, `label()`, `lang` et du helper `mcIcon()` (+ `_MI`/`_HR`/`MC_ICONS_HR`) depuis `stats/assets/app.js` vers le nouveau fichier `stats/assets/i18n.js`. Pattern retenu : bindings classiques `let`/`const` au top-level — les scripts classiques partagent le scope lexical global, donc `app.js` voit directement `lang`/`T`/`t`/`label`/`mcIcon` sans passer par `window.*` (zéro changement de référence côté `app.js`). Le helper d'icônes a été co-localisé car `T` l'invoque à l'initialisation. `app.js` passe de **1197 → 993 lignes** (−204) ; `i18n.js` fait 217 lignes.
 - **Effets de bord :** nouveau fichier `stats/assets/i18n.js`, `generate.py` injecte un `<script src="../assets/i18n.js">` supplémentaire (avant `app.js`), régénération des deux dashboards (`serveur-2026`, `serveur-2020`). Test navigateur : bascule FR/EN OK, navigation joueur OK, aucune erreur console.
 
+### 2026-04-19 — Tâche 13 (refreshed plan) : Vue comparaison 2 joueurs
+
+- **Branche :** refactor/task-13-compare-view
+- **Commits :** b10249c (feat compare view), 0870bc6 (regen dashboards)
+- **Résumé :** Nouvelle section route-able `#compare/<a>/<b>` lazy-rendue (cache `renderedCompares`). Mini profile-headers côte-à-côte, radar 2-séries (6 axes normalisés, mêmes métriques que le radar overview) et table de diff où le leader prend la couleur d'identité du joueur. Router étendu dans `sectionToHash`/`hashToSection` avec validation `playerNames.includes()` (fallback silencieux vers `overview` en cas de joueur inexistant). Guard `a===b` → redirect `#player/<a>`.
+- **UX entry-point :** Bouton « 🔀 Comparer » dans la nav qui toggle un petit formulaire inline (2 `<select>` + bouton Go) flottant sous le bouton. Click-outside ferme, Entrée sur un select déclenche Go, pré-remplissage des 2 joueurs les plus joués à l'ouverture. Listener click-outside enregistré une seule fois (guard `buildNav._outsideClickBound`) pour survivre aux `buildNav()` successifs du switch FR/EN.
+- **i18n :** 7 clés ajoutées (`nav_compare_btn`, `nav_compare_label`, `compare_go`, `compare_select_placeholder`, `compare_radar`, `compare_table`, `compare_metric`) dans `T.fr` avec overrides EN.
+- **CSS :** styles pour `.compare-headers` (2 colonnes desktop, 1 mobile), `.compare-table` (tabular-nums), `.nav-compare-wrap` + `.nav-compare-form` (position absolue desktop, fixed bottom mobile).
+- **Effets de bord :** `app.js` 1197 → 1378 lignes (+181), `styles.css` 295 → 334 (+39). Régénération des 2 dashboards (`serveur-2026` 50 047 o, `serveur-2020` 65 851 o). `deno check` OK, `python -m py_compile` OK.
+
+### 2026-04-17 — Tâche 1 : Extraction CSS
+
 ### 2026-04-19 — Tâche 1 : Deltas négatifs/nuls honnêtes
 
 - **Branche :** refactor/task-1-delta-signs

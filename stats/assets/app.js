@@ -373,17 +373,68 @@ function buildNav(){
     h+=`<option value="${name}">${name} — ${hrs}h</option>`;
   });
   h+=`</select>`;
+  // Compare entry point — button + inline 2-select form (hidden until toggled).
+  h+=`<div class="nav-compare-wrap">`;
+  h+=`<button type="button" class="nav-tab nav-compare-btn" id="compareBtn" aria-label="${t('nav_compare_label')}" aria-expanded="false">${t('nav_compare_btn')}</button>`;
+  h+=`<div class="nav-compare-form" id="compareForm" role="dialog" aria-label="${t('nav_compare_label')}">`;
+  const opts=`<option value="">${t('compare_select_placeholder')}</option>`+playerNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+  h+=`<select class="nav-compare-select" id="cmpA" aria-label="${t('nav_compare_label')}">${opts}</select>`;
+  h+=`<select class="nav-compare-select" id="cmpB" aria-label="${t('nav_compare_label')}">${opts}</select>`;
+  h+=`<button type="button" class="nav-compare-go" id="cmpGo">${t('compare_go')}</button>`;
+  h+=`</div></div>`;
   navEl.innerHTML=h;
-  navEl.querySelectorAll('.nav-tab').forEach(btn=>{
+  navEl.querySelectorAll('.nav-tab[data-section]').forEach(btn=>{
     btn.addEventListener('click',()=>navigateTo(btn.dataset.section));
   });
   document.getElementById('playerSelect').addEventListener('change',e=>{
     if(e.target.value)navigateTo('player-'+e.target.value);
   });
+  const cBtn=document.getElementById('compareBtn');
+  const cForm=document.getElementById('compareForm');
+  const cA=document.getElementById('cmpA');
+  const cB=document.getElementById('cmpB');
+  const cGo=document.getElementById('cmpGo');
+  const closeForm=()=>{cForm.classList.remove('open');cBtn.setAttribute('aria-expanded','false')};
+  cBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const isOpen=cForm.classList.toggle('open');
+    cBtn.setAttribute('aria-expanded',isOpen?'true':'false');
+    if(isOpen){
+      // Pre-fill with top-2 most-played when empty — sensible default.
+      if(!cA.value&&playerNames.length>=2){cA.value=playerNames[0];cB.value=playerNames[1]}
+    }
+  });
+  // Click outside the form closes it. Registered once globally — the listener
+  // re-fetches the current form/btn from the DOM, so it survives buildNav()
+  // re-renders (e.g. on lang switch) without stacking duplicate listeners.
+  if(!buildNav._outsideClickBound){
+    buildNav._outsideClickBound=true;
+    document.addEventListener('click',(e)=>{
+      const form=document.getElementById('compareForm');
+      const btn=document.getElementById('compareBtn');
+      if(!form||!form.classList.contains('open'))return;
+      if(form.contains(e.target)||(btn&&btn.contains(e.target)))return;
+      form.classList.remove('open');
+      if(btn)btn.setAttribute('aria-expanded','false');
+    });
+  }
+  const doCompare=()=>{
+    const a=cA.value,b=cB.value;
+    if(!a||!b)return;
+    if(a===b){navigateTo('player-'+a);closeForm();return}
+    navigateTo(`compare-${a}__${b}`);
+    closeForm();
+  };
+  cGo.addEventListener('click',doCompare);
+  // Enter key on either select triggers Go.
+  [cA,cB].forEach(sel=>sel.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doCompare()}}));
 }
 
 function updateNavActive(section){
-  navEl.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+  // .nav-tab without data-section (e.g. the compare button) should never go active here.
+  navEl.querySelectorAll('.nav-tab[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+  const cBtn=document.getElementById('compareBtn');
+  if(cBtn)cBtn.classList.toggle('active',section.startsWith('compare-'));
   const sel=document.getElementById('playerSelect');
   if(!sel)return;
   if(section.startsWith('player-')){
@@ -401,6 +452,10 @@ function updateNavActive(section){
 function sectionToHash(id){
   if(id==='leaderboards')return '#leaderboards';
   if(id.startsWith('player-'))return '#player/'+encodeURIComponent(id.replace('player-',''));
+  if(id.startsWith('compare-')){
+    const [a,b]=id.slice('compare-'.length).split('__');
+    return '#compare/'+encodeURIComponent(a)+'/'+encodeURIComponent(b);
+  }
   return '';
 }
 function hashToSection(hash){
@@ -410,6 +465,18 @@ function hashToSection(hash){
   if(h.startsWith('player/')){
     const name=decodeURIComponent(h.slice(7));
     if(playerNames.includes(name))return 'player-'+name;
+  }
+  if(h.startsWith('compare/')){
+    const parts=h.slice('compare/'.length).split('/');
+    if(parts.length>=2){
+      const a=decodeURIComponent(parts[0]);
+      const b=decodeURIComponent(parts[1]);
+      if(playerNames.includes(a)&&playerNames.includes(b)){
+        // Guard against self-compare: redirect to single-player view.
+        if(a===b){location.hash='#player/'+encodeURIComponent(a);return 'player-'+a}
+        return 'compare-'+a+'__'+b;
+      }
+    }
   }
   return 'overview';
 }
@@ -433,12 +500,20 @@ function showSection(id){
   }
   currentSection=id;
   if(id.startsWith('player-'))ensurePlayerSection(id.replace('player-',''));
+  if(id.startsWith('compare-')){
+    const [a,b]=id.slice('compare-'.length).split('__');
+    ensureCompareSection(a,b);
+  }
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);
   if(el)el.classList.add('active');
   if(id==='overview')renderOverviewCharts();
   if(id==='leaderboards')renderLeaderboardCharts();
   if(id.startsWith('player-'))renderPlayerCharts(id.replace('player-',''));
+  if(id.startsWith('compare-')){
+    const [a,b]=id.slice('compare-'.length).split('__');
+    renderCompareChart(a,b);
+  }
   setTimeout(animateCounters,50);
 }
 
@@ -463,15 +538,24 @@ window.matchMedia('(max-width:600px)').addEventListener('change',()=>{
 // first visit via ensurePlayerSection() and memoized for re-entry. Keeps
 // the initial innerHTML small even with 20+ players.
 const renderedPlayers=new Set();
+const renderedCompares=new Set();
 function buildAllSections(){
   contentEl.innerHTML=buildOverview()+buildLeaderboards();
   renderedPlayers.clear();
+  renderedCompares.clear();
 }
 function ensurePlayerSection(name){
   if(renderedPlayers.has(name))return;
   if(!playerNames.includes(name))return;
   contentEl.insertAdjacentHTML('beforeend',buildPlayerSection(name));
   renderedPlayers.add(name);
+}
+function ensureCompareSection(a,b){
+  const id=`compare-${a}__${b}`;
+  if(renderedCompares.has(id))return;
+  if(!playerNames.includes(a)||!playerNames.includes(b))return;
+  contentEl.insertAdjacentHTML('beforeend',buildCompareSection(a,b));
+  renderedCompares.add(id);
 }
 
 // ═══════════════════════════════════════
@@ -1037,6 +1121,103 @@ function renderPlayerCharts(name){
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const mode=de[ctx.dataIndex][0];const km=ctx.parsed.x;return ` ${km.toFixed(2)} km — ~${fmtDuration(travelSeconds(mode,km))}`}}}},
       scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}});
   }
+}
+
+// ═══════════════════════════════════════
+// COMPARE SECTION — 2-player side-by-side (#compare/a/b)
+// ═══════════════════════════════════════
+// Lazy-rendered per unique pair. Metric set mirrors the overview radar
+// (6 axes). The diff column highlights the leader using that player's
+// identity color — same colors the radar uses, so the chart and table
+// read together without a separate legend.
+const COMPARE_METRICS=[
+  {key:'play_hours',    labelKey:'radar_playtime',suffix:'h'},
+  {key:'total_mined',   labelKey:'radar_mined',   suffix:''},
+  {key:'mob_kills',     labelKey:'radar_kills',   suffix:''},
+  {key:'total_distance_km',labelKey:'radar_distance',suffix:' km'},
+  {key:'total_crafted', labelKey:'radar_crafted', suffix:''},
+  {key:'deaths',        labelKey:'radar_deaths',  suffix:''},
+];
+function _fmtMetric(v,suffix){
+  const s=(typeof v==='number'&&v%1!==0)?v.toFixed(1):fmt(Math.round(v));
+  return s+suffix;
+}
+function buildCompareSection(a,b){
+  const pA=PLAYERS_DATA[a],pB=PLAYERS_DATA[b];
+  const cA=PLAYER_COLORS_MAP[a],cB=PLAYER_COLORS_MAP[b];
+  const id=`compare-${a}__${b}`;
+  const avatarA=`https://mc-heads.net/avatar/${pA.uuid}/64`;
+  const avatarB=`https://mc-heads.net/avatar/${pB.uuid}/64`;
+  const rows=COMPARE_METRICS.map(m=>{
+    const va=pA[m.key]||0,vb=pB[m.key]||0;
+    const diff=va-vb;
+    const leader=diff>0?a:diff<0?b:null;
+    const arrow=diff>0?'▲':diff<0?'▼':'=';
+    const leaderColor=leader===a?cA:leader===b?cB:'var(--text-muted)';
+    return `<tr>
+      <td class="cmp-m">${t(m.labelKey)}</td>
+      <td class="cmp-v" style="color:${cA}">${_fmtMetric(va,m.suffix)}</td>
+      <td class="cmp-v" style="color:${cB}">${_fmtMetric(vb,m.suffix)}</td>
+      <td class="cmp-diff" style="color:${leaderColor}">${arrow} ${_fmtMetric(Math.abs(diff),m.suffix)}</td>
+    </tr>`;
+  }).join('');
+  return `
+  <div class="section" id="${id}">
+    <div class="compare-headers">
+      <div class="profile-header compare-header" style="border-left:4px solid ${cA}">
+        <img class="profile-avatar" src="${avatarA}" alt="${a}" onerror="this.style.display='none'">
+        <div class="profile-info">
+          <h2 style="color:${cA}"><a href="#player/${encodeURIComponent(a)}" style="color:inherit">${a}</a></h2>
+          <div class="uuid">${pA.uuid}</div>
+        </div>
+      </div>
+      <div class="profile-header compare-header" style="border-left:4px solid ${cB}">
+        <img class="profile-avatar" src="${avatarB}" alt="${b}" onerror="this.style.display='none'">
+        <div class="profile-info">
+          <h2 style="color:${cB}"><a href="#player/${encodeURIComponent(b)}" style="color:inherit">${b}</a></h2>
+          <div class="uuid">${pB.uuid}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('compare_radar')}</h3>
+      <div class="chart-wrap" style="max-height:420px"><canvas id="chart-compare-${a}__${b}"></canvas></div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">${mcIcon('writable_book')}</span> ${t('compare_table')}</h3>
+      <table class="compare-table">
+        <thead><tr><th>${t('compare_metric')}</th><th style="color:${cA}">${a}</th><th style="color:${cB}">${b}</th><th>Δ</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderCompareChart(a,b){
+  const canvasId=`chart-compare-${a}__${b}`;
+  destroyChart(canvasId);
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const pA=PLAYERS_DATA[a],pB=PLAYERS_DATA[b];
+  const rm=COMPARE_METRICS.map(m=>m.key);
+  const rl=COMPARE_METRICS.map(m=>t(m.labelKey));
+  const mx=rm.map(m=>Math.max(pA[m]||0,pB[m]||0));
+  charts[canvasId]=new Chart(canvas,{type:'radar',data:{
+    labels:rl,datasets:[
+      {label:a,data:rm.map((m,i)=>mx[i]?((pA[m]||0)/mx[i]*100):0),
+        borderColor:PLAYER_COLORS_MAP[a],backgroundColor:PLAYER_COLORS_MAP[a]+'33',
+        borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[a]},
+      {label:b,data:rm.map((m,i)=>mx[i]?((pB[m]||0)/mx[i]*100):0),
+        borderColor:PLAYER_COLORS_MAP[b],backgroundColor:PLAYER_COLORS_MAP[b]+'33',
+        borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[b]},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},ticks:{display:false},pointLabels:{font:{size:12}}}},
+    plugins:{tooltip:{callbacks:{label:ctx=>{
+      const idx=ctx.dataIndex;const name=ctx.dataset.label;
+      const raw=(PLAYERS_DATA[name]?.[rm[idx]]||0);
+      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(Math.round(raw))}`;
+    }}}}}});
 }
 
 // ═══════════════════════════════════════

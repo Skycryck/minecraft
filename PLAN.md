@@ -513,6 +513,13 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 4 (refreshed plan) : Extraction colors.js + palette unifiée
+
+- **Branche :** refactor/task-4-extract-colors
+- **Commits :** `c2a7ac3` refactor(colors): extract palettes and block-color maps to colors.js · `ae0115c` refactor(colors): replace 4 duplicate palettes with CHART_PALETTE · `1ccffd1` chore: regenerate dashboards after colors extraction
+- **Résumé :** Extraction de toutes les définitions de couleurs et helpers associés dans un nouveau fichier `stats/assets/colors.js` (97 lignes) : palette d'identité joueur (`PALETTE`, `_PALETTE_HUES`, `_hslHex`, `playerColor`), maps de couleurs de blocs (`BLOCK_COLORS` + `DYE_COLORS`/`WOOD_COLORS`/`LEAF_COLORS` + `blockColor()` et suffixes). Nouvelle constante `CHART_PALETTE` (15 teintes : 8 premières alignées sur l'identité mais démarrant par le violet brand `#7c6aef`, + 7 teintes muted/dark pour couvrir la taille max de l'ancienne palette `fallback` du treemap) remplace 4 tableaux dupliqués inline (treemap `fallback`, doughnut `deathColors`, stacked bar `distColors`, per-player bar `dp`). `app.js` passe de **1197 → 1123 lignes** (-74). `PLAYER_COLORS_MAP` reste construit dans `app.js` (dépend de `PLAYERS_DATA`) mais utilise `playerColor()` du scope global partagé.
+- **Effets de bord :** nouveau fichier `stats/assets/colors.js`, `generate.py` injecte 1 `<script src="../assets/colors.js">` avant `app.js`, régénération de serveur-2026 et serveur-2020 (hermitcraft-s10 non re-généré — hors demande). Smoke test via `deno eval` : tous les symboles retournent les bonnes valeurs (PALETTE 8 hues, CHART_PALETTE 15, 82 BLOCK_COLORS, `blockColor('diamond_ore')='#5ecfd5'`, `blockColor('oak_planks')='#b08a50'`, `blockColor('red_wool')='#b02e26'`, fallback unknown retourne bien l'argument). Parse-check complet OK via `new Function(colorsSrc + '\n' + appSrc)`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

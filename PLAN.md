@@ -329,7 +329,7 @@
 
 ---
 
-### [ ] Tâche 16 — Ajouter un heatmap d'activité par jour (52 semaines × 7 jours)
+### [x] Tâche 16 — Ajouter un heatmap d'activité par jour (52 semaines × 7 jours)
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -338,9 +338,9 @@
 - **Problème identifié :**
   > Aucune visualisation ne permet de voir les patterns temporels (jours joués, intensité, streaks). Le style GitHub-contribution est naturel pour ça.
 - **Action attendue :**
-  - [ ] Depuis les snapshots, calculer pour chaque joueur `{date: delta_hours}` sur 52 semaines
-  - [ ] Rendre un SVG 52×7 avec intensité = heures jouées ce jour
-  - [ ] L'ajouter dans chaque section joueur
+  - [x] Depuis les snapshots, calculer pour chaque joueur `{date: delta_hours}` sur 52 semaines
+  - [x] Rendre un SVG 52×7 avec intensité = heures jouées ce jour
+  - [x] L'ajouter dans chaque section joueur
 - **Critères d'acceptation :**
   - Les jours sans snapshot sont vides (pas de faux zéros)
   - Le tooltip au survol indique la date et les heures
@@ -491,6 +491,17 @@
 - Petit bonus nécessaire : le paramètre `t` dans `distTypes.map((t,i)=>...)` shadowait la fonction i18n globale `t()` (pas visible car seul `label()` était appelé dans le callback, mais c'était piégeux) — renommé en `dtype` pour ne plus masquer le global et cohérent avec le `i` qui reste en paramètre de map standard.
 - Grep de vérification `\b(da|ds|dc|dt|dco|fp|kb)\b` sur `app.js` → 0 match : aucune occurrence des anciens noms ne subsiste dans tout le fichier (pas juste la fonction). Les paramètres d'une lettre (`n`, `m`, `c`, `a`, `b`, `s`, `v`, `k`, `d`, `i`) dans les callbacks anonymes restent, conformes à la convention JS.
 - `deno check stats/assets/app.js` exit 0, `python -m py_compile scripts/generate.py` OK. Régénération : `serveur-2026` 49 846 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — tailles **identiques** (JS externe, seul le contenu textuel change, pas la structure JSON embarquée), rendu strictement identique.
+
+### 2026-04-19 — Tâche 16 : Heatmap d'activité quotidienne
+
+- `scripts/minecraft/history.py` — nouvelle fonction `compute_daily_play_hours(snapshots_root)` (+ helper `_load_play_hours`) : itère sur les paires de snapshots **consécutives** (gap == 1 jour) et attribue le delta `play_hours` à la date du snapshot le plus récent. Les jours de gap (>1j entre 2 snapshots) sont **omis** — pas de zéros faussement comblés ni de hours "réparties" sur des jours arbitraires (respecte le critère "Les jours sans snapshot sont vides"). Deltas négatifs (world reset, corruption) filtrés. Retourne `{uuid: {YYYY-MM-DD: hours}}` ; map vide si <2 snapshots ou pas de paire consécutive.
+- `scripts/generate.py` — import + appel `compute_daily_play_hours(snapshots_dir)` dans `main()` ; chaque joueur reçoit `player["daily_hours"]` uniquement si une entrée non vide existe pour son uuid (clé absente sinon, contrat identique à `delta_7d`). Log `[HIST] Daily heatmap data: 9 cells across 3 players` quand des données existent.
+- `stats/assets/app.js` — nouvelle fonction `buildHeatmapHtml(name)` (~50 lignes) appelée juste avant `buildBadgesHtml` dans `buildPlayerSection`. Rend un SVG 52 semaines × 7 jours (Mon-Sun, semaine FR), cellule 11×11 px, gap 2 px, viewBox responsive avec `preserveAspectRatio="xMidYMid meet"`. La colonne la plus à droite contient la semaine de "today" ; les jours futurs sont absents (skip via `if(day>today)`). Couleur des cellules = `PLAYER_COLORS_MAP[name]` (couleur d'identité du joueur), opacité par bucket `<0.5h`/`<2h`/`<4h`/`<6h`/`>6h` = `0`/`.3`/`.55`/`.8`/`1.0`. Cellules sans snapshot = classe `.hm-empty` (fond `--bg-card-alt`). Tooltip natif `<title>` par cellule (`2026-04-13 — 3.6h` ou `2026-04-15 — pas de snapshot`). Labels de mois en haut via `toLocaleDateString(lang==='fr'?'fr-FR':'en-US',{month:'short'})` (ne s'affichent qu'à la 1ʳᵉ semaine d'un mois). Légende "Moins ▢▢▢▢▢ Plus" sous le SVG.
+- 5 clés i18n ajoutées : `card_heatmap` (Activité quotidienne / Daily activity), `hm_days_active` (jours actifs / active days), `hm_no_data` (pas de snapshot / no snapshot), `hm_less` / `hm_more`, `hm_hours_unit` (`h` partagé). EN n'override que les 4 strings différentes — `hm_hours_unit` fallback FR via `T[lang]?.[k] ?? T.fr[k]`.
+- `stats/assets/styles.css` — bloc `.heatmap-meta` / `.heatmap-wrap` (overflow-x:auto pour mobile sous 520 px) / `.heatmap` (width:100%, max-height:140px, min-width:520px) / `.hm-cell` (stroke fond pour séparation) / `.hm-empty` (fond `--bg-card-alt`) / `.hm-label` (texte gris muted, mono 9px) / `.heatmap-legend` (5 swatches 11×11px alignés à droite).
+- Vérif Skycryck (serveur-2026, snapshots 04-12/13/14/16/17/18) : 4 cellules attribuées (04-13: 3.6h, 04-14: 0.2h, 04-17: 4.4h, 04-18: 1.8h = 10.0h sommés). Les paires (04-14↔04-16) sont gap → omises. Méta affiche `4 jours actifs · 10.0h`. Toggle EN OK : `4 active days · 10.0h`, mois en `May/Jun/.../Apr`.
+- Edge cases : `serveur-2020` et `hermitcraft-s10` n'ont pas de dossier `snapshots/` → `compute_daily_play_hours` retourne `{}`, aucun joueur ne reçoit `daily_hours`, `buildHeatmapHtml` retourne `''` (pas de card vide). Aucune erreur console côté navigateur (vérif Claude_Preview, FR + EN).
+- `python -m py_compile` OK ; `deno check stats/assets/app.js` exit 0 ; régénération : `serveur-2026` 50 047 o (+201 o : 9 cellules de daily_hours JSON pour 3 joueurs), `serveur-2020` 65 851 o (inchangé), `hermitcraft-s10` 379 141 o (inchangé). CLAUDE.md mis à jour : section `history.py internals` documente `compute_daily_play_hours` et le contrat `daily_hours` côté player dict.
 
 ---
 

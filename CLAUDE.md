@@ -84,6 +84,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - `load_baseline_metrics(snapshot_dir)` — reads each `<uuid>.json` and runs `_extract_metrics()`, mirroring `process_player()`'s conversions for the 4 tracked keys (ticks→hours, sums for mined/crafted).
 - `compute_deltas(current, baseline)` — returns `{key: round(current - baseline, 1)}` or `None` when baseline is missing. `None` is the contract that lets callers omit `player["delta_7d"]` entirely so the JS side can hide the sub-line cleanly (no misleading `+0` displayed).
 - The actual baseline window may differ from 7 days — `app.js` reads `BASELINE_DATE` and labels the sub-line with the real day count (e.g. `↑ +13.5h (6j)` for a 6-day-old snapshot), keeping the figure honest after gaps in the snapshot cadence.
+- `compute_daily_play_hours(snapshots_root)` — returns `{uuid: {YYYY-MM-DD: hours}}` from **consecutive** snapshot pairs only. If snapshot D and D-1 both exist, the delta is attributed to date D; otherwise the day is omitted (no faked zeros for gaps). Drives the per-player activity heatmap. Negative deltas (world reset) are filtered out. `generate.py` attaches the per-player map under `player["daily_hours"]` (key absent if no entries).
 
 ### Snapshots archive
 

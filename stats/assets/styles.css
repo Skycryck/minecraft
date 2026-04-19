@@ -103,7 +103,8 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .stat-tile .value{font-size:1.8rem;font-weight:700;font-family:var(--font-mono);line-height:1.1;margin-bottom:.2rem}
 .stat-tile .label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-mono)}
 .stat-tile .sub{font-size:.7rem;color:var(--text-dim);margin-top:.15rem;font-family:var(--font-mono)}
-.stat-tile .delta-sub{color:var(--c-mining);font-weight:600}
+.stat-tile .delta-sub,.profile-stat .delta-sub{color:var(--c-mining);font-weight:600}
+.profile-stat .delta-sub{margin-top:.15rem;font-size:.7rem}
 .leaderboard{list-style:none}
 .leaderboard li{
   display:flex;align-items:center;gap:.75rem;
@@ -281,5 +282,15 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
   background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;z-index:10;
 }
 .lang-toggle:hover{border-color:var(--accent);color:var(--text)}
+
+/* Activity heatmap (52 weeks × 7 days, GitHub style) */
+.heatmap-meta{font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem}
+.heatmap-wrap{width:100%;overflow-x:auto}
+.heatmap{display:block;width:100%;height:auto;min-width:520px;max-height:140px}
+.heatmap .hm-cell{stroke:var(--bg);stroke-width:.5}
+.heatmap .hm-empty{fill:var(--bg-card-alt)}
+.heatmap .hm-label{fill:var(--text-muted);font-size:9px;font-family:var(--font-mono)}
+.heatmap-legend{display:flex;align-items:center;gap:.35rem;margin-top:.5rem;font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono);justify-content:flex-end}
+.heatmap-legend .hm-swatch{display:inline-block;width:11px;height:11px;border-radius:2px}
 </content>
 </invoke>

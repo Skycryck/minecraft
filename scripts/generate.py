@@ -29,6 +29,7 @@ from pathlib import Path
 
 from minecraft.badges import compute_player_badges
 from minecraft.history import (
+    compute_daily_play_hours,
     compute_deltas,
     find_baseline_snapshot,
     load_baseline_metrics,
@@ -316,6 +317,11 @@ def main():
     else:
         print(f"[HIST] No baseline snapshot >= 6 days old - deltas hidden")
 
+    # Per-day play_hours from consecutive snapshots → activity heatmap
+    daily_hours = compute_daily_play_hours(snapshots_dir)
+    if daily_hours:
+        print(f"[HIST] Daily heatmap data: {sum(len(v) for v in daily_hours.values())} cells across {len(daily_hours)} players")
+
     # Process stats
     print("\n[STATS] Processing statistics...")
     players_data = {}
@@ -326,6 +332,8 @@ def main():
         delta = compute_deltas(player, baseline_metrics.get(uuid))
         if delta is not None:
             player["delta_7d"] = delta
+        if daily_hours.get(uuid):
+            player["daily_hours"] = daily_hours[uuid]
         players_data[name] = player
         print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocks, {player['mob_kills']} kills")
 

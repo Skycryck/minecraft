@@ -391,6 +391,13 @@
 - **Résumé :** `deltaSub()` dans `stats/assets/app.js` distingue désormais trois états visuels : `> 0` → `↑ +X` vert (`--c-mining`), `=== 0` → `= 0` gris muted (`--text-muted`), `< 0` → `↓ -X` rouge (`--c-combat`, valeur absolue). Seul un baseline absent (`value==null` ou `!_baselineDays`) masque encore la ligne. La couleur est déplacée de la règle de base `.delta-sub` vers trois modificateurs (`.delta-sub--pos/--zero/--neg`) dans `stats/assets/styles.css` ; la base conserve layout + typographie pour que les sélecteurs `.stat-tile .delta-sub` / `.profile-stat .delta-sub` continuent de fonctionner sur les 7 call sites (overview ×4, profile-stat playtime, stat-tiles joueur ×3). Un joueur inactif pendant la fenêtre de baseline ne ressemble plus à un joueur sans baseline — l'info est honnête.
 - **Effets de bord :** régénération des 2 dashboards (serveur-2026 + serveur-2020)
 
+### 2026-04-19 — Tâche 2 : SRI hash Chart.js
+
+- **Branche :** refactor/task-2-sri-chartjs
+- **Commits :** 98ac23f fix(security): add SRI hash to Chart.js CDN script · 080f3ef chore: regenerate dashboards with Chart.js SRI attribute
+- **Résumé :** Ajout de `integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"` et `crossorigin="anonymous"` sur le tag `<script>` Chart.js 4.4.1 dans `scripts/generate.py`. Hash SHA-384 calculé via `urllib` + `hashlib` sur le bundle cdnjs (200 807 octets), vérifié deux fois à l'identique. Protège les dashboards contre une compromission du CDN cdnjs.
+- **Effets de bord :** régénération des 2 dashboards (`serveur-2026` 50 155 o, `serveur-2020` 65 959 o) — les 2 `index.html` contiennent désormais l'attribut `integrity=`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

@@ -940,7 +940,7 @@ function buildHeatmapHtml(name){
   const streakSuffix=p.streaks
     ?` · ${t('hm_streak_longest')} ${p.streaks.longest}${t('delta_unit')} · ${t('hm_streak_current')} ${p.streaks.current}${t('delta_unit')}`
     :'';
-  return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_heatmap')}</h3>
+  return `<div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('card_heatmap')}</h3>
     <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}${streakSuffix}</div>
     <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
@@ -989,7 +989,7 @@ function buildServerHeatmapHtml(){
     }
   }
   const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
-  return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_server_heatmap')}</h3>
+  return `<div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('card_server_heatmap')}</h3>
     <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(0)}${t('hm_hours_unit')} total</div>
     <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>

@@ -83,6 +83,7 @@ card_heatmap:"Activité quotidienne",
 hm_days_active:'jours actifs',hm_no_data:'pas de snapshot',
 hm_less:'Moins',hm_more:'Plus',
 hm_hours_unit:'h',
+hm_streak_current:'série en cours',hm_streak_longest:'plus longue série',
 card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
 card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
 no_death:'Aucune mort',no_data:'Pas assez de données',
@@ -169,6 +170,7 @@ d_walk_on_water:'On water',d_walk_under_water:'Underwater',
 card_heatmap:'Daily activity',
 hm_days_active:'active days',hm_no_data:'no snapshot',
 hm_less:'Less',hm_more:'More',
+hm_streak_current:'current streak',hm_streak_longest:'longest streak',
 arch_new:'Newcomer',arch_miner:'Miner',arch_fighter:'Fighter',
 arch_explorer:'Explorer',arch_builder:'Builder',arch_farmer:'Farmer',
 playtime:'Playtime',traveled:'Traveled',
@@ -1047,8 +1049,11 @@ function buildHeatmapHtml(name){
   }
   // Legend swatches (5 buckets)
   const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
+  const streakSuffix=p.streaks
+    ?` · ${t('hm_streak_longest')} ${p.streaks.longest}${t('delta_unit')} · ${t('hm_streak_current')} ${p.streaks.current}${t('delta_unit')}`
+    :'';
   return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_heatmap')}</h3>
-    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}</div>
+    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}${streakSuffix}</div>
     <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
   </div>`;

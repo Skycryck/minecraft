@@ -513,6 +513,13 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 6 (refreshed plan) : Tests unitaires badges.py
+
+- **Branche :** refactor/task-6-tests-badges
+- **Commits :** 39e5db8 test(badges): add unit tests for tiers, progress, increvable, and meta-badges
+- **Résumé :** 16 tests (`python -m unittest discover -s tests -v` → `Ran 16 tests in 0.002s / OK`) couvrant `get_tier` (3), `_compute_progress` (4), `_increvable` (4) et `compute_player_badges` (5, dont vérification des 35 entrées + présence de `all_rounder` / `legende` en catégorie `prestige`). Fixture "toutes catégories bronze" implémentée en mode brute-force : tous les champs pertinents (top-level + `badge_data` + `distances` + `killed_by`) mis à `1e9` pour garantir diamond sur chaque badge standard, ce qui prouve a fortiori que toutes les catégories META ont au moins bronze. Robuste aux futures modifs de `BADGES`. Subtilité notée : avec le fixture maxed, `_increvable` = hours/deaths, donc `deaths` doit être volontairement modéré (10) pour que le ratio reste élevé — toutes les catégories passent quand même car 10 == seuil bronze de `kamikaze`.
+- **Effets de bord :** nouveaux fichiers `tests/__init__.py` (vide) + `tests/test_badges.py` (~210 lignes). Aucune modification de `scripts/minecraft/badges.py`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

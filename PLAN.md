@@ -311,7 +311,7 @@
 
 ---
 
-### [ ] Tâche 15 — Renommer les variables 2 lettres dans `renderLeaderboardCharts`
+### [x] Tâche 15 — Renommer les variables 2 lettres dans `renderLeaderboardCharts`
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -319,8 +319,8 @@
 - **Problème identifié :**
   > `generate.py:979-997` utilise `da`, `ds`, `dc`, `dt`, `dco`, `fp`, `kb` — illisible à la relecture.
 - **Action attendue :**
-  - [ ] Renommer en noms explicites : `deathAggregate`, `deathSorted`, `deathColors`, `distTypes`, `distColors`, `filteredPlayers`, `killedBy`
-  - [ ] Vérifier que le rendu est strictement identique
+  - [x] Renommer en noms explicites : `deathAggregate`, `deathSorted`, `deathColors`, `distTypes`, `distColors`, `filteredPlayers`, `killedBy`
+  - [x] Vérifier que le rendu est strictement identique
 - **Critères d'acceptation :**
   - Plus aucune variable < 4 caractères dans cette fonction
   - Aucune régression visuelle
@@ -484,6 +484,13 @@
 - `manifest.json` initial généré depuis le contenu actuel de `stats/assets/icons/` (51 icônes — identique à l'ancien hardcode). Après régénération des 3 dashboards (serveur-2026 49 846 o, serveur-2020 65 851 o, hermitcraft-s10 379 141 o), `grep window.ICONS_HR` confirme l'injection correcte.
 - CLAUDE.md mis à jour : la section "Icon rendering" et la règle "Adding a new icon" ne mentionnent plus de synchronisation manuelle — ajouter une icône = 1 modif dans `build_icons.py` + run, puis commit du PNG et du manifest régénéré.
 - `python -m py_compile` OK sur `generate.py` et `build_icons.py` ; `deno check stats/assets/app.js` exit 0.
+
+### 2026-04-19 — Tâche 15 : Renommage des variables courtes
+
+- `stats/assets/app.js` `renderLeaderboardCharts` (~l. 816-855) : 7 `const` renommés selon la liste de la tâche — `da` → `deathAggregate`, `kb` → `killedBy`, `ds` → `deathSorted`, `dc` → `deathColors`, `dt` → `distTypes`, `dco` → `distColors`, `fp` → `filteredPlayers`. Toutes les occurrences en aval mises à jour (arguments de `map`/`reduce`, accès `.length`, etc.).
+- Petit bonus nécessaire : le paramètre `t` dans `distTypes.map((t,i)=>...)` shadowait la fonction i18n globale `t()` (pas visible car seul `label()` était appelé dans le callback, mais c'était piégeux) — renommé en `dtype` pour ne plus masquer le global et cohérent avec le `i` qui reste en paramètre de map standard.
+- Grep de vérification `\b(da|ds|dc|dt|dco|fp|kb)\b` sur `app.js` → 0 match : aucune occurrence des anciens noms ne subsiste dans tout le fichier (pas juste la fonction). Les paramètres d'une lettre (`n`, `m`, `c`, `a`, `b`, `s`, `v`, `k`, `d`, `i`) dans les callbacks anonymes restent, conformes à la convention JS.
+- `deno check stats/assets/app.js` exit 0, `python -m py_compile scripts/generate.py` OK. Régénération : `serveur-2026` 49 846 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — tailles **identiques** (JS externe, seul le contenu textuel change, pas la structure JSON embarquée), rendu strictement identique.
 
 ---
 

@@ -815,34 +815,34 @@ function initLeaderboardTabs(){
 
 function renderLeaderboardCharts(){
   destroyChart('chart-deathcauses');
-  const da={};playerNames.forEach(n=>{const kb=PLAYERS_DATA[n].killed_by||{};Object.entries(kb).forEach(([m,c])=>{da[m]=(da[m]||0)+c})});
-  const sorted=Object.entries(da).sort((a,b)=>b[1]-a[1]);
+  const deathAggregate={};playerNames.forEach(n=>{const killedBy=PLAYERS_DATA[n].killed_by||{};Object.entries(killedBy).forEach(([m,c])=>{deathAggregate[m]=(deathAggregate[m]||0)+c})});
+  const sorted=Object.entries(deathAggregate).sort((a,b)=>b[1]-a[1]);
   const daTotal=sorted.reduce((s,[,v])=>s+v,0);
   const threshold=daTotal*0.01;
   const main=[];let otherSum=0;
   sorted.forEach(([k,v])=>{if(v>=threshold)main.push([k,v]);else otherSum+=v});
-  const ds=otherSum>0?main.concat([['__other__',otherSum]]):main;
-  const dc=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
+  const deathSorted=otherSum>0?main.concat([['__other__',otherSum]]):main;
+  const deathColors=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
   charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{type:'doughnut',data:{
-    labels:ds.map(d=>d[0]==='__other__'?t('other_slice'):label(d[0])),
-    datasets:[{data:ds.map(d=>d[1]),backgroundColor:ds.map((d,i)=>d[0]==='__other__'?'#5c5c6888':dc[i%dc.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
+    labels:deathSorted.map(d=>d[0]==='__other__'?t('other_slice'):label(d[0])),
+    datasets:[{data:deathSorted.map(d=>d[1]),backgroundColor:deathSorted.map((d,i)=>d[0]==='__other__'?'#5c5c6888':deathColors[i%deathColors.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
 
   destroyChart('chart-dist-stacked');
-  const dt=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
-  const dco=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
-  const fp=playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>5);
-  const distHorizontal=fp.length>8;
+  const distTypes=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
+  const distColors=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
+  const filteredPlayers=playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>5);
+  const distHorizontal=filteredPlayers.length>8;
   const distCanvas=document.getElementById('chart-dist-stacked');
   if(distHorizontal){
-    distCanvas.parentNode.style.height=Math.max(350,fp.length*24)+'px';
+    distCanvas.parentNode.style.height=Math.max(350,filteredPlayers.length*24)+'px';
     distCanvas.parentNode.style.maxHeight='none';
   }else{
     distCanvas.parentNode.style.height='';
     distCanvas.parentNode.style.maxHeight='';
   }
   charts['chart-dist-stacked']=new Chart(distCanvas,{type:'bar',data:{
-    labels:fp,datasets:dt.map((t,i)=>({label:label(t),data:fp.map(n=>PLAYERS_DATA[n].distances?.[t]||0),backgroundColor:dco[i]+'aa',borderWidth:0}))
+    labels:filteredPlayers,datasets:distTypes.map((dtype,i)=>({label:label(dtype),data:filteredPlayers.map(n=>PLAYERS_DATA[n].distances?.[dtype]||0),backgroundColor:distColors[i]+'aa',borderWidth:0}))
   },options:{responsive:true,maintainAspectRatio:false,indexAxis:distHorizontal?'y':'x',
     scales:distHorizontal?{
       y:{stacked:true,grid:{display:false},ticks:{autoSkip:false,font:{size:10}},afterFit:(s)=>{s.width+=8}},

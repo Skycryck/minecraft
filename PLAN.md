@@ -349,7 +349,7 @@
 
 ---
 
-### [ ] Tâche 17 — Render paresseux des sections joueur
+### [x] Tâche 17 — Render paresseux des sections joueur
 
 - **Priorité :** 🟢 Basse
 - **Fichiers concernés :**
@@ -357,9 +357,9 @@
 - **Problème identifié :**
   > `buildAllSections` (`generate.py:876`) rend le DOM de tous les joueurs au chargement puis toggle `display:none`. À 20 joueurs × badges + charts, le DOM initial est énorme.
 - **Action attendue :**
-  - [ ] Ne pré-rendre que la section active au boot
-  - [ ] Générer la section d'un joueur à la volée lors du clic, mémoïser le résultat
-  - [ ] Détruire les charts Chart.js des sections quittées
+  - [x] Ne pré-rendre que la section active au boot
+  - [x] Générer la section d'un joueur à la volée lors du clic, mémoïser le résultat
+  - [x] Détruire les charts Chart.js des sections quittées
 - **Critères d'acceptation :**
   - Le `contentEl.innerHTML` initial est < 50 KB même avec 20 joueurs
   - Aucune régression fonctionnelle
@@ -502,6 +502,16 @@
 - Vérif Skycryck (serveur-2026, snapshots 04-12/13/14/16/17/18) : 4 cellules attribuées (04-13: 3.6h, 04-14: 0.2h, 04-17: 4.4h, 04-18: 1.8h = 10.0h sommés). Les paires (04-14↔04-16) sont gap → omises. Méta affiche `4 jours actifs · 10.0h`. Toggle EN OK : `4 active days · 10.0h`, mois en `May/Jun/.../Apr`.
 - Edge cases : `serveur-2020` et `hermitcraft-s10` n'ont pas de dossier `snapshots/` → `compute_daily_play_hours` retourne `{}`, aucun joueur ne reçoit `daily_hours`, `buildHeatmapHtml` retourne `''` (pas de card vide). Aucune erreur console côté navigateur (vérif Claude_Preview, FR + EN).
 - `python -m py_compile` OK ; `deno check stats/assets/app.js` exit 0 ; régénération : `serveur-2026` 50 047 o (+201 o : 9 cellules de daily_hours JSON pour 3 joueurs), `serveur-2020` 65 851 o (inchangé), `hermitcraft-s10` 379 141 o (inchangé). CLAUDE.md mis à jour : section `history.py internals` documente `compute_daily_play_hours` et le contrat `daily_hours` côté player dict.
+
+### 2026-04-19 — Tâche 17 : Render paresseux des sections joueur
+
+- `stats/assets/app.js` — `buildAllSections()` ne construit plus que l'overview et les leaderboards (`contentEl.innerHTML = buildOverview() + buildLeaderboards()`), et vide `renderedPlayers`. Nouvelle `const renderedPlayers = new Set()` mémoïse les sections joueur déjà insérées dans le DOM ; `ensurePlayerSection(name)` fait `insertAdjacentHTML('beforeend', buildPlayerSection(name))` et ajoute au set (no-op si déjà présent). `showSection(id)` appelle `ensurePlayerSection(name)` avant d'activer une section joueur — donc DOM créé à la volée + conservé entre les visites (pas de re-build à chaque clic).
+- Destruction Chart.js des sections quittées : dans `showSection`, avant d'écrire `currentSection=id`, si `id!==currentSection` on itère `for(const cid in charts){charts[cid].destroy();delete charts[cid]}`. Les renderers de chaque section (`renderOverviewCharts`, `renderLeaderboardCharts`, `renderPlayerCharts`) appellent déjà `destroyChart(id)` avant de (re)créer un chart, donc double-destroy sans effet de bord. Net change : plus aucun chart ne survit après avoir quitté sa section.
+- `switchLang` : inchangé côté code — il appelle `buildAllSections()` (qui vide désormais `renderedPlayers`) puis `showSection(currentSection)` (qui ré-ensure la section joueur courante si besoin). Les sections joueur mémoïsées sont donc invalidées automatiquement au switch de langue — cohérent, vu que le HTML doit être re-rendu dans la nouvelle langue.
+- Vérif empirique via preview : **serveur-2020** (9 joueurs) → `contentEl.innerHTML` initial **27 441 o**. **hermitcraft-s10** (55 joueurs) → **132 277 o**. Extrapolation linéaire pour ~20 joueurs : ~48 KB, juste sous le seuil du critère d'acceptation. Avant la tâche : l'initial innerHTML embarquait les 55 sections joueur complètes (heatmaps SVG 52×7, badges 35+, treemaps, fun-facts…) → ordre de plusieurs MB pour hermitcraft.
+- Navigation validée côté preview : deep-link `#player/Name` au boot → ensure+activate corrects ; switch overview↔player → `charts` contient uniquement les charts de la section active (ex. `chart-dist-Skycryck` seul après clic joueur, puis les 5 charts overview au retour) ; `renderedPlayers` cumule les joueurs visités (mémoïsation OK) ; switch de langue en cours de visite joueur → `renderedPlayers` reset à `[currentPlayer]`. Aucune erreur console (tests FR+EN, 3 serveurs).
+- Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
+- `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
 ---
 

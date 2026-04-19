@@ -283,6 +283,45 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 }
 .lang-toggle:hover{border-color:var(--accent);color:var(--text)}
 
+/* Compare view (2-player side-by-side #compare/a/b) */
+.compare-headers{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.compare-headers .profile-header{margin-bottom:0}
+@media(max-width:768px){.compare-headers{grid-template-columns:1fr}}
+.compare-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.82rem}
+.compare-table th,.compare-table td{padding:.5rem .7rem;text-align:right;border-bottom:1px solid var(--border)}
+.compare-table th{text-transform:uppercase;font-size:.7rem;letter-spacing:.06em;color:var(--text-muted);font-weight:600}
+.compare-table th:first-child,.compare-table td:first-child{text-align:left}
+.compare-table .cmp-m{color:var(--text-dim)}
+.compare-table .cmp-diff{font-weight:600;font-variant-numeric:tabular-nums}
+.compare-table .cmp-v{font-variant-numeric:tabular-nums}
+.compare-table tbody tr:last-child td{border-bottom:none}
+/* Compare nav entry: button + inline 2-select form floating below */
+.nav-compare-wrap{position:relative;display:inline-flex;align-items:center}
+.nav-compare-btn{cursor:pointer}
+.nav-compare-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(124,106,239,.25)}
+.nav-compare-form{
+  display:none;position:absolute;top:calc(100% + .5rem);left:50%;transform:translateX(-50%);
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:.6rem;z-index:200;gap:.4rem;align-items:center;flex-wrap:wrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);min-width:260px;
+}
+.nav-compare-form.open{display:flex}
+.nav-compare-form select{
+  font-family:var(--font-mono);font-size:.78rem;padding:.35rem .6rem;
+  background:var(--bg-card-alt);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);
+  min-width:110px;
+}
+.nav-compare-form select:focus{outline:none;border-color:var(--accent)}
+.nav-compare-form .nav-compare-go{
+  font-family:var(--font-mono);font-size:.78rem;padding:.35rem .9rem;
+  background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;
+  transition:background .15s;
+}
+.nav-compare-form .nav-compare-go:hover{background:var(--accent-light)}
+@media(max-width:600px){
+  .nav-compare-form{position:fixed;top:auto;bottom:1rem;left:1rem;right:1rem;transform:none;min-width:0}
+}
+
 /* Activity heatmap (52 weeks × 7 days, GitHub style) */
 .heatmap-meta{font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem}
 .heatmap-wrap{width:100%;overflow-x:auto}

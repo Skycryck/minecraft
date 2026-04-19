@@ -134,7 +134,9 @@ ff_breeding:(n)=>`A élevé ${n} animaux — fermier dans l'âme`,
 ff_fishing:(n)=>`A pêché ${n} poissons — le pêcheur du serveur`,
 ff_total_dist:(km,n,eq)=>`${km} km parcourus au total — soit ${n} allers ${eq}`,
 ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres',
-other_slice:'Autres'
+other_slice:'Autres',
+expand_show_all:(hidden)=>`Voir tout (+${hidden})`,
+expand_show_less:'Voir moins'
 },en:{
 // EN contains only overrides where the translation differs from FR.
 // Identical values fall through to T.fr via the ?? lookup in t() / label().
@@ -222,12 +224,45 @@ ff_breeding:(n)=>`Bred ${n} animals — farmer at heart`,
 ff_fishing:(n)=>`Caught ${n} fish — the server's angler`,
 ff_total_dist:(km,n,eq)=>`${km} km traveled in total — that's ${n} ${eq} trips`,
 ff_equiv_long:'Paris-Barcelona',ff_equiv_short:'Paris-London',
-other_slice:'Others'
+other_slice:'Others',
+expand_show_all:(hidden)=>`Show all (+${hidden})`,
+expand_show_less:'Show less'
 }};
 function t(k){const a=[].slice.call(arguments,1);const v=T[lang]?.[k]??T.fr[k];return typeof v==='function'?v.apply(null,a):(v||k)}
 function label(k){const dl=T[lang]?.['d_'+k]??T.fr['d_'+k];if(dl)return dl;return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString(lang==='fr'?'fr-FR':'en-US')}
 function pct(v,m){return m?Math.round(v/m*100):0}
+
+// ═══════════════════════════════════════
+// MOBILE TOP-N + EXPAND TOGGLE
+// ═══════════════════════════════════════
+const MOBILE_TOP_N=15;
+const isMobile=()=>window.matchMedia('(max-width:600px)').matches;
+const expandedCharts={}; // id -> bool (true = show all, false = top-N). undefined => default (collapsed on mobile, expanded on desktop)
+function isExpanded(id){return expandedCharts[id]??!isMobile()}
+function expandToggleText(chartId,fullCount){
+  const expanded=isExpanded(chartId);
+  return expanded
+    ?'<span class="expand-arrow">▴</span> '+t('expand_show_less')
+    :'<span class="expand-arrow">▾</span> '+t('expand_show_all',fullCount-MOBILE_TOP_N);
+}
+function attachExpandToggle(cardEl,chartId,fullCount,onToggle){
+  if(!cardEl)return;
+  let btn=cardEl.querySelector('.expand-toggle');
+  if(fullCount<=MOBILE_TOP_N){if(btn)btn.remove();return}
+  if(!btn){
+    btn=document.createElement('button');
+    btn.className='expand-toggle';
+    btn.type='button';
+    cardEl.appendChild(btn);
+    btn.addEventListener('click',()=>{
+      expandedCharts[chartId]=!isExpanded(chartId);
+      onToggle();
+      btn.innerHTML=expandToggleText(chartId,fullCount);
+    });
+  }
+  btn.innerHTML=expandToggleText(chartId,fullCount);
+}
 
 // ═══════════════════════════════════════
 // ARCHETYPE DETECTION
@@ -664,6 +699,13 @@ window.addEventListener('popstate',()=>{
   showSection(s);updateNavActive(s);
 });
 
+window.matchMedia('(max-width:600px)').addEventListener('change',()=>{
+  for(const k in expandedCharts)delete expandedCharts[k];
+  if(currentSection==='overview')renderOverviewCharts();
+  if(currentSection==='leaderboards')renderDistStackedChart();
+  initLeaderboardCollapse();
+});
+
 function buildAllSections(){
   let h='';h+=buildOverview();h+=buildLeaderboards();
   playerNames.forEach(name=>{h+=buildPlayerSection(name)});
@@ -683,10 +725,10 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
     <div class="grid grid-2-fixed">
-      <div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
-      <div class="card"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
-      <div class="card"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
-      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+      <div class="card" data-chart-card="chart-playtime"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
+      <div class="card" data-chart-card="chart-distance"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
+      <div class="card" data-chart-card="chart-mined"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
+      <div class="card" data-chart-card="chart-kills"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
     </div>
     <div class="card"><h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_multi')}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
@@ -695,36 +737,42 @@ function buildOverview(){
 }
 
 function renderOverviewCharts(){
-  const useHorizontal=playerNames.length>8;
   const padAxis=(scale)=>{scale.width+=8};
-  const barOpts=(lbl)=>useHorizontal?{
-    responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
-    scales:{x:{title:{display:true,text:lbl},grid:{color:'rgba(42,42,53,0.3)'}},
-      y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}},afterFit:padAxis}}
-  }:{
-    responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{y:{title:{display:true,text:lbl},grid:{color:'rgba(42,42,53,0.3)'}},
-      x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:60,minRotation:45,font:{size:10}}}}
-  };
-  const mkBar=(id,data,tooltipSuffix,yLabel)=>{
+  const mkBar=(id,metric,tooltipSuffix,yLabel)=>{
     destroyChart(id);
+    const sorted=[...playerNames].sort((a,b)=>(PLAYERS_DATA[b][metric]||0)-(PLAYERS_DATA[a][metric]||0));
+    const expanded=isExpanded(id);
+    const labels=expanded?sorted:sorted.slice(0,MOBILE_TOP_N);
+    const data=labels.map(n=>PLAYERS_DATA[n][metric]||0);
+    const useHorizontal=labels.length>8;
     const canvas=document.getElementById(id);
     if(useHorizontal){
-      canvas.parentNode.style.height=Math.max(350,playerNames.length*28)+'px';
+      canvas.parentNode.style.height=Math.max(350,labels.length*28)+'px';
       canvas.parentNode.style.maxHeight='none';
     }else{
       canvas.parentNode.style.height='';
       canvas.parentNode.style.maxHeight='';
     }
+    const opts=useHorizontal?{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{title:{display:true,text:yLabel},grid:{color:'rgba(42,42,53,0.3)'}},
+        y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}},afterFit:padAxis}}
+    }:{
+      responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{title:{display:true,text:yLabel},grid:{color:'rgba(42,42,53,0.3)'}},
+        x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:60,minRotation:45,font:{size:10}}}}
+    };
     charts[id]=new Chart(canvas,{type:'bar',data:{
-      labels:playerNames,datasets:[{data,backgroundColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]+'cc'),
-        borderColor:playerNames.map(n=>PLAYER_COLORS_MAP[n]),borderWidth:1,borderRadius:4}]
-    },options:{...barOpts(yLabel),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed[useHorizontal?'x':'y']+(tooltipSuffix||'')}}}}});
+      labels,datasets:[{data,backgroundColor:labels.map(n=>PLAYER_COLORS_MAP[n]+'cc'),
+        borderColor:labels.map(n=>PLAYER_COLORS_MAP[n]),borderWidth:1,borderRadius:4}]
+    },options:{...opts,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed[useHorizontal?'x':'y']+(tooltipSuffix||'')}}}}});
+    const card=document.querySelector(`[data-chart-card="${id}"]`);
+    attachExpandToggle(card,id,sorted.length,()=>mkBar(id,metric,tooltipSuffix,yLabel));
   };
-  mkBar('chart-playtime',playerNames.map(n=>PLAYERS_DATA[n].play_hours),'h',t('axis_hours'));
-  mkBar('chart-distance',playerNames.map(n=>PLAYERS_DATA[n].total_distance_km),' km',t('axis_km'));
-  mkBar('chart-mined',playerNames.map(n=>PLAYERS_DATA[n].total_mined),' blocs',t('axis_blocks'));
-  mkBar('chart-kills',playerNames.map(n=>PLAYERS_DATA[n].mob_kills),' kills',t('axis_kills'));
+  mkBar('chart-playtime','play_hours','h',t('axis_hours'));
+  mkBar('chart-distance','total_distance_km',' km',t('axis_km'));
+  mkBar('chart-mined','total_mined',' blocs',t('axis_blocks'));
+  mkBar('chart-kills','mob_kills',' kills',t('axis_kills'));
 
   destroyChart('chart-radar');
   const top5=playerNames.slice(0,5);
@@ -778,7 +826,7 @@ function buildLeaderboards(){
   h+=`</div>
     <div class="grid grid-2 lb-charts">
       <div class="card lb-card" data-lbcats="combat"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('chart_deathcauses')}</h3><div class="chart-wrap"><canvas id="chart-deathcauses"></canvas></div></div>
-      <div class="card lb-card" data-lbcats="exploration"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
+      <div class="card lb-card" data-chart-card="chart-dist-stacked" data-lbcats="exploration"><h3><span class="icon">${mcIcon('compass')}</span> ${t('chart_dist_type')}</h3><div class="chart-wrap"><canvas id="chart-dist-stacked"></canvas></div></div>
     </div>
     <div class="grid grid-3 lb-grid">`;
   boards.forEach(b=>{
@@ -813,6 +861,20 @@ function initLeaderboardTabs(){
   });
 }
 
+function initLeaderboardCollapse(){
+  document.querySelectorAll('#leaderboards ol.leaderboard').forEach(ol=>{
+    const items=ol.children.length;
+    if(items<=MOBILE_TOP_N)return;
+    const card=ol.closest('.card');
+    if(!card)return;
+    const h3=card.querySelector('h3');
+    const stableId='lb-'+(h3?h3.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-'):'unknown');
+    const apply=()=>ol.classList.toggle('lb-collapsed',!isExpanded(stableId));
+    apply();
+    attachExpandToggle(card,stableId,items,apply);
+  });
+}
+
 function renderLeaderboardCharts(){
   destroyChart('chart-deathcauses');
   const da={};playerNames.forEach(n=>{const kb=PLAYERS_DATA[n].killed_by||{};Object.entries(kb).forEach(([m,c])=>{da[m]=(da[m]||0)+c})});
@@ -828,10 +890,16 @@ function renderLeaderboardCharts(){
     datasets:[{data:ds.map(d=>d[1]),backgroundColor:ds.map((d,i)=>d[0]==='__other__'?'#5c5c6888':dc[i%dc.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
 
+  renderDistStackedChart();
+}
+
+function renderDistStackedChart(){
   destroyChart('chart-dist-stacked');
   const dt=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
   const dco=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
-  const fp=playerNames.filter(n=>PLAYERS_DATA[n].total_distance_km>5);
+  const sorted=[...playerNames].sort((a,b)=>(PLAYERS_DATA[b].total_distance_km||0)-(PLAYERS_DATA[a].total_distance_km||0));
+  const expanded=isExpanded('chart-dist-stacked');
+  const fp=expanded?sorted:sorted.slice(0,MOBILE_TOP_N);
   const distHorizontal=fp.length>8;
   const distCanvas=document.getElementById('chart-dist-stacked');
   if(distHorizontal){
@@ -852,6 +920,8 @@ function renderLeaderboardCharts(){
       y:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}
     },
     plugins:{legend:{position:'bottom',labels:{font:{size:9}}}}}});
+  const card=document.querySelector(`[data-chart-card="chart-dist-stacked"]`);
+  attachExpandToggle(card,'chart-dist-stacked',sorted.length,renderDistStackedChart);
 }
 
 // ═══════════════════════════════════════
@@ -926,10 +996,9 @@ function buildPlayerSection(name){
 
   const mkList=(entries,color)=>{
     if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
-    const vals=entries.map(e=>e[1]);
-    const mn=Math.min(...vals),mx=Math.max(...vals);const range=mx-mn;
+    const mx=Math.max(...entries.map(e=>e[1]));
     return entries.map(([k,v])=>{
-      const w=range>0?Math.round((v-mn)/range*90+10):100;
+      const w=mx>0?(v/mx*100):0;
       return `<li><span class="name">${label(k)}</span><span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span><span class="val">${fmt(v)}</span></li>`;
     }).join('');
   };
@@ -1030,6 +1099,7 @@ function switchLang(newLang){
   buildNav();
   buildAllSections();
   initLeaderboardTabs();
+  initLeaderboardCollapse();
   showSection(currentSection);
   updateNavActive(currentSection);
 }
@@ -1042,7 +1112,7 @@ document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
 document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
-buildNav();buildAllSections();initLeaderboardTabs();initTreemapTooltip();
+buildNav();buildAllSections();initLeaderboardTabs();initLeaderboardCollapse();initTreemapTooltip();
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);
 animateCounters();

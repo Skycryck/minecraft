@@ -513,6 +513,13 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 14 (refreshed plan) : A11y skip-link + aria treemap
+
+- **Branche :** refactor/task-14-a11y
+- **Commits :** ead5492, 595f609, d349b48
+- **Résumé :** Ajout d'un skip-link en tête de body (invisible jusqu'au focus, cible #content). Chaque .treemap-item reçoit role="img" + aria-label. La nav player select avait déjà un aria-label (confirmé).
+- **Effets de bord :** 1 règle CSS ajoutée, régénération des 2 dashboards
+
 ---
 
 ## 🚫 Anti-patterns à éviter

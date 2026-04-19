@@ -79,6 +79,10 @@ fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
 card_distances:'Distances parcourues',
 travel_time_sub:(h,pct)=>`≈ ${h}h en déplacement · ${pct}% du temps de jeu`,
 card_killed_by:'Tué par',card_treemap:'Blocs minés — Treemap',
+card_heatmap:"Activité quotidienne",
+hm_days_active:'jours actifs',hm_no_data:'pas de snapshot',
+hm_less:'Moins',hm_more:'Plus',
+hm_hours_unit:'h',
 card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
 card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
 no_death:'Aucune mort',no_data:'Pas assez de données',
@@ -162,6 +166,9 @@ d_walk:'Walk',d_swim:'Swim',d_fly:'Creative flight',
 d_boat:'Boat',d_horse:'Horse',
 d_climb:'Climbing',d_crouch:'Crouching',d_fall:'Falling',
 d_walk_on_water:'On water',d_walk_under_water:'Underwater',
+card_heatmap:'Daily activity',
+hm_days_active:'active days',hm_no_data:'no snapshot',
+hm_less:'Less',hm_more:'More',
 arch_new:'Newcomer',arch_miner:'Miner',arch_fighter:'Fighter',
 arch_explorer:'Explorer',arch_builder:'Builder',arch_farmer:'Farmer',
 playtime:'Playtime',traveled:'Traveled',
@@ -979,6 +986,57 @@ function buildBadgesHtml(name){
 // ═══════════════════════════════════════
 // PLAYER SECTION
 // ═══════════════════════════════════════
+// 52-week × 7-day GitHub-style activity heatmap (per player).
+// Reads p.daily_hours = {YYYY-MM-DD: hours} (computed Python-side from
+// consecutive snapshots; gap days are absent → render as empty cells, no
+// faked zeros). Cells are colored using the player's identity color with
+// 4 intensity buckets; missing days use --bg-card-alt.
+function buildHeatmapHtml(name){
+  const p=PLAYERS_DATA[name];
+  const daily=p.daily_hours;
+  if(!daily||!Object.keys(daily).length)return'';
+  const color=PLAYER_COLORS_MAP[name];
+  const weeks=52,cell=11,gap=2;
+  const today=new Date();today.setHours(0,0,0,0);
+  // Monday of the week containing today (Mon=0..Sun=6 — French week start)
+  const dow=(today.getDay()+6)%7;
+  const lastMon=new Date(today);lastMon.setDate(today.getDate()-dow);
+  const bucket=v=>v<0.5?0:v<2?1:v<4?2:v<6?3:4;
+  const op=[0,0.3,0.55,0.8,1.0];
+  const w=weeks*(cell+gap)-gap,h=7*(cell+gap)-gap;
+  const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let cells='',totalHours=0,daysActive=0,monthLabels='';
+  let lastMonthLabel=-1;
+  for(let wi=0;wi<weeks;wi++){
+    const colMon=new Date(lastMon);colMon.setDate(lastMon.getDate()-(weeks-1-wi)*7);
+    if(colMon.getMonth()!==lastMonthLabel&&colMon.getDate()<=7){
+      monthLabels+=`<text x="${wi*(cell+gap)}" y="-3" class="hm-label">${colMon.toLocaleDateString(lang==='fr'?'fr-FR':'en-US',{month:'short'})}</text>`;
+      lastMonthLabel=colMon.getMonth();
+    }
+    for(let di=0;di<7;di++){
+      const day=new Date(colMon);day.setDate(colMon.getDate()+di);
+      if(day>today)continue;
+      const iso=isoLocal(day);
+      const v=daily[iso];
+      const x=wi*(cell+gap),y=di*(cell+gap);
+      if(v===undefined){
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} — ${t('hm_no_data')}</title></rect>`;
+      }else{
+        totalHours+=v;daysActive++;
+        const b=bucket(v);
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} — ${v}${t('hm_hours_unit')}</title></rect>`;
+      }
+    }
+  }
+  // Legend swatches (5 buckets)
+  const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
+  return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_heatmap')}</h3>
+    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}</div>
+    <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
+    <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
+  </div>`;
+}
+
 function buildPlayerSection(name){
   const p=PLAYERS_DATA[name];const color=PLAYER_COLORS_MAP[name];
   const avatarUrl=`https://mc-heads.net/avatar/${p.uuid}/64`;
@@ -1061,6 +1119,7 @@ function buildPlayerSection(name){
       <div class="card"><h3><span class="icon">${mcIcon('anvil')}</span> ${t('card_tools_broken')}</h3>${buildBrokenHtml(p.broken)}</div>
       <div class="card"><h3><span class="icon">${mcIcon('torch')}</span> ${t('card_fun_facts')}</h3><div class="fun-facts">${funFactsHtml}</div></div>
     </div>
+    ${buildHeatmapHtml(name)}
     ${buildBadgesHtml(name)}
   </div>`;
 }

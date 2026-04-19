@@ -93,6 +93,53 @@ def load_baseline_metrics(snapshot_dir: Path) -> dict[str, dict]:
     return out
 
 
+def _load_play_hours(snapshot_dir: Path) -> dict[str, float]:
+    """Map UUID → play_hours for every readable JSON in this snapshot."""
+    out: dict[str, float] = {}
+    for json_file in snapshot_dir.glob("*.json"):
+        try:
+            out[json_file.stem] = _extract_metrics(json_file)["play_hours"]
+        except (json.JSONDecodeError, OSError, ValueError, KeyError):
+            continue
+    return out
+
+
+def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]]:
+    """Map UUID → {YYYY-MM-DD: hours_played_that_day} from consecutive snapshots.
+
+    Only days where snapshot D and snapshot D-1 both exist contribute an entry —
+    the delta is attributed to date D. Gap days are omitted entirely (no faked
+    zeros), so the heatmap renders them as empty cells. Negative deltas (world
+    reset, data corruption) are filtered out.
+    """
+    if not snapshots_root.exists() or not snapshots_root.is_dir():
+        return {}
+    snaps: list[tuple[date, Path]] = []
+    for d in snapshots_root.iterdir():
+        if not d.is_dir():
+            continue
+        try:
+            snaps.append((date.fromisoformat(d.name), d))
+        except ValueError:
+            continue
+    snaps.sort()
+    if len(snaps) < 2:
+        return {}
+    result: dict[str, dict[str, float]] = {}
+    prev_date, prev_dir = snaps[0]
+    prev_hours = _load_play_hours(prev_dir)
+    for cur_date, cur_dir in snaps[1:]:
+        cur_hours = _load_play_hours(cur_dir)
+        if (cur_date - prev_date).days == 1:
+            iso = cur_date.isoformat()
+            for uuid, h in cur_hours.items():
+                delta = round(h - prev_hours.get(uuid, 0), 2)
+                if delta > 0:
+                    result.setdefault(uuid, {})[iso] = delta
+        prev_date, prev_dir, prev_hours = cur_date, cur_dir, cur_hours
+    return result
+
+
 def compute_deltas(current: dict, baseline: dict | None) -> dict | None:
     """Return `{key: current - baseline}` for `DELTA_KEYS`, or None.
 

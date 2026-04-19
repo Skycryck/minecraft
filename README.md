@@ -4,6 +4,8 @@
 
 Drop the raw stats JSON files your Minecraft server already writes into this repo, push, and GitHub Pages serves an interactive dashboard — per-player profiles, leaderboards, badges, charts, fun facts. No database, no server to maintain, no paid services.
 
+![Tickstats dashboard overview](https://iili.io/BgexRMQ.png)
+
 > **[See a live example →](https://skycryck.github.io/minecraft/stats/hermitcraft-s10/)**
 > A Tickstats dashboard built from the publicly available HermitCraft Season 10 world save.
 
@@ -21,7 +23,16 @@ Drop the raw stats JSON files your Minecraft server already writes into this rep
 
 The UI is currently in French with English fallbacks in place; both languages are wired up through an i18n dict you can extend in `stats/assets/app.js`.
 
-## Deploy your own
+## Getting started
+
+Two ways to use Tickstats. Pick the one that fits you:
+
+| I want to... | Go to | Needs |
+|---|---|---|
+| **Publish online** so friends can see the dashboard at a URL | [Deploy to GitHub Pages](#deploy-to-github-pages) | A free GitHub account |
+| **Just view it on my own PC**, no hosting, no accounts | [Run locally (Windows beginner guide)](#run-locally-windows-beginner-guide) | Windows + 5 minutes |
+
+## Deploy to GitHub Pages
 
 ### 1. Create your repo
 
@@ -79,6 +90,59 @@ Automating the copy step is up to you — cron + rsync, a scheduled PowerShell t
 
 ---
 
+## Run locally (Windows beginner guide)
+
+If you don't want to publish anything online and just want to open your dashboard from your own PC, here's the shortest path. No Git, no GitHub account, no command-line experience needed beyond copy/paste.
+
+### 1. Install Python
+
+Open the **Start menu**, type `PowerShell`, click **Windows PowerShell**, then paste:
+
+```powershell
+winget install -e --id Python.Python.3.12
+```
+
+Close PowerShell and reopen it so the new `python` command is picked up. Check it works:
+
+```powershell
+python --version
+```
+
+You should see `Python 3.12.x`. If not, restart your PC once.
+
+### 2. Download Tickstats
+
+On this GitHub page, click the green **Code** button → **Download ZIP**. Extract the ZIP anywhere you like — for example `C:\Users\<you>\Desktop\tickstats`. That folder is your working directory from now on.
+
+### 3. Add your Minecraft stats files
+
+Inside the extracted folder, create this sub-folder (replace `my-server` with any name you like):
+
+```
+stats\my-server\data\
+```
+
+Copy all the `*.json` files from your Minecraft world's `stats\` folder into `stats\my-server\data\`. See the table in [**Locate your Minecraft stats files**](#3-locate-your-minecraft-stats-files) above if you're not sure where they live.
+
+### 4. Generate the dashboard
+
+Back in PowerShell, go into the Tickstats folder and run the generator:
+
+```powershell
+cd C:\Users\<you>\Desktop\tickstats
+python scripts\generate.py stats\my-server\data --title "My Server"
+```
+
+That's it. The command creates `stats\my-server\index.html`.
+
+### 5. Open it
+
+Double-click `stats\my-server\index.html` in File Explorer. It opens in your browser — fully offline, nothing sent anywhere. To refresh after your Minecraft server writes new stats, replace the JSON files in `stats\my-server\data\` and run the `python scripts\generate.py ...` command again.
+
+> **Note:** the first run needs internet access to resolve Minecraft UUIDs into player names (Mojang API). After that, the names are cached in `stats\my-server\.uuid_cache.json` and further runs work offline.
+
+---
+
 ## How it works
 
 No dependencies beyond Python 3.12+ stdlib. No pip install, no `node_modules`, no database.
@@ -129,14 +193,6 @@ No dependencies beyond Python 3.12+ stdlib. No pip install, no `node_modules`, n
 
 Minecraft UUIDs are resolved to usernames via the Mojang session-server API. Results are cached in `stats/<server>/.uuid_cache.json` to avoid rate-limiting (Mojang is aggressive about this) — commit the cache alongside the rest so CI doesn't re-hit the API every run.
 
-### Unit conversion
-
-| Minecraft raw | Converted to | Division |
-|---|---|---|
-| `play_time` / `play_one_minute` (ticks) | hours | ÷ 72,000 |
-| `*_one_cm` (distances) | km | ÷ 100,000 |
-| `damage_dealt` / `damage_taken` | hearts (display only) | ÷ 20 |
-
 ### Badges
 
 33 standard badges + 2 meta badges (`all_rounder`, `legende`) across 8 categories: Mining, Combat, Survival, Exploration, Farming, Crafting, Daily life, and Prestige. Each badge has 4 progressive thresholds (Bronze → Silver → Gold → Diamond). Thresholds and tiers are computed server-side in `scripts/minecraft/badges.py`; `stats/assets/app.js` is a pure renderer — no badge logic lives in JS.
@@ -148,13 +204,3 @@ Minecraft UUIDs are resolved to usernames via the Mojang session-server API. Res
 ### Shared frontend assets
 
 `stats/assets/styles.css` and `stats/assets/app.js` are shared across every server dashboard. `generate.py` only emits a ~30-line HTML shell that injects `window.PLAYERS_DATA` and loads these static files. Minecraft icons under `stats/assets/icons/` are pre-rendered 256×256 PNGs (via `scripts/build_icons.py`) committed to the repo so the dashboard has no runtime CDN dependency for its core visuals.
-
-### Running the generator locally
-
-If you want to iterate on a dashboard without going through CI:
-
-```bash
-python scripts/generate.py stats/<server-name>/data --title "Server Name"
-```
-
-Open the resulting `stats/<server-name>/index.html` in a browser. Same output as what CI produces.

@@ -54,9 +54,8 @@ players:'joueurs',hours_played:'h de jeu',blocks_mined_meta:'blocs minés',mobs_
 nav_overview:mcIcon('new_realm')+' Vue globale',nav_leaderboards:mcIcon('nether_star')+' Classements',
 nav_player_placeholder:'Choisir un joueur…',nav_player_label:'Sélectionner un joueur',
 total_playtime:'Temps de jeu total',blocks_mined:'Blocs minés',mobs_killed:'Mobs tués',items_crafted:'Items craftés',
-chart_playtime:'Temps de jeu par joueur',chart_distance:'Distance totale (km)',
-chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_multi:'Comparaison multi-stats',
-axis_hours:'Heures',axis_blocks:'Blocs',axis_kills:'Kills',axis_km:'km',
+chart_multi:'Comparaison multi-stats',chart_overview_bar:'Comparaison par métrique',overview_metric_label:'Métrique à comparer',
+axis_hours:'Heures',axis_blocks:'Blocs',axis_kills:'Kills',axis_km:'km',axis_deaths:'Morts',
 radar_playtime:'Temps de jeu',radar_mined:'Blocs minés',radar_kills:'Mobs tués',
 radar_distance:'Distance',radar_crafted:'Items craftés',radar_deaths:'Morts',
 radar_avg:'Moyenne serveur',
@@ -150,9 +149,8 @@ nav_overview:mcIcon('new_realm')+' Overview',nav_leaderboards:mcIcon('nether_sta
 nav_player_placeholder:'Select a player…',nav_player_label:'Select a player',
 total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
 delta_unit:'d',
-chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
-chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
-axis_hours:'Hours',axis_blocks:'Blocks',
+chart_multi:'Multi-stats comparison',chart_overview_bar:'Compare by metric',overview_metric_label:'Metric to compare',
+axis_hours:'Hours',axis_blocks:'Blocks',axis_deaths:'Deaths',
 radar_playtime:'Playtime',radar_mined:'Blocks mined',radar_kills:'Mobs killed',
 radar_crafted:'Items crafted',radar_deaths:'Deaths',
 radar_avg:'Server average',
@@ -748,11 +746,20 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div>${deltaSub(deltaTotals?.mob_kills)}</div>
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
-    <div class="grid grid-2-fixed">
-      <div class="card" data-chart-card="chart-playtime"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
-      <div class="card" data-chart-card="chart-distance"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
-      <div class="card" data-chart-card="chart-mined"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
-      <div class="card" data-chart-card="chart-kills"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+    <div class="card" data-chart-card="chart-overview-bar">
+      <div class="overview-bar-header">
+        <h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_overview_bar')}</h3>
+        <label class="sr-only" for="overviewMetric">${t('overview_metric_label')}</label>
+        <select id="overviewMetric" class="overview-metric-select" aria-label="${t('overview_metric_label')}">
+          <option value="play_hours">${t('radar_playtime')}</option>
+          <option value="total_mined">${t('radar_mined')}</option>
+          <option value="mob_kills">${t('radar_kills')}</option>
+          <option value="total_distance_km">${t('radar_distance')}</option>
+          <option value="total_crafted">${t('radar_crafted')}</option>
+          <option value="deaths">${t('radar_deaths')}</option>
+        </select>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-overview-bar"></canvas></div>
     </div>
     <div class="card"><h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_multi')}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
@@ -793,10 +800,32 @@ function renderOverviewCharts(){
     const card=document.querySelector(`[data-chart-card="${id}"]`);
     attachExpandToggle(card,id,sorted.length,()=>mkBar(id,metric,tooltipSuffix,yLabel));
   };
-  mkBar('chart-playtime','play_hours','h',t('axis_hours'));
-  mkBar('chart-distance','total_distance_km',' km',t('axis_km'));
-  mkBar('chart-mined','total_mined',' blocs',t('axis_blocks'));
-  mkBar('chart-kills','mob_kills',' kills',t('axis_kills'));
+  const METRICS=[
+    {key:'play_hours',       labelKey:'radar_playtime', suffix:'h',    axisKey:'axis_hours'},
+    {key:'total_mined',      labelKey:'radar_mined',    suffix:'',     axisKey:'axis_blocks'},
+    {key:'mob_kills',        labelKey:'radar_kills',    suffix:'',     axisKey:'axis_kills'},
+    {key:'total_distance_km',labelKey:'radar_distance', suffix:' km',  axisKey:'axis_km'},
+    {key:'total_crafted',    labelKey:'radar_crafted',  suffix:'',     axisKey:'axis_blocks'},
+    {key:'deaths',           labelKey:'radar_deaths',   suffix:'',     axisKey:'axis_deaths'},
+  ];
+  const sel=document.getElementById('overviewMetric');
+  if(sel){
+    const saved=localStorage.getItem('mc-overview-metric');
+    if(saved&&METRICS.some(m=>m.key===saved))sel.value=saved;
+    const renderOverviewBar=()=>{
+      const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+      mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
+    };
+    renderOverviewBar();
+    if(!sel.dataset.wired){
+      sel.addEventListener('change',()=>{
+        localStorage.setItem('mc-overview-metric',sel.value);
+        const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+        mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
+      });
+      sel.dataset.wired='1';
+    }
+  }
 
   destroyChart('chart-radar');
   const top5=playerNames.slice(0,5);

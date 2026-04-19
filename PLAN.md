@@ -513,6 +513,12 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 12 (refreshed plan) : Sparkline 30j playtime
+- **Branche :** refactor/task-12-sparkline
+- **Commits :** 9ceefa5 feat(ui): add 30-day playtime sparkline to player profile, 553f83a chore: regenerate dashboards
+- **Résumé :** Nouvelle fonction `buildSparklineSvg(daily, color)` dans `stats/assets/app.js` (SVG inline 100×20, viewBox non proportionnel, `preserveAspectRatio="none"`). Affichée sous le chiffre "playtime" dans `profile-header` (juste après `deltaSub`), couleur = `PLAYER_COLORS_MAP[name]`. Fenêtre = 30 derniers jours finissant aujourd'hui ; polyline cassée en segments consécutifs aux jours manquants (pas de faux zéros, cohérent avec la convention heatmap) ; dernier point défini marqué d'un petit `<circle>` (r=1.8) avec `<title>` tooltip `YYYY-MM-DD — Xh`. Silencieuse (retourne `''`) si < 7 points connus sur la fenêtre.
+- **Effets de bord :** nouvelle règle CSS `.sparkline` dans `stats/assets/styles.css` (`display:block; width:100px; height:20px; margin:.4rem auto 0; opacity:.85` ; override mobile `margin:.3rem 0 0` sous 768 px). Régénération des 2 dashboards (diff = timestamp sync uniquement, la sparkline est rendue côté JS à la volée dans `buildPlayerSection`). `serveur-2020` n'a pas de `daily_hours` → silencieuse pour tous les joueurs ; `serveur-2026` : rendu attendu pour les joueurs avec ≥ 7 jours de snapshots consécutifs.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

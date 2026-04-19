@@ -406,6 +406,13 @@
 - **Effets de bord :** nouveau dossier `tests/` (`__init__.py` + `test_history.py`, stdlib uniquement) ; section "Running tests" ajoutée au README ; aucune modif de `scripts/minecraft/history.py` (tests en boîte noire).
 - **Clarifications en écrivant les tests :** le contrat `not baseline` de `compute_deltas` absorbe à la fois `None` et `{}` — les deux renvoient `None`, c'est testé explicitement. Le cas de tie-break exact (ages équidistants de la cible) n'est pas testé : le résultat dépend de l'ordre d'itération de `Path.iterdir()` (filesystem-dependent), un test déterministe sans toucher au module a été écarté. Le cas sans ambiguïté (`target=7`, ages 6/10/14 → 6) est testé à la place.
 
+### 2026-04-19 — Tâche 6 (refreshed plan) : Tests unitaires badges.py
+
+- **Branche :** refactor/task-6-tests-badges
+- **Commits :** 39e5db8 test(badges): add unit tests for tiers, progress, increvable, and meta-badges
+- **Résumé :** 16 tests (`python -m unittest discover -s tests -v` → `Ran 16 tests in 0.002s / OK`) couvrant `get_tier` (3), `_compute_progress` (4), `_increvable` (4) et `compute_player_badges` (5, dont vérification des 35 entrées + présence de `all_rounder` / `legende` en catégorie `prestige`). Fixture "toutes catégories bronze" implémentée en mode brute-force : tous les champs pertinents (top-level + `badge_data` + `distances` + `killed_by`) mis à `1e9` pour garantir diamond sur chaque badge standard, ce qui prouve a fortiori que toutes les catégories META ont au moins bronze. Robuste aux futures modifs de `BADGES`. Subtilité notée : avec le fixture maxed, `_increvable` = hours/deaths, donc `deaths` doit être volontairement modéré (10) pour que le ratio reste élevé — toutes les catégories passent quand même car 10 == seuil bronze de `kamikaze`.
+- **Effets de bord :** nouveaux fichiers `tests/__init__.py` (vide) + `tests/test_badges.py` (~210 lignes). Aucune modification de `scripts/minecraft/badges.py`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

@@ -147,6 +147,8 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .profile-stat{text-align:center}
 .profile-stat .pv{font-size:1.4rem;font-weight:700;font-family:var(--font-mono);color:var(--accent-light)}
 .profile-stat .pl{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-mono)}
+.sparkline{display:block;width:100px;height:20px;margin:.4rem auto 0;opacity:.85}
+@media (max-width: 768px){.sparkline{margin:.3rem 0 0}}
 .section{display:none}
 .section.active{display:block}
 .lb-subnav{display:flex;justify-content:center;gap:.4rem;flex-wrap:wrap;margin:-.75rem 0 1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}

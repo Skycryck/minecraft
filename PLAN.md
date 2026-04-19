@@ -435,6 +435,16 @@
 - **Résumé :** Nouvelle fonction `aggregate_daily_hours(daily_hours)` dans `scripts/minecraft/history.py` (somme des heures/jour agrégées par UUID, arrondi 2 déc.). `generate.py` l'appelle puis la passe à `generate_html(..., server_daily)` qui injecte `window.SERVER_DAILY` dans le shell HTML. Côté JS, `buildServerHeatmapHtml()` (nouveau, à côté de `buildHeatmapHtml`) rend une SVG 52×7 calquée sur la version par joueur mais avec des seuils ajustés aux totaux serveur (buckets `[1, 5, 15, 30]`) et la teinte `--accent` (`#7c6aef`) au lieu d'une identité joueur. La carte est insérée dans `buildOverview()` entre les stat-tiles et la grille des 4 bar-charts ; si `SERVER_DAILY` est `{}` la fonction retourne `''` et la carte disparaît sans template orphelin.
 - **Effets de bord :** 1 clé i18n ajoutée (`card_server_heatmap`, FR + EN), signature `generate_html` élargie d'un arg optionnel `server_daily`, régénération des 2 dashboards. `serveur-2020` n'a pas de `snapshots/` donc `SERVER_DAILY = {}` et la carte reste absente — `serveur-2026` affiche la heatmap agrégée (4 jours actifs visibles, max 11.4h cumulées le 13/04).
 
+### 2026-04-19 — Tâche 9 (refreshed plan) : Bar overview unifiée
+
+- **Branche :** `refactor/task-9-overview-unified-bar`
+- **Commits :** `1da1e8b` feat(ui): unify overview bar charts behind a metric selector, `b420b3b` chore: regenerate dashboards
+- **Résumé :** Les 4 bar charts de l'overview (playtime/distance/mined/kills) sont remplacés par 1 seule carte `chart-overview-bar` avec un `<select id="overviewMetric">` à 6 options (play_hours, total_mined, mob_kills, total_distance_km, total_crafted, deaths). Les labels d'options réutilisent les clés `radar_*` existantes. `renderOverviewCharts` expose un tableau `METRICS` et invoque le helper `mkBar` existant (signature inchangée) avec la métrique courante ; le listener `change` est branché une seule fois via le flag `sel.dataset.wired`. Radar et stat-tiles intouchés. Persistance localStorage (`mc-overview-metric`) implémentée — 5 lignes, trivial.
+- **Effets de bord i18n :** ajout de `chart_overview_bar`, `overview_metric_label`, `axis_deaths` dans `T.fr` et `T.en`. Suppression des 4 clés orphelines `chart_playtime`/`chart_distance`/`chart_mined`/`chart_kills` dans les deux dicts (grep confirme : usage uniquement dans les 4 cartes supprimées). `axis_crafted` non ajouté — on réutilise `axis_blocks` comme prévu par le plan.
+- **CSS :** nouvelle classe `.overview-metric-select` (mime `.nav-player-select` mais min-height 36px au lieu de 50) + `.overview-bar-header` (flex space-between pour poser le select à droite du h3) + `.sr-only` (utility pour le `<label>` accessible). Dans `stats/assets/styles.css`.
+- **Régénération :** `serveur-2026` 50 047 o et `serveur-2020` 65 851 o régénérés (tailles identiques, JS externe).
+- **Smoke test navigateur :** non effectué (pas de browser dans ce worktree) ; vérification par grep — 0 occurrence des 4 anciens canvas IDs dans `app.js`, 7 occurrences de `overviewMetric`/`chart-overview-bar`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

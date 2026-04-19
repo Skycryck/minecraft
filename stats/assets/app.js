@@ -479,11 +479,20 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
     ${buildServerHeatmapHtml()}
-    <div class="grid grid-2-fixed">
-      <div class="card" data-chart-card="chart-playtime"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
-      <div class="card" data-chart-card="chart-distance"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
-      <div class="card" data-chart-card="chart-mined"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
-      <div class="card" data-chart-card="chart-kills"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+    <div class="card" data-chart-card="chart-overview-bar">
+      <div class="overview-bar-header">
+        <h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_overview_bar')}</h3>
+        <label class="sr-only" for="overviewMetric">${t('overview_metric_label')}</label>
+        <select id="overviewMetric" class="overview-metric-select" aria-label="${t('overview_metric_label')}">
+          <option value="play_hours">${t('radar_playtime')}</option>
+          <option value="total_mined">${t('radar_mined')}</option>
+          <option value="mob_kills">${t('radar_kills')}</option>
+          <option value="total_distance_km">${t('radar_distance')}</option>
+          <option value="total_crafted">${t('radar_crafted')}</option>
+          <option value="deaths">${t('radar_deaths')}</option>
+        </select>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-overview-bar"></canvas></div>
     </div>
     <div class="card"><h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_multi')}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
@@ -524,10 +533,32 @@ function renderOverviewCharts(){
     const card=document.querySelector(`[data-chart-card="${id}"]`);
     attachExpandToggle(card,id,sorted.length,()=>mkBar(id,metric,tooltipSuffix,yLabel));
   };
-  mkBar('chart-playtime','play_hours','h',t('axis_hours'));
-  mkBar('chart-distance','total_distance_km',' km',t('axis_km'));
-  mkBar('chart-mined','total_mined',' blocs',t('axis_blocks'));
-  mkBar('chart-kills','mob_kills',' kills',t('axis_kills'));
+  const METRICS=[
+    {key:'play_hours',       labelKey:'radar_playtime', suffix:'h',    axisKey:'axis_hours'},
+    {key:'total_mined',      labelKey:'radar_mined',    suffix:'',     axisKey:'axis_blocks'},
+    {key:'mob_kills',        labelKey:'radar_kills',    suffix:'',     axisKey:'axis_kills'},
+    {key:'total_distance_km',labelKey:'radar_distance', suffix:' km',  axisKey:'axis_km'},
+    {key:'total_crafted',    labelKey:'radar_crafted',  suffix:'',     axisKey:'axis_blocks'},
+    {key:'deaths',           labelKey:'radar_deaths',   suffix:'',     axisKey:'axis_deaths'},
+  ];
+  const sel=document.getElementById('overviewMetric');
+  if(sel){
+    const saved=localStorage.getItem('mc-overview-metric');
+    if(saved&&METRICS.some(m=>m.key===saved))sel.value=saved;
+    const renderOverviewBar=()=>{
+      const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+      mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
+    };
+    renderOverviewBar();
+    if(!sel.dataset.wired){
+      sel.addEventListener('change',()=>{
+        localStorage.setItem('mc-overview-metric',sel.value);
+        const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+        mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
+      });
+      sel.dataset.wired='1';
+    }
+  }
 
   destroyChart('chart-radar');
   const top5=playerNames.slice(0,5);

@@ -513,6 +513,13 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 2 : SRI hash Chart.js
+
+- **Branche :** refactor/task-2-sri-chartjs
+- **Commits :** 98ac23f fix(security): add SRI hash to Chart.js CDN script · 080f3ef chore: regenerate dashboards with Chart.js SRI attribute
+- **Résumé :** Ajout de `integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"` et `crossorigin="anonymous"` sur le tag `<script>` Chart.js 4.4.1 dans `scripts/generate.py`. Hash SHA-384 calculé via `urllib` + `hashlib` sur le bundle cdnjs (200 807 octets), vérifié deux fois à l'identique. Protège les dashboards contre une compromission du CDN cdnjs.
+- **Effets de bord :** régénération des 2 dashboards (`serveur-2026` 50 155 o, `serveur-2020` 65 959 o) — les 2 `index.html` contiennent désormais l'attribut `integrity=`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

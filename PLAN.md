@@ -513,6 +513,13 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 1 : Deltas négatifs/nuls honnêtes
+
+- **Branche :** refactor/task-1-delta-signs
+- **Commits :** 4d2bb00 fix(ui): show neutral and negative deltas honestly
+- **Résumé :** `deltaSub()` dans `stats/assets/app.js` distingue désormais trois états visuels : `> 0` → `↑ +X` vert (`--c-mining`), `=== 0` → `= 0` gris muted (`--text-muted`), `< 0` → `↓ -X` rouge (`--c-combat`, valeur absolue). Seul un baseline absent (`value==null` ou `!_baselineDays`) masque encore la ligne. La couleur est déplacée de la règle de base `.delta-sub` vers trois modificateurs (`.delta-sub--pos/--zero/--neg`) dans `stats/assets/styles.css` ; la base conserve layout + typographie pour que les sélecteurs `.stat-tile .delta-sub` / `.profile-stat .delta-sub` continuent de fonctionner sur les 7 call sites (overview ×4, profile-stat playtime, stat-tiles joueur ×3). Un joueur inactif pendant la fenêtre de baseline ne ressemble plus à un joueur sans baseline — l'info est honnête.
+- **Effets de bord :** régénération des 2 dashboards (serveur-2026 + serveur-2020)
+
 ---
 
 ## 🚫 Anti-patterns à éviter

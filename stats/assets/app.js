@@ -390,7 +390,7 @@ function buildTreemapHtml(entries){
   if(!entries.length)return '<div style="color:var(--text-muted);padding:1rem;font-family:var(--font-mono);font-size:.8rem">'+t('no_blocks')+'</div>';
   const data=entries.slice(0,15);
   const total=data.reduce((s,[_,v])=>s+v,0);
-  const fallback=['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#6aefd9','#efd96a','#ef6ac0','#a86aef','#5a9e6f','#9e5a5a','#5a6f9e','#9e8b5a','#5a9e9e','#8b8b96'];
+  const fallback=CHART_PALETTE;
   const W=200,H=100;
   const items=data.map(([k,v],i)=>({k,v,color:blockColor(k,fallback[i%fallback.length]),area:v/total*W*H}));
   const rects=squarifyLayout(items,0,0,W,H);
@@ -834,7 +834,7 @@ function renderLeaderboardCharts(){
   const main=[];let otherSum=0;
   sorted.forEach(([k,v])=>{if(v>=threshold)main.push([k,v]);else otherSum+=v});
   const deathSorted=otherSum>0?main.concat([['__other__',otherSum]]):main;
-  const deathColors=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
+  const deathColors=CHART_PALETTE;
   charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{type:'doughnut',data:{
     labels:deathSorted.map(d=>d[0]==='__other__'?t('other_slice'):label(d[0])),
     datasets:[{data:deathSorted.map(d=>d[1]),backgroundColor:deathSorted.map((d,i)=>d[0]==='__other__'?'#5c5c6888':deathColors[i%deathColors.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
@@ -846,7 +846,7 @@ function renderLeaderboardCharts(){
 function renderDistStackedChart(){
   destroyChart('chart-dist-stacked');
   const distTypes=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
-  const distColors=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
+  const distColors=CHART_PALETTE;
   const sortedPlayers=[...playerNames].sort((a,b)=>(PLAYERS_DATA[b].total_distance_km||0)-(PLAYERS_DATA[a].total_distance_km||0));
   const filteredPlayers=isExpanded('chart-dist-stacked')?sortedPlayers:sortedPlayers.slice(0,MOBILE_TOP_N);
   const distHorizontal=filteredPlayers.length>8;
@@ -1076,7 +1076,7 @@ function renderPlayerCharts(name){
   const dists=p.distances||{};
   const de=Object.entries(dists).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(de.length&&document.getElementById(distId)){
-    const dp=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#ef6a6a','#8b8b96','#5c5c68','#3a3a48','#222230'];
+    const dp=CHART_PALETTE;
     charts[distId]=new Chart(document.getElementById(distId),{type:'bar',data:{
       labels:de.map(d=>label(d[0])),datasets:[{data:de.map(d=>d[1]),
         backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}]

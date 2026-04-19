@@ -420,6 +420,14 @@
 - **Résumé :** Extraction de toutes les définitions de couleurs et helpers associés dans un nouveau fichier `stats/assets/colors.js` (97 lignes) : palette d'identité joueur (`PALETTE`, `_PALETTE_HUES`, `_hslHex`, `playerColor`), maps de couleurs de blocs (`BLOCK_COLORS` + `DYE_COLORS`/`WOOD_COLORS`/`LEAF_COLORS` + `blockColor()` et suffixes). Nouvelle constante `CHART_PALETTE` (15 teintes : 8 premières alignées sur l'identité mais démarrant par le violet brand `#7c6aef`, + 7 teintes muted/dark pour couvrir la taille max de l'ancienne palette `fallback` du treemap) remplace 4 tableaux dupliqués inline (treemap `fallback`, doughnut `deathColors`, stacked bar `distColors`, per-player bar `dp`). `app.js` passe de **1197 → 1123 lignes** (-74). `PLAYER_COLORS_MAP` reste construit dans `app.js` (dépend de `PLAYERS_DATA`) mais utilise `playerColor()` du scope global partagé.
 - **Effets de bord :** nouveau fichier `stats/assets/colors.js`, `generate.py` injecte 1 `<script src="../assets/colors.js">` avant `app.js`, régénération de serveur-2026 et serveur-2020 (hermitcraft-s10 non re-généré — hors demande). Smoke test via `deno eval` : tous les symboles retournent les bonnes valeurs (PALETTE 8 hues, CHART_PALETTE 15, 82 BLOCK_COLORS, `blockColor('diamond_ore')='#5ecfd5'`, `blockColor('oak_planks')='#b08a50'`, `blockColor('red_wool')='#b02e26'`, fallback unknown retourne bien l'argument). Parse-check complet OK via `new Function(colorsSrc + '\n' + appSrc)`.
 
+### 2026-04-19 — Tâche 7 (refreshed plan) : Métrique streak sous heatmap
+
+- **Branche :** refactor/task-7-streak-metric
+- **Commits :** d6cae2e feat(history): compute per-player streak metrics, ac3b0fe feat(ui): display longest + current streak under heatmap meta line, da2bcce chore: regenerate dashboards with streak data.
+- **Résumé :** Nouvelle fonction `compute_streaks(daily_hours, today)` dans `scripts/minecraft/history.py`, exposée sous `player['streaks'] = {current, longest, total_active_days}` via `generate.py`. Affichée en suffixe de la ligne `.heatmap-meta` (`· plus longue série Nj · série en cours Nj` en FR, `· longest streak Nd · current streak Nd` en EN) — l'unité jour réutilise la clé i18n existante `delta_unit` (`j`/`d`).
+- **Effets de bord :** 2 nouvelles clés i18n (`hm_streak_current`, `hm_streak_longest`) dupliquées dans `T.fr` et `T.en`. Régénération des 2 dashboards : `serveur-2026` 50 221 o, 3 joueurs ont une clé `streaks` (longest runs de 2 jours) ; `serveur-2020` 65 851 o inchangé (pas de dossier `snapshots/`, `compute_daily_play_hours` retourne `{}` → aucun joueur ne reçoit `streaks`, dégradation propre — le suffixe est vide et la ligne meta garde son ancien format).
+- **Invariants vérifiés :** `current ≤ longest ≤ total_active_days` sur les 3 entrées générées (ex. `{current:0,longest:2,total_active_days:3}`). Pas de test automatisé ajouté (scaffolding tests en tâche 5 sur une autre branche).
+
 ---
 
 ## 🚫 Anti-patterns à éviter

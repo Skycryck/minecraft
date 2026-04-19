@@ -31,6 +31,7 @@ from minecraft.badges import compute_player_badges
 from minecraft.history import (
     compute_daily_play_hours,
     compute_deltas,
+    compute_streaks,
     find_baseline_snapshot,
     load_baseline_metrics,
 )
@@ -323,6 +324,9 @@ def main():
     daily_hours = compute_daily_play_hours(snapshots_dir)
     if daily_hours:
         print(f"[HIST] Daily heatmap data: {sum(len(v) for v in daily_hours.values())} cells across {len(daily_hours)} players")
+    streaks = compute_streaks(daily_hours)
+    if streaks:
+        print(f"[HIST] Streaks computed for {len(streaks)} players")
 
     # Process stats
     print("\n[STATS] Processing statistics...")
@@ -336,6 +340,8 @@ def main():
             player["delta_7d"] = delta
         if daily_hours.get(uuid):
             player["daily_hours"] = daily_hours[uuid]
+        if streaks.get(uuid):
+            player["streaks"] = streaks[uuid]
         players_data[name] = player
         print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocks, {player['mob_kills']} kills")
 

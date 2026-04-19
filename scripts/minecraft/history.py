@@ -140,6 +140,61 @@ def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]
     return result
 
 
+def compute_streaks(
+    daily_hours: dict[str, dict[str, float]],
+    today: date | None = None,
+) -> dict[str, dict]:
+    """Per UUID, return {current, longest, total_active_days}.
+
+    - total_active_days = count of entries in daily_hours[uuid]
+    - longest = max run of consecutive ISO dates present in daily_hours[uuid]
+    - current = length of the consecutive run ending at `today` (default
+      `date.today()`); 0 if today's date isn't in the dict.
+
+    Returns {} if `daily_hours` is empty. UUIDs with no entries are skipped.
+    """
+    if not daily_hours:
+        return {}
+    today = today or date.today()
+    out: dict[str, dict] = {}
+    for uuid, days in daily_hours.items():
+        if not days:
+            continue
+        parsed: list[date] = []
+        for iso in days.keys():
+            try:
+                parsed.append(date.fromisoformat(iso))
+            except ValueError:
+                continue
+        if not parsed:
+            continue
+        parsed.sort()
+        # Longest consecutive run
+        longest = 1
+        run = 1
+        for i in range(1, len(parsed)):
+            if (parsed[i] - parsed[i - 1]).days == 1:
+                run += 1
+                if run > longest:
+                    longest = run
+            else:
+                run = 1
+        # Current run ending at `today`
+        day_set = set(parsed)
+        current = 0
+        if today in day_set:
+            cursor = today
+            while cursor in day_set:
+                current += 1
+                cursor = cursor - timedelta(days=1)
+        out[uuid] = {
+            "current": current,
+            "longest": longest,
+            "total_active_days": len(parsed),
+        }
+    return out
+
+
 def compute_deltas(current: dict, baseline: dict | None) -> dict | None:
     """Return `{key: current - baseline}` for `DELTA_KEYS`, or None.
 

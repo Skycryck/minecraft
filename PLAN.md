@@ -513,6 +513,14 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 7 (refreshed plan) : Métrique streak sous heatmap
+
+- **Branche :** refactor/task-7-streak-metric
+- **Commits :** d6cae2e feat(history): compute per-player streak metrics, ac3b0fe feat(ui): display longest + current streak under heatmap meta line, da2bcce chore: regenerate dashboards with streak data.
+- **Résumé :** Nouvelle fonction `compute_streaks(daily_hours, today)` dans `scripts/minecraft/history.py`, exposée sous `player['streaks'] = {current, longest, total_active_days}` via `generate.py`. Affichée en suffixe de la ligne `.heatmap-meta` (`· plus longue série Nj · série en cours Nj` en FR, `· longest streak Nd · current streak Nd` en EN) — l'unité jour réutilise la clé i18n existante `delta_unit` (`j`/`d`).
+- **Effets de bord :** 2 nouvelles clés i18n (`hm_streak_current`, `hm_streak_longest`) dupliquées dans `T.fr` et `T.en`. Régénération des 2 dashboards : `serveur-2026` 50 221 o, 3 joueurs ont une clé `streaks` (longest runs de 2 jours) ; `serveur-2020` 65 851 o inchangé (pas de dossier `snapshots/`, `compute_daily_play_hours` retourne `{}` → aucun joueur ne reçoit `streaks`, dégradation propre — le suffixe est vide et la ligne meta garde son ancien format).
+- **Invariants vérifiés :** `current ≤ longest ≤ total_active_days` sur les 3 entrées générées (ex. `{current:0,longest:2,total_active_days:3}`). Pas de test automatisé ajouté (scaffolding tests en tâche 5 sur une autre branche).
+
 ---
 
 ## 🚫 Anti-patterns à éviter

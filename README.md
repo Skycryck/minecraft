@@ -15,6 +15,11 @@ Drop the raw stats JSON files your Minecraft server already writes into this rep
 - **Badge system** — 33 badges + 2 meta badges across 4 tiers (Bronze → Silver → Gold → Diamond) with progression tooltips
 - **12 leaderboards** grouped by activity category
 - **Interactive charts** (Chart.js) — radar comparison, distance stacks, deaths aggregate, treemaps
+- **2-player compare view** — deep-linkable `#compare/<a>/<b>` route with side-by-side radar and diff table
+- **Activity heatmaps** — GitHub-style 52-week × 7-day grid per player, plus a server-wide aggregate on the overview
+- **Activity streaks** — current and longest consecutive-day runs derived from the snapshot archive
+- **Playtime sparkline** — tiny 30-day trend line under each player's playtime figure
+- **Weekly rank movements** — "Alice passed Bob on blocks mined (+2)" narrated from baseline vs. current rankings
 - **Fun facts** auto-generated for each player
 - **Deep-linkable views** — share a URL that opens straight to a specific player (`#player/<name>`)
 - **Daily historical snapshots** — archived JSON under `snapshots/YYYY-MM-DD/`, used to compute 7-day deltas displayed on the headline stat-tiles
@@ -165,12 +170,15 @@ No dependencies beyond Python 3.12+ stdlib. No pip install, no `node_modules`, n
 │   ├── generate.py          # Main generator (JSON → HTML)
 │   ├── minecraft/
 │   │   ├── badges.py        # Badge definitions + per-player tier computation
-│   │   └── history.py       # 7-day deltas from snapshot archive
+│   │   └── history.py       # Snapshot-based deltas, streaks, rank changes, aggregates
 │   └── build_icons.py       # Pre-renders local Minecraft icon PNGs (stdlib only)
+├── tests/                   # unittest suite (stdlib only) for history.py + badges.py
 ├── stats/
 │   ├── assets/
 │   │   ├── icons/           # Pre-rendered 256×256 Minecraft icon PNGs (committed)
 │   │   ├── styles.css       # Shared dashboard stylesheet
+│   │   ├── colors.js        # Player palette + block colors + chart palette
+│   │   ├── i18n.js          # FR/EN translations + t() / label() helpers
 │   │   └── app.js           # Shared dashboard runtime
 │   └── <server-name>/       # One folder per server (repeatable)
 │       ├── data/            # Raw JSON files (Minecraft stats)
@@ -203,7 +211,7 @@ Minecraft UUIDs are resolved to usernames via the Mojang session-server API. Res
 
 ### Shared frontend assets
 
-`stats/assets/styles.css` and `stats/assets/app.js` are shared across every server dashboard. `generate.py` only emits a ~30-line HTML shell that injects `window.PLAYERS_DATA` and loads these static files. Minecraft icons under `stats/assets/icons/` are pre-rendered 256×256 PNGs (via `scripts/build_icons.py`) committed to the repo so the dashboard has no runtime CDN dependency for its core visuals.
+`stats/assets/styles.css`, `stats/assets/colors.js`, `stats/assets/i18n.js` and `stats/assets/app.js` are shared across every server dashboard. `generate.py` only emits a ~30-line HTML shell that injects `window.PLAYERS_DATA`, `window.SYNC`, `window.BASELINE_DATE`, `window.ICONS_HR`, `window.SERVER_DAILY`, and `window.RANK_CHANGES`, then loads the four static files. Minecraft icons under `stats/assets/icons/` are pre-rendered 256×256 PNGs (via `scripts/build_icons.py`) committed to the repo so the dashboard has no runtime CDN dependency for its core visuals.
 
 ## Running tests
 

@@ -27,13 +27,17 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 │   ├── generate.py          # Main generator: JSON → HTML dashboard
 │   ├── minecraft/
 │   │   ├── badges.py        # Badge definitions + per-player tier computation
-│   │   └── history.py       # 7-day deltas from snapshot archive (drives stat-tile sub-lines)
+│   │   └── history.py       # Snapshot-based deltas, streaks, daily hours, aggregates, rank changes
 │   ├── build_icons.py       # Pre-renders Minecraft icon PNGs (stdlib only)
 │   └── sync-stats.ps1       # Windows: copy stats from Crafty + git push
+├── tests/                   # unittest suite (stdlib only) for history.py + badges.py
+├── docs/                    # Internal dev planning logs — EXCLUDED from public mirror
 ├── stats/
 │   ├── assets/
 │   │   ├── icons/           # Pre-rendered 256×256 Minecraft icon PNGs (committed)
 │   │   ├── styles.css       # Dashboard stylesheet (shared across servers)
+│   │   ├── colors.js        # Identity palette, block colors, CHART_PALETTE — loaded before app.js
+│   │   ├── i18n.js          # T (fr+en), t(), label(), mcIcon() — loaded before app.js
 │   │   └── app.js           # Dashboard runtime (shared across servers)
 │   └── <server-name>/       # One folder per server (repeatable)
 │       ├── data/            # Raw Minecraft stats JSON (UUID-named)
@@ -50,7 +54,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 1. **UUID resolution** — Mojang API with local `.uuid_cache.json` to avoid rate limits (0.5s delay between calls)
 2. **Stats extraction** — `process_player()` normalizes Minecraft JSON: ticks→hours, cm→km, strips `minecraft:` prefixes, then calls `compute_player_badges()` and attaches the result under the `badges` key
 3. **7-day deltas** — `main()` calls `find_baseline_snapshot()` once, loads the baseline metrics, then attaches `delta_7d` to each player dict via `compute_deltas()` (key absent when no usable baseline)
-4. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` / `window.BASELINE_DATE` then loads `../assets/styles.css` and `../assets/app.js`. CSS/JS are not embedded — they ship as static files under `stats/assets/`.
+4. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` / `window.BASELINE_DATE` / `window.ICONS_HR` / `window.SERVER_DAILY` / `window.RANK_CHANGES`, then loads `../assets/styles.css` + the three JS assets in order: `colors.js`, `i18n.js`, `app.js` (classic scripts, shared global scope). CSS/JS are not embedded — they ship as static files under `stats/assets/`.
 
 ### build_icons.py internals
 
@@ -85,6 +89,9 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - `compute_deltas(current, baseline)` — returns `{key: round(current - baseline, 1)}` or `None` when baseline is missing. `None` is the contract that lets callers omit `player["delta_7d"]` entirely so the JS side can hide the sub-line cleanly (no misleading `+0` displayed).
 - The actual baseline window may differ from 7 days — `app.js` reads `BASELINE_DATE` and labels the sub-line with the real day count (e.g. `↑ +13.5h (6j)` for a 6-day-old snapshot), keeping the figure honest after gaps in the snapshot cadence.
 - `compute_daily_play_hours(snapshots_root)` — returns `{uuid: {YYYY-MM-DD: hours}}` from **consecutive** snapshot pairs only. If snapshot D and D-1 both exist, the delta is attributed to date D; otherwise the day is omitted (no faked zeros for gaps). Drives the per-player activity heatmap. Negative deltas (world reset) are filtered out. `generate.py` attaches the per-player map under `player["daily_hours"]` (key absent if no entries).
+- `compute_streaks(daily_hours, today=None)` — per UUID, returns `{current, longest, total_active_days}` computed from the output of `compute_daily_play_hours`. `current` is the run ending at `today` (0 if today's date isn't present). Drives the streak suffix under the heatmap meta line. `generate.py` attaches it under `player["streaks"]` (key absent if no entries).
+- `aggregate_daily_hours(daily_hours)` — sums per-day hours across every player, rounded to 2 decimals. Injected as `window.SERVER_DAILY` and drives the server-wide heatmap card on the overview. Empty dict → card absent (returns `''` client-side).
+- `compute_rank_changes(current_players, baseline_metrics, uuid_to_name, keys=DELTA_KEYS)` — per metric, ranks players at baseline and now, emits an entry only when a player improved rank AND a specific overtaken player (just behind now, ahead at baseline) can be named. Gain-only narrative (never "X got overtaken"). Sorted by `|delta_rank|` desc, capped at 10. Exposed as `window.RANK_CHANGES`.
 
 ### Snapshots archive
 
@@ -96,21 +103,22 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 
 ### Navigation & routing (app.js)
 
-- Two fixed nav tabs (`Vue globale`, `Classements`) plus a `<select id="playerSelect">` listing players sorted by hours. No player buttons anymore (doesn't scale past ~6 players on mobile).
-- Hash router: `location.hash` reflects the active section — `''` (overview), `#leaderboards`, `#player/<name>`. `navigateTo()` uses `history.pushState` so dashboard-triggered navigation doesn't fire `hashchange`; `hashchange` + `popstate` listeners sync the UI when the URL changes externally (back/forward, paste a deep-link).
+- Two fixed nav tabs (`Vue globale`, `Classements`), a `<select id="playerSelect">` listing players sorted by hours, and a `🔀 Comparer` button that toggles an inline 2-select form (+ Go) pre-filled with the top-2 most-played. No player buttons anymore (doesn't scale past ~6 players on mobile).
+- Hash router: `location.hash` reflects the active section — `''` (overview), `#leaderboards`, `#player/<name>`, `#compare/<a>/<b>`. `navigateTo()` uses `history.pushState` so dashboard-triggered navigation doesn't fire `hashchange`; `hashchange` + `popstate` listeners sync the UI when the URL changes externally (back/forward, paste a deep-link).
+- Compare section is lazy-rendered (cache `renderedCompares`) like player sections. Deep-link `#compare/A/A` redirects silently to `#player/A` via `hashToSection`. Unknown player names fall back to `overview`.
 
 ## Code style
 
 ### generate.py template (the f-string)
 
 - `generate_html()` only holds the HTML shell + data injection — keep it short. Real markup is built by `app.js` from `window.PLAYERS_DATA`.
-- The two injected values are `{data_json}` (compact JSON of all players) and the sync-date strings. Any literal `{` / `}` in the shell still need doubling (e.g. the `window.SYNC` object literal).
-- Do **not** reintroduce inline CSS/JS here — edit `stats/assets/styles.css` and `stats/assets/app.js` instead (no escaping needed, full syntax highlighting, lintable).
+- Placeholders injected today: `{data_json}`, `{sync_date_fr}` / `{sync_date_en}`, `{baseline_json}`, `{icons_json}`, `{server_daily_json}`, `{rank_changes_json}`, `{title}`. Any literal `{` / `}` in the shell still need doubling (e.g. the `window.SYNC` object literal).
+- Do **not** reintroduce inline CSS/JS here — edit the files under `stats/assets/` instead (no escaping needed, full syntax highlighting, lintable). Script load order in the shell is `colors.js` → `i18n.js` → `app.js` (classic scripts share the global scope).
 
 ### Color palette
 
 - Five **semantic** CSS vars in `stats/assets/styles.css :root`, one per stat category: `--c-mining` (green), `--c-combat` (red), `--c-survival` (orange), `--c-travel` (blue), `--c-craft` (teal). Every stat-tile, leaderboard and card-icon binds to exactly one of these — a given category always has the same color across overview, per-player sections and leaderboards.
-- The 8-hue `PALETTE` array in `app.js` is **player identity only** — it's used to derive `PLAYER_COLORS_MAP` for the comparative charts (radar, distance stack, deaths aggregate) and the active-player select border. Never reuse `PALETTE` colors for stat categories.
+- Palettes and block-color maps live in `stats/assets/colors.js`: the 8-hue `PALETTE` is **player identity only** (used to derive `PLAYER_COLORS_MAP` in `app.js` for comparative charts — radar, distance stack, deaths aggregate — and the active-player select border), the 15-hue `CHART_PALETTE` is the unified fallback for all chart datasets (death-causes doughnut, distance stacked, per-player dist bar, treemap fallback), and `BLOCK_COLORS` / `DYE_COLORS` / `WOOD_COLORS` / `LEAF_COLORS` + `blockColor()` drive the treemap's in-game-hue mapping. Never reuse `PALETTE` colors for stat categories.
 - Muted text uses `--text-muted: #8080a0` (WCAG AA on the `--bg` / `--bg-card` pair).
 
 ### Dashboard language conventions
@@ -118,7 +126,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - **French** for all UI: titles, section headers, labels, navigation, stat tile names, distance types (Marche, Sprint, Elytra)
 - **English** for Minecraft entity names: blocks, items, mobs. Formatted automatically from snake_case → Title Case via JS `label()` function
 - The `LABELS` dict in JS only contains French overrides for distance types. Everything else falls through to auto-formatting.
-- **i18n dict (`T` in app.js)** — `T.fr` is the complete source of truth; `T.en` only holds overrides. Lookups use `T[lang]?.[k] ?? T.fr[k]`, so any missing EN key silently falls back to French. When adding a new UI string, add it to `T.fr`; only add a matching `T.en` entry if it needs a non-French value.
+- **i18n dict (`T` in `stats/assets/i18n.js`)** — `T.fr` is the complete source of truth; `T.en` only holds overrides. Lookups use `T[lang]?.[k] ?? T.fr[k]`, so any missing EN key silently falls back to French. When adding a new UI string, add it to `T.fr`; only add a matching `T.en` entry if it needs a non-French value. `t()`, `label()`, `mcIcon()` and the `lang` binding live in the same file — all shared with `app.js` through the classic-script global scope.
 
 ### Stats units
 

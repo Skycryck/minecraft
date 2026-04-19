@@ -31,6 +31,7 @@ from minecraft.badges import compute_player_badges
 from minecraft.history import (
     compute_daily_play_hours,
     compute_deltas,
+    compute_rank_changes,
     find_baseline_snapshot,
     load_baseline_metrics,
 )
@@ -200,11 +201,17 @@ def load_icons_manifest() -> list[str]:
         return json.load(f)
 
 
-def generate_html(players_data: dict, title: str, baseline_date: str | None = None) -> str:
+def generate_html(
+    players_data: dict,
+    title: str,
+    baseline_date: str | None = None,
+    rank_changes: list | None = None,
+) -> str:
     """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
     baseline_json = json.dumps(baseline_date)
     icons_json = json.dumps(load_icons_manifest(), separators=(",", ":"))
+    rank_changes_json = json.dumps(rank_changes or [], separators=(",", ":"))
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
     sync_date_en = now.strftime("%Y-%m-%d at %H:%M")
@@ -236,6 +243,7 @@ window.PLAYERS_DATA = {data_json};
 window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
 window.BASELINE_DATE = {baseline_json};
 window.ICONS_HR = {icons_json};
+window.RANK_CHANGES = {rank_changes_json};
 </script>
 <script src="../assets/app.js"></script>
 </body>
@@ -337,9 +345,17 @@ def main():
         players_data[name] = player
         print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocks, {player['mob_kills']} kills")
 
+    # Rank movements vs baseline (only computed when we have a baseline)
+    rank_changes = (
+        compute_rank_changes(players_data, baseline_metrics, uuid_to_name)
+        if baseline_metrics else []
+    )
+    if rank_changes:
+        print(f"[HIST] Rank changes detected: {len(rank_changes)}")
+
     # Generate HTML
     print(f"\n[HTML] Generating HTML...")
-    html = generate_html(players_data, title, baseline_date)
+    html = generate_html(players_data, title, baseline_date, rank_changes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

@@ -140,6 +140,78 @@ def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]
     return result
 
 
+def compute_rank_changes(
+    current_players: dict[str, dict],
+    baseline_metrics: dict[str, dict],
+    uuid_to_name: dict[str, str],
+    keys: tuple[str, ...] = DELTA_KEYS,
+) -> list[dict]:
+    """Return the list of significant rank changes between baseline and now.
+
+    For each tracked metric we rank players by descending value at baseline
+    and today, then emit an entry whenever a player's rank improved (delta
+    > 0) AND a specific "overtaken" player can be identified — namely the
+    player now just behind them who was ahead of them at baseline.
+
+    Returned list is sorted by `delta_rank` desc then `current_value` desc
+    and capped at 10 entries. No "loss" narrative is ever emitted — only
+    improvements, so the feature stays feel-good on a public dashboard.
+    """
+    if not current_players or not baseline_metrics:
+        return []
+    name_to_uuid = {v: k for k, v in uuid_to_name.items()}
+    out: list[dict] = []
+    for metric in keys:
+        ranked_cur = sorted(
+            [
+                (name, p.get(metric, 0) or 0)
+                for name, p in current_players.items()
+                if name_to_uuid.get(name) in baseline_metrics
+            ],
+            key=lambda x: -x[1],
+        )
+        ranked_base = sorted(
+            [
+                (uuid_to_name[uuid], m.get(metric, 0) or 0)
+                for uuid, m in baseline_metrics.items()
+                if uuid in uuid_to_name
+            ],
+            key=lambda x: -x[1],
+        )
+        cur_rank = {name: i for i, (name, _) in enumerate(ranked_cur)}
+        base_rank = {name: i for i, (name, _) in enumerate(ranked_base)}
+        cur_value = dict(ranked_cur)
+        base_value = dict(ranked_base)
+        for name, _ in ranked_cur:
+            if name not in base_rank:
+                continue
+            delta = base_rank[name] - cur_rank[name]
+            if delta <= 0:
+                continue
+            my_cur = cur_rank[name]
+            my_base = base_rank[name]
+            overtaken = next(
+                (
+                    n
+                    for n, r in cur_rank.items()
+                    if r == my_cur + 1 and base_rank.get(n, 10**9) < my_base
+                ),
+                None,
+            )
+            if not overtaken:
+                continue
+            out.append({
+                "metric": metric,
+                "player": name,
+                "overtaken": overtaken,
+                "delta_rank": delta,
+                "current_value": cur_value[name],
+                "baseline_value": base_value.get(name, 0),
+            })
+    out.sort(key=lambda x: (-x["delta_rank"], -x["current_value"]))
+    return out[:10]
+
+
 def compute_deltas(current: dict, baseline: dict | None) -> dict | None:
     """Return `{key: current - baseline}` for `DELTA_KEYS`, or None.
 

@@ -337,24 +337,23 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .nav-compare-form{
   display:none;position:absolute;top:calc(100% + .5rem);left:50%;transform:translateX(-50%);
   background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:.6rem;z-index:200;gap:.4rem;align-items:center;flex-wrap:wrap;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);min-width:260px;
+  padding:.75rem;z-index:200;gap:.5rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);width:260px;box-sizing:border-box;
 }
-.nav-compare-form.open{display:flex}
+.nav-compare-form.open{display:flex;flex-direction:column}
 .nav-compare-form select{
-  font-family:var(--font-mono);font-size:.78rem;padding:.35rem .6rem;
+  font-family:var(--font-mono);font-size:.78rem;padding:.4rem .6rem;width:100%;box-sizing:border-box;
   background:var(--bg-card-alt);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);
-  min-width:110px;
 }
 .nav-compare-form select:focus{outline:none;border-color:var(--accent)}
 .nav-compare-form .nav-compare-go{
-  font-family:var(--font-mono);font-size:.78rem;padding:.35rem .9rem;
+  font-family:var(--font-mono);font-size:.82rem;font-weight:600;padding:.5rem .9rem;width:100%;
   background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;
-  transition:background .15s;
+  transition:background .15s;margin-top:.15rem;
 }
 .nav-compare-form .nav-compare-go:hover{background:var(--accent-light)}
 @media(max-width:600px){
-  .nav-compare-form{position:fixed;top:auto;bottom:1rem;left:1rem;right:1rem;transform:none;min-width:0}
+  .nav-compare-form{position:fixed;top:auto;bottom:1rem;left:1rem;right:1rem;transform:none;width:auto}
 }
 
 /* Activity heatmap (52 weeks × 7 days, GitHub style) */

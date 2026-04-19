@@ -378,22 +378,6 @@
 - **Effets de bord :** <régénération des dashboards, nouvelles clés i18n, etc.>
 -->
 
-### 2026-04-19 — Tâche 3 (refreshed plan) : Extraction i18n.js
-- **Branche :** refactor/task-3-extract-i18n (poussée via `claude/gifted-kapitsa-4395bf` depuis worktree)
-- **Commits :** `refactor(i18n): extract translations and helpers to i18n.js`, `chore: regenerate dashboards after i18n extraction`, `chore: journal entry for task 3 (i18n extraction)`
-- **Résumé :** Déplacement de `T` (fr+en), `t()`, `label()`, `lang` et du helper `mcIcon()` (+ `_MI`/`_HR`/`MC_ICONS_HR`) depuis `stats/assets/app.js` vers le nouveau fichier `stats/assets/i18n.js`. Pattern retenu : bindings classiques `let`/`const` au top-level — les scripts classiques partagent le scope lexical global, donc `app.js` voit directement `lang`/`T`/`t`/`label`/`mcIcon` sans passer par `window.*` (zéro changement de référence côté `app.js`). Le helper d'icônes a été co-localisé car `T` l'invoque à l'initialisation. `app.js` passe de **1197 → 993 lignes** (−204) ; `i18n.js` fait 217 lignes.
-- **Effets de bord :** nouveau fichier `stats/assets/i18n.js`, `generate.py` injecte un `<script src="../assets/i18n.js">` supplémentaire (avant `app.js`), régénération des deux dashboards (`serveur-2026`, `serveur-2020`). Test navigateur : bascule FR/EN OK, navigation joueur OK, aucune erreur console.
-
-### 2026-04-19 — Tâche 13 (refreshed plan) : Vue comparaison 2 joueurs
-
-- **Branche :** refactor/task-13-compare-view
-- **Commits :** b10249c (feat compare view), 0870bc6 (regen dashboards)
-- **Résumé :** Nouvelle section route-able `#compare/<a>/<b>` lazy-rendue (cache `renderedCompares`). Mini profile-headers côte-à-côte, radar 2-séries (6 axes normalisés, mêmes métriques que le radar overview) et table de diff où le leader prend la couleur d'identité du joueur. Router étendu dans `sectionToHash`/`hashToSection` avec validation `playerNames.includes()` (fallback silencieux vers `overview` en cas de joueur inexistant). Guard `a===b` → redirect `#player/<a>`.
-- **UX entry-point :** Bouton « 🔀 Comparer » dans la nav qui toggle un petit formulaire inline (2 `<select>` + bouton Go) flottant sous le bouton. Click-outside ferme, Entrée sur un select déclenche Go, pré-remplissage des 2 joueurs les plus joués à l'ouverture. Listener click-outside enregistré une seule fois (guard `buildNav._outsideClickBound`) pour survivre aux `buildNav()` successifs du switch FR/EN.
-- **i18n :** 7 clés ajoutées (`nav_compare_btn`, `nav_compare_label`, `compare_go`, `compare_select_placeholder`, `compare_radar`, `compare_table`, `compare_metric`) dans `T.fr` avec overrides EN.
-- **CSS :** styles pour `.compare-headers` (2 colonnes desktop, 1 mobile), `.compare-table` (tabular-nums), `.nav-compare-wrap` + `.nav-compare-form` (position absolue desktop, fixed bottom mobile).
-- **Effets de bord :** `app.js` 1197 → 1378 lignes (+181), `styles.css` 295 → 334 (+39). Régénération des 2 dashboards (`serveur-2026` 50 047 o, `serveur-2020` 65 851 o). `deno check` OK, `python -m py_compile` OK.
-
 ### 2026-04-19 — Tâche 1 : Deltas négatifs/nuls honnêtes
 
 - **Branche :** refactor/task-1-delta-signs
@@ -407,6 +391,19 @@
 - **Commits :** 98ac23f fix(security): add SRI hash to Chart.js CDN script · 080f3ef chore: regenerate dashboards with Chart.js SRI attribute
 - **Résumé :** Ajout de `integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"` et `crossorigin="anonymous"` sur le tag `<script>` Chart.js 4.4.1 dans `scripts/generate.py`. Hash SHA-384 calculé via `urllib` + `hashlib` sur le bundle cdnjs (200 807 octets), vérifié deux fois à l'identique. Protège les dashboards contre une compromission du CDN cdnjs.
 - **Effets de bord :** régénération des 2 dashboards (`serveur-2026` 50 155 o, `serveur-2020` 65 959 o) — les 2 `index.html` contiennent désormais l'attribut `integrity=`.
+
+### 2026-04-19 — Tâche 3 (refreshed plan) : Extraction i18n.js
+- **Branche :** refactor/task-3-extract-i18n (poussée via `claude/gifted-kapitsa-4395bf` depuis worktree)
+- **Commits :** `refactor(i18n): extract translations and helpers to i18n.js`, `chore: regenerate dashboards after i18n extraction`, `chore: journal entry for task 3 (i18n extraction)`
+- **Résumé :** Déplacement de `T` (fr+en), `t()`, `label()`, `lang` et du helper `mcIcon()` (+ `_MI`/`_HR`/`MC_ICONS_HR`) depuis `stats/assets/app.js` vers le nouveau fichier `stats/assets/i18n.js`. Pattern retenu : bindings classiques `let`/`const` au top-level — les scripts classiques partagent le scope lexical global, donc `app.js` voit directement `lang`/`T`/`t`/`label`/`mcIcon` sans passer par `window.*` (zéro changement de référence côté `app.js`). Le helper d'icônes a été co-localisé car `T` l'invoque à l'initialisation. `app.js` passe de **1197 → 993 lignes** (−204) ; `i18n.js` fait 217 lignes.
+- **Effets de bord :** nouveau fichier `stats/assets/i18n.js`, `generate.py` injecte un `<script src="../assets/i18n.js">` supplémentaire (avant `app.js`), régénération des deux dashboards (`serveur-2026`, `serveur-2020`). Test navigateur : bascule FR/EN OK, navigation joueur OK, aucune erreur console.
+
+### 2026-04-19 — Tâche 4 (refreshed plan) : Extraction colors.js + palette unifiée
+
+- **Branche :** refactor/task-4-extract-colors
+- **Commits :** `c2a7ac3` refactor(colors): extract palettes and block-color maps to colors.js · `ae0115c` refactor(colors): replace 4 duplicate palettes with CHART_PALETTE · `1ccffd1` chore: regenerate dashboards after colors extraction
+- **Résumé :** Extraction de toutes les définitions de couleurs et helpers associés dans un nouveau fichier `stats/assets/colors.js` (97 lignes) : palette d'identité joueur (`PALETTE`, `_PALETTE_HUES`, `_hslHex`, `playerColor`), maps de couleurs de blocs (`BLOCK_COLORS` + `DYE_COLORS`/`WOOD_COLORS`/`LEAF_COLORS` + `blockColor()` et suffixes). Nouvelle constante `CHART_PALETTE` (15 teintes : 8 premières alignées sur l'identité mais démarrant par le violet brand `#7c6aef`, + 7 teintes muted/dark pour couvrir la taille max de l'ancienne palette `fallback` du treemap) remplace 4 tableaux dupliqués inline (treemap `fallback`, doughnut `deathColors`, stacked bar `distColors`, per-player bar `dp`). `app.js` passe de **1197 → 1123 lignes** (-74). `PLAYER_COLORS_MAP` reste construit dans `app.js` (dépend de `PLAYERS_DATA`) mais utilise `playerColor()` du scope global partagé.
+- **Effets de bord :** nouveau fichier `stats/assets/colors.js`, `generate.py` injecte 1 `<script src="../assets/colors.js">` avant `app.js`, régénération de serveur-2026 et serveur-2020 (hermitcraft-s10 non re-généré — hors demande). Smoke test via `deno eval` : tous les symboles retournent les bonnes valeurs (PALETTE 8 hues, CHART_PALETTE 15, 82 BLOCK_COLORS, `blockColor('diamond_ore')='#5ecfd5'`, `blockColor('oak_planks')='#b08a50'`, `blockColor('red_wool')='#b02e26'`, fallback unknown retourne bien l'argument). Parse-check complet OK via `new Function(colorsSrc + '\n' + appSrc)`.
 
 ### 2026-04-19 — Tâche 5 (refreshed plan) : Tests unitaires history.py
 
@@ -422,13 +419,6 @@
 - **Commits :** 39e5db8 test(badges): add unit tests for tiers, progress, increvable, and meta-badges
 - **Résumé :** 16 tests (`python -m unittest discover -s tests -v` → `Ran 16 tests in 0.002s / OK`) couvrant `get_tier` (3), `_compute_progress` (4), `_increvable` (4) et `compute_player_badges` (5, dont vérification des 35 entrées + présence de `all_rounder` / `legende` en catégorie `prestige`). Fixture "toutes catégories bronze" implémentée en mode brute-force : tous les champs pertinents (top-level + `badge_data` + `distances` + `killed_by`) mis à `1e9` pour garantir diamond sur chaque badge standard, ce qui prouve a fortiori que toutes les catégories META ont au moins bronze. Robuste aux futures modifs de `BADGES`. Subtilité notée : avec le fixture maxed, `_increvable` = hours/deaths, donc `deaths` doit être volontairement modéré (10) pour que le ratio reste élevé — toutes les catégories passent quand même car 10 == seuil bronze de `kamikaze`.
 - **Effets de bord :** nouveaux fichiers `tests/__init__.py` (vide) + `tests/test_badges.py` (~210 lignes). Aucune modification de `scripts/minecraft/badges.py`.
-
-### 2026-04-19 — Tâche 4 (refreshed plan) : Extraction colors.js + palette unifiée
-
-- **Branche :** refactor/task-4-extract-colors
-- **Commits :** `c2a7ac3` refactor(colors): extract palettes and block-color maps to colors.js · `ae0115c` refactor(colors): replace 4 duplicate palettes with CHART_PALETTE · `1ccffd1` chore: regenerate dashboards after colors extraction
-- **Résumé :** Extraction de toutes les définitions de couleurs et helpers associés dans un nouveau fichier `stats/assets/colors.js` (97 lignes) : palette d'identité joueur (`PALETTE`, `_PALETTE_HUES`, `_hslHex`, `playerColor`), maps de couleurs de blocs (`BLOCK_COLORS` + `DYE_COLORS`/`WOOD_COLORS`/`LEAF_COLORS` + `blockColor()` et suffixes). Nouvelle constante `CHART_PALETTE` (15 teintes : 8 premières alignées sur l'identité mais démarrant par le violet brand `#7c6aef`, + 7 teintes muted/dark pour couvrir la taille max de l'ancienne palette `fallback` du treemap) remplace 4 tableaux dupliqués inline (treemap `fallback`, doughnut `deathColors`, stacked bar `distColors`, per-player bar `dp`). `app.js` passe de **1197 → 1123 lignes** (-74). `PLAYER_COLORS_MAP` reste construit dans `app.js` (dépend de `PLAYERS_DATA`) mais utilise `playerColor()` du scope global partagé.
-- **Effets de bord :** nouveau fichier `stats/assets/colors.js`, `generate.py` injecte 1 `<script src="../assets/colors.js">` avant `app.js`, régénération de serveur-2026 et serveur-2020 (hermitcraft-s10 non re-généré — hors demande). Smoke test via `deno eval` : tous les symboles retournent les bonnes valeurs (PALETTE 8 hues, CHART_PALETTE 15, 82 BLOCK_COLORS, `blockColor('diamond_ore')='#5ecfd5'`, `blockColor('oak_planks')='#b08a50'`, `blockColor('red_wool')='#b02e26'`, fallback unknown retourne bien l'argument). Parse-check complet OK via `new Function(colorsSrc + '\n' + appSrc)`.
 
 ### 2026-04-19 — Tâche 7 (refreshed plan) : Métrique streak sous heatmap
 
@@ -474,6 +464,16 @@
 - **Commits :** 9ceefa5 feat(ui): add 30-day playtime sparkline to player profile, 553f83a chore: regenerate dashboards
 - **Résumé :** Nouvelle fonction `buildSparklineSvg(daily, color)` dans `stats/assets/app.js` (SVG inline 100×20, viewBox non proportionnel, `preserveAspectRatio="none"`). Affichée sous le chiffre "playtime" dans `profile-header` (juste après `deltaSub`), couleur = `PLAYER_COLORS_MAP[name]`. Fenêtre = 30 derniers jours finissant aujourd'hui ; polyline cassée en segments consécutifs aux jours manquants (pas de faux zéros, cohérent avec la convention heatmap) ; dernier point défini marqué d'un petit `<circle>` (r=1.8) avec `<title>` tooltip `YYYY-MM-DD — Xh`. Silencieuse (retourne `''`) si < 7 points connus sur la fenêtre.
 - **Effets de bord :** nouvelle règle CSS `.sparkline` dans `stats/assets/styles.css` (`display:block; width:100px; height:20px; margin:.4rem auto 0; opacity:.85` ; override mobile `margin:.3rem 0 0` sous 768 px). Régénération des 2 dashboards (diff = timestamp sync uniquement, la sparkline est rendue côté JS à la volée dans `buildPlayerSection`). `serveur-2020` n'a pas de `daily_hours` → silencieuse pour tous les joueurs ; `serveur-2026` : rendu attendu pour les joueurs avec ≥ 7 jours de snapshots consécutifs.
+
+### 2026-04-19 — Tâche 13 (refreshed plan) : Vue comparaison 2 joueurs
+
+- **Branche :** refactor/task-13-compare-view
+- **Commits :** b10249c (feat compare view), 0870bc6 (regen dashboards)
+- **Résumé :** Nouvelle section route-able `#compare/<a>/<b>` lazy-rendue (cache `renderedCompares`). Mini profile-headers côte-à-côte, radar 2-séries (6 axes normalisés, mêmes métriques que le radar overview) et table de diff où le leader prend la couleur d'identité du joueur. Router étendu dans `sectionToHash`/`hashToSection` avec validation `playerNames.includes()` (fallback silencieux vers `overview` en cas de joueur inexistant). Guard `a===b` → redirect `#player/<a>`.
+- **UX entry-point :** Bouton « 🔀 Comparer » dans la nav qui toggle un petit formulaire inline (2 `<select>` + bouton Go) flottant sous le bouton. Click-outside ferme, Entrée sur un select déclenche Go, pré-remplissage des 2 joueurs les plus joués à l'ouverture. Listener click-outside enregistré une seule fois (guard `buildNav._outsideClickBound`) pour survivre aux `buildNav()` successifs du switch FR/EN.
+- **i18n :** 7 clés ajoutées (`nav_compare_btn`, `nav_compare_label`, `compare_go`, `compare_select_placeholder`, `compare_radar`, `compare_table`, `compare_metric`) dans `T.fr` avec overrides EN.
+- **CSS :** styles pour `.compare-headers` (2 colonnes desktop, 1 mobile), `.compare-table` (tabular-nums), `.nav-compare-wrap` + `.nav-compare-form` (position absolue desktop, fixed bottom mobile).
+- **Effets de bord :** `app.js` 1197 → 1378 lignes (+181), `styles.css` 295 → 334 (+39). Régénération des 2 dashboards (`serveur-2026` 50 047 o, `serveur-2020` 65 851 o). `deno check` OK, `python -m py_compile` OK.
 
 ### 2026-04-19 — Tâche 14 (refreshed plan) : A11y skip-link + aria treemap
 

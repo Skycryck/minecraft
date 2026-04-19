@@ -19,6 +19,8 @@ body{
     radial-gradient(ellipse 60% 40% at 80% 100%,rgba(62,207,142,.04),transparent);
 }
 a{color:var(--accent-light);text-decoration:none}
+.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:10000}
+.skip-link:focus{position:fixed;left:1rem;top:1rem;width:auto;height:auto;padding:.75rem 1rem;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:.85rem;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}

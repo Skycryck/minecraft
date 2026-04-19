@@ -85,6 +85,7 @@ hm_less:'Moins',hm_more:'Plus',
 hm_hours_unit:'h',
 card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
 card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
+card_rank_changes:'Mouvements cette semaine',rank_passes:'dépasse',rank_on:'sur',
 no_death:'Aucune mort',no_data:'Pas assez de données',
 no_blocks:'Aucun bloc miné',no_tools:'Aucun outil cassé',
 badges_title:'Badges & Achievements',badges_unlocked:'badges débloqués',
@@ -179,6 +180,7 @@ travel_time_sub:(h,pct)=>`≈ ${h}h traveling · ${pct}% of playtime`,
 card_killed_by:'Killed by',card_treemap:'Blocks mined — Treemap',
 card_top15_mined:'Top 15 blocks mined',card_top10_killed:'Top 10 mobs killed',
 card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',
+card_rank_changes:'This week\'s movements',rank_passes:'passes',rank_on:'on',
 no_death:'No deaths',no_data:'Not enough data',
 no_blocks:'No blocks mined',no_tools:'No tools broken',
 badges_unlocked:'badges unlocked',
@@ -739,6 +741,22 @@ function ensurePlayerSection(name){
 // ═══════════════════════════════════════
 // OVERVIEW
 // ═══════════════════════════════════════
+function buildRankChangesHtml(){
+  const changes=window.RANK_CHANGES||[];
+  if(!changes.length)return '';
+  const metricKey={play_hours:'playtime',total_mined:'mined',mob_kills:'kills',total_crafted:'crafted'};
+  const rows=changes.slice(0,5).map(c=>{
+    const metricLabel=t('radar_'+(metricKey[c.metric]||c.metric));
+    const pColor=PLAYER_COLORS_MAP[c.player]||'var(--accent-light)';
+    const oColor=PLAYER_COLORS_MAP[c.overtaken]||'var(--text-dim)';
+    const playerLink=`<a href="#player/${encodeURIComponent(c.player)}" style="color:${pColor};font-weight:600">${c.player}</a>`;
+    const overtakenLink=`<a href="#player/${encodeURIComponent(c.overtaken)}" style="color:${oColor}">${c.overtaken}</a>`;
+    return `<li>${playerLink} ${t('rank_passes')} ${overtakenLink} ${t('rank_on')} <b>${metricLabel}</b> (+${c.delta_rank})</li>`;
+  }).join('');
+  return `<div class="card" id="rank-changes-card"><h3><span class="icon">${mcIcon('nether_star')}</span> ${t('card_rank_changes')}</h3>
+    <ul class="rank-changes">${rows}</ul></div>`;
+}
+
 function buildOverview(){
   return `
   <div class="section active" id="overview">
@@ -748,6 +766,7 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div>${deltaSub(deltaTotals?.mob_kills)}</div>
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
+    ${buildRankChangesHtml()}
     <div class="grid grid-2-fixed">
       <div class="card" data-chart-card="chart-playtime"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
       <div class="card" data-chart-card="chart-distance"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>

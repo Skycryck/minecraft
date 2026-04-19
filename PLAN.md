@@ -384,6 +384,13 @@
 - **Résumé :** Déplacement de `T` (fr+en), `t()`, `label()`, `lang` et du helper `mcIcon()` (+ `_MI`/`_HR`/`MC_ICONS_HR`) depuis `stats/assets/app.js` vers le nouveau fichier `stats/assets/i18n.js`. Pattern retenu : bindings classiques `let`/`const` au top-level — les scripts classiques partagent le scope lexical global, donc `app.js` voit directement `lang`/`T`/`t`/`label`/`mcIcon` sans passer par `window.*` (zéro changement de référence côté `app.js`). Le helper d'icônes a été co-localisé car `T` l'invoque à l'initialisation. `app.js` passe de **1197 → 993 lignes** (−204) ; `i18n.js` fait 217 lignes.
 - **Effets de bord :** nouveau fichier `stats/assets/i18n.js`, `generate.py` injecte un `<script src="../assets/i18n.js">` supplémentaire (avant `app.js`), régénération des deux dashboards (`serveur-2026`, `serveur-2020`). Test navigateur : bascule FR/EN OK, navigation joueur OK, aucune erreur console.
 
+### 2026-04-19 — Tâche 1 : Deltas négatifs/nuls honnêtes
+
+- **Branche :** refactor/task-1-delta-signs
+- **Commits :** 4d2bb00 fix(ui): show neutral and negative deltas honestly
+- **Résumé :** `deltaSub()` dans `stats/assets/app.js` distingue désormais trois états visuels : `> 0` → `↑ +X` vert (`--c-mining`), `=== 0` → `= 0` gris muted (`--text-muted`), `< 0` → `↓ -X` rouge (`--c-combat`, valeur absolue). Seul un baseline absent (`value==null` ou `!_baselineDays`) masque encore la ligne. La couleur est déplacée de la règle de base `.delta-sub` vers trois modificateurs (`.delta-sub--pos/--zero/--neg`) dans `stats/assets/styles.css` ; la base conserve layout + typographie pour que les sélecteurs `.stat-tile .delta-sub` / `.profile-stat .delta-sub` continuent de fonctionner sur les 7 call sites (overview ×4, profile-stat playtime, stat-tiles joueur ×3). Un joueur inactif pendant la fenêtre de baseline ne ressemble plus à un joueur sans baseline — l'info est honnête.
+- **Effets de bord :** régénération des 2 dashboards (serveur-2026 + serveur-2020)
+
 ---
 
 ## 🚫 Anti-patterns à éviter

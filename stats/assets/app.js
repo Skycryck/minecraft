@@ -398,11 +398,19 @@ const deltaTotals=_hasBaseline?{
   play_hours:_sumDelta('play_hours'),total_mined:_sumDelta('total_mined'),
   mob_kills:_sumDelta('mob_kills'),total_crafted:_sumDelta('total_crafted'),
 }:null;
-// Render a "↑ +12h (6j)" sub-line; returns '' if delta missing or ≤ 0.
+// Render a delta sub-line ("↑ +12h (6j)" / "= 0h (6j)" / "↓ -3h (6j)").
+// Returns '' only when no baseline exists — otherwise shows the real state
+// (inactive = neutral grey, regression = red) so players without progress
+// can't be confused with players that have no baseline.
 function deltaSub(value,suffix=''){
-  if(value==null||value<=0||!_baselineDays)return'';
-  const v=Number.isInteger(value)?fmt(value):fmt(Math.round(value*10)/10);
-  return `<div class="sub delta-sub">↑ +${v}${suffix} (${_baselineDays}${t('delta_unit')})</div>`;
+  if(value==null||!_baselineDays)return'';
+  const abs=Math.abs(value);
+  const v=Number.isInteger(abs)?fmt(abs):fmt(Math.round(abs*10)/10);
+  let mod,arrow,sign;
+  if(value>0){mod='pos';arrow='↑';sign='+'}
+  else if(value<0){mod='neg';arrow='↓';sign='-'}
+  else{mod='zero';arrow='=';sign=''}
+  return `<div class="sub delta-sub delta-sub--${mod}">${arrow} ${sign}${v}${suffix} (${_baselineDays}${t('delta_unit')})</div>`;
 }
 
 function updateGlobalMeta(){

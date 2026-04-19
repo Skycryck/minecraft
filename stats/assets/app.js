@@ -204,7 +204,10 @@ function buildTreemapHtml(entries){
     // Label threshold uses min dimension rather than area: a rect with enough
     // width AND height can fit the 2-line label regardless of its total area.
     // An area-based check mis-hides tall+narrow rects that have room for text.
-    const showLabel=r.w>=10 && r.h>=9;
+    // Higher threshold on mobile: rects under ~50px wide can't fit a label
+    // without mid-word breaks, tooltip (tap) covers those.
+    const mobile=isMobile();
+    const showLabel=mobile?(r.w>=18 && r.h>=14):(r.w>=10 && r.h>=9);
     const tip=`${label(r.k)} · ${fmt(r.v)} (${p.toFixed(1)}%)`;
     return `<div class="treemap-item" role="img" aria-label="${tip}" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
   }).join('')}</div>`;

@@ -428,6 +428,13 @@
 - **Effets de bord :** 2 nouvelles clés i18n (`hm_streak_current`, `hm_streak_longest`) dupliquées dans `T.fr` et `T.en`. Régénération des 2 dashboards : `serveur-2026` 50 221 o, 3 joueurs ont une clé `streaks` (longest runs de 2 jours) ; `serveur-2020` 65 851 o inchangé (pas de dossier `snapshots/`, `compute_daily_play_hours` retourne `{}` → aucun joueur ne reçoit `streaks`, dégradation propre — le suffixe est vide et la ligne meta garde son ancien format).
 - **Invariants vérifiés :** `current ≤ longest ≤ total_active_days` sur les 3 entrées générées (ex. `{current:0,longest:2,total_active_days:3}`). Pas de test automatisé ajouté (scaffolding tests en tâche 5 sur une autre branche).
 
+### 2026-04-19 — Tâche 8 (refreshed plan) : Heatmap serveur agrégée
+
+- **Branche :** refactor/task-8-server-heatmap
+- **Commits :** e8f9f37 feat(history): aggregate daily hours across all players, b960d45 feat(ui): add server-wide activity heatmap to overview, d52a7f8 chore: regenerate dashboards with server heatmap data
+- **Résumé :** Nouvelle fonction `aggregate_daily_hours(daily_hours)` dans `scripts/minecraft/history.py` (somme des heures/jour agrégées par UUID, arrondi 2 déc.). `generate.py` l'appelle puis la passe à `generate_html(..., server_daily)` qui injecte `window.SERVER_DAILY` dans le shell HTML. Côté JS, `buildServerHeatmapHtml()` (nouveau, à côté de `buildHeatmapHtml`) rend une SVG 52×7 calquée sur la version par joueur mais avec des seuils ajustés aux totaux serveur (buckets `[1, 5, 15, 30]`) et la teinte `--accent` (`#7c6aef`) au lieu d'une identité joueur. La carte est insérée dans `buildOverview()` entre les stat-tiles et la grille des 4 bar-charts ; si `SERVER_DAILY` est `{}` la fonction retourne `''` et la carte disparaît sans template orphelin.
+- **Effets de bord :** 1 clé i18n ajoutée (`card_server_heatmap`, FR + EN), signature `generate_html` élargie d'un arg optionnel `server_daily`, régénération des 2 dashboards. `serveur-2020` n'a pas de `snapshots/` donc `SERVER_DAILY = {}` et la carte reste absente — `serveur-2026` affiche la heatmap agrégée (4 jours actifs visibles, max 11.4h cumulées le 13/04).
+
 ---
 
 ## 🚫 Anti-patterns à éviter

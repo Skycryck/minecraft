@@ -478,6 +478,7 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div>${deltaSub(deltaTotals?.mob_kills)}</div>
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
+    ${buildServerHeatmapHtml()}
     <div class="grid grid-2-fixed">
       <div class="card" data-chart-card="chart-playtime"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
       <div class="card" data-chart-card="chart-distance"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
@@ -782,6 +783,55 @@ function buildHeatmapHtml(name){
     :'';
   return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_heatmap')}</h3>
     <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}${streakSuffix}</div>
+    <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
+    <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
+  </div>`;
+}
+
+// Server-wide activity heatmap (52 weeks × 7 days).
+// Reads window.SERVER_DAILY = {YYYY-MM-DD: total_hours_all_players} (Python-side
+// sum of each player's daily_hours). Differs from buildHeatmapHtml: uses --accent
+// as the hue (no player identity) and buckets scaled for server totals.
+// Duplication with buildHeatmapHtml is intentional — bucketing & coloring diverge
+// enough that sharing logic would hurt readability.
+function buildServerHeatmapHtml(){
+  const daily=window.SERVER_DAILY||{};
+  if(!Object.keys(daily).length)return'';
+  const color='#7c6aef'; // matches --accent
+  const weeks=52,cell=11,gap=2;
+  const today=new Date();today.setHours(0,0,0,0);
+  const dow=(today.getDay()+6)%7;
+  const lastMon=new Date(today);lastMon.setDate(today.getDate()-dow);
+  const bucket=v=>v<1?0:v<5?1:v<15?2:v<30?3:4;
+  const op=[0,0.3,0.55,0.8,1.0];
+  const w=weeks*(cell+gap)-gap,h=7*(cell+gap)-gap;
+  const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let cells='',totalHours=0,daysActive=0,monthLabels='';
+  let lastMonthLabel=-1;
+  for(let wi=0;wi<weeks;wi++){
+    const colMon=new Date(lastMon);colMon.setDate(lastMon.getDate()-(weeks-1-wi)*7);
+    if(colMon.getMonth()!==lastMonthLabel&&colMon.getDate()<=7){
+      monthLabels+=`<text x="${wi*(cell+gap)}" y="-3" class="hm-label">${colMon.toLocaleDateString(lang==='fr'?'fr-FR':'en-US',{month:'short'})}</text>`;
+      lastMonthLabel=colMon.getMonth();
+    }
+    for(let di=0;di<7;di++){
+      const day=new Date(colMon);day.setDate(colMon.getDate()+di);
+      if(day>today)continue;
+      const iso=isoLocal(day);
+      const v=daily[iso];
+      const x=wi*(cell+gap),y=di*(cell+gap);
+      if(v===undefined){
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} — ${t('hm_no_data')}</title></rect>`;
+      }else{
+        totalHours+=v;daysActive++;
+        const b=bucket(v);
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} — ${v}${t('hm_hours_unit')}</title></rect>`;
+      }
+    }
+  }
+  const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
+  return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_server_heatmap')}</h3>
+    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(0)}${t('hm_hours_unit')} total</div>
     <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
   </div>`;

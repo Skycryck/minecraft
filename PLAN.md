@@ -398,6 +398,14 @@
 - **Résumé :** Ajout de `integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"` et `crossorigin="anonymous"` sur le tag `<script>` Chart.js 4.4.1 dans `scripts/generate.py`. Hash SHA-384 calculé via `urllib` + `hashlib` sur le bundle cdnjs (200 807 octets), vérifié deux fois à l'identique. Protège les dashboards contre une compromission du CDN cdnjs.
 - **Effets de bord :** régénération des 2 dashboards (`serveur-2026` 50 155 o, `serveur-2020` 65 959 o) — les 2 `index.html` contiennent désormais l'attribut `integrity=`.
 
+### 2026-04-19 — Tâche 5 (refreshed plan) : Tests unitaires history.py
+
+- **Branche :** `refactor/task-5-tests-history`
+- **Commits :** `7682bd6` test(history): add unit tests for find_baseline_snapshot, compute_daily_play_hours, compute_deltas ; `6ea66d3` docs(readme): document how to run tests
+- **Résumé :** 13 tests couvrant `find_baseline_snapshot` (6), `load_baseline_metrics` (2), `compute_daily_play_hours` (2), `compute_deltas` (3). Fixtures construites à la volée via `tempfile.TemporaryDirectory` + helper `_make_snapshot` qui écrit le schéma minimal attendu par `_extract_metrics` (ticks = heures × 72 000). Tous passent : `Ran 13 tests in 0.018s — OK`.
+- **Effets de bord :** nouveau dossier `tests/` (`__init__.py` + `test_history.py`, stdlib uniquement) ; section "Running tests" ajoutée au README ; aucune modif de `scripts/minecraft/history.py` (tests en boîte noire).
+- **Clarifications en écrivant les tests :** le contrat `not baseline` de `compute_deltas` absorbe à la fois `None` et `{}` — les deux renvoient `None`, c'est testé explicitement. Le cas de tie-break exact (ages équidistants de la cible) n'est pas testé : le résultat dépend de l'ordre d'itération de `Path.iterdir()` (filesystem-dependent), un test déterministe sans toucher au module a été écarté. Le cas sans ambiguïté (`target=7`, ages 6/10/14 → 6) est testé à la place.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

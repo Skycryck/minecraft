@@ -204,3 +204,11 @@ Minecraft UUIDs are resolved to usernames via the Mojang session-server API. Res
 ### Shared frontend assets
 
 `stats/assets/styles.css` and `stats/assets/app.js` are shared across every server dashboard. `generate.py` only emits a ~30-line HTML shell that injects `window.PLAYERS_DATA` and loads these static files. Minecraft icons under `stats/assets/icons/` are pre-rendered 256×256 PNGs (via `scripts/build_icons.py`) committed to the repo so the dashboard has no runtime CDN dependency for its core visuals.
+
+## Running tests
+
+Unit tests for the snapshot/delta logic live under `tests/` and use the Python stdlib `unittest` runner — no extra dependencies. From the repo root:
+
+```bash
+python -m unittest discover -s tests
+```

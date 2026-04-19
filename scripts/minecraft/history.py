@@ -140,6 +140,21 @@ def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]
     return result
 
 
+def aggregate_daily_hours(
+    daily_hours: dict[str, dict[str, float]],
+) -> dict[str, float]:
+    """Sum per-day hours across all players.
+
+    Input: {uuid: {YYYY-MM-DD: hours}}
+    Output: {YYYY-MM-DD: total_hours_across_all_players} rounded to 2 decimals.
+    """
+    totals: dict[str, float] = {}
+    for per_day in daily_hours.values():
+        for iso, hours in per_day.items():
+            totals[iso] = totals.get(iso, 0.0) + hours
+    return {iso: round(h, 2) for iso, h in totals.items()}
+
+
 def compute_deltas(current: dict, baseline: dict | None) -> dict | None:
     """Return `{key: current - baseline}` for `DELTA_KEYS`, or None.
 

@@ -513,6 +513,13 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 10 (refreshed plan) : Contexte relatif stat-tiles joueur
+
+- **Branche :** refactor/task-10-relative-context
+- **Commits :** 5861595 feat(ui): add "X% du serveur" context line under player stat-tiles, 615a0d9 chore: regenerate dashboards
+- **Résumé :** 4 stat-tiles joueur (mined, kills, deaths, crafted) affichent "X% du serveur" en sous-ligne. Nouvelle classe `.ctx-sub` + helper `ctxPct()`. Filtre 0% pour ne pas polluer.
+- **Effets de bord :** 1 clé i18n (`ctx_of_server`), régénération des 2 dashboards
+
 ---
 
 ## 🚫 Anti-patterns à éviter

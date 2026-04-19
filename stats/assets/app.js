@@ -687,7 +687,14 @@ function navigateTo(section){
 }
 
 function showSection(id){
+  // Destroy all charts from the section we are leaving — cheapest correct
+  // path: each render function re-creates its own charts on entry, and
+  // destroyChart() is idempotent, so double-destroy is harmless.
+  if(id!==currentSection){
+    for(const cid in charts){charts[cid].destroy();delete charts[cid]}
+  }
   currentSection=id;
+  if(id.startsWith('player-'))ensurePlayerSection(id.replace('player-',''));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);
   if(el)el.classList.add('active');
@@ -713,10 +720,20 @@ window.matchMedia('(max-width:600px)').addEventListener('change',()=>{
   initLeaderboardCollapse();
 });
 
+// Lazy section rendering: only overview + leaderboards (shared across all
+// players) land in the initial DOM. Per-player sections are appended on
+// first visit via ensurePlayerSection() and memoized for re-entry. Keeps
+// the initial innerHTML small even with 20+ players.
+const renderedPlayers=new Set();
 function buildAllSections(){
-  let h='';h+=buildOverview();h+=buildLeaderboards();
-  playerNames.forEach(name=>{h+=buildPlayerSection(name)});
-  contentEl.innerHTML=h;
+  contentEl.innerHTML=buildOverview()+buildLeaderboards();
+  renderedPlayers.clear();
+}
+function ensurePlayerSection(name){
+  if(renderedPlayers.has(name))return;
+  if(!playerNames.includes(name))return;
+  contentEl.insertAdjacentHTML('beforeend',buildPlayerSection(name));
+  renderedPlayers.add(name);
 }
 
 // ═══════════════════════════════════════

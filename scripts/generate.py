@@ -231,6 +231,7 @@ def generate_html(
 <link rel="stylesheet" href="../assets/styles.css">
 </head>
 <body>
+<a href="#content" class="skip-link">Aller au contenu</a>
 <div class="app">
 <div class="header">
   <h1><img class="mc-icon-hr" style="width:48px;height:48px;margin-right:.3rem" src="../assets/icons/diamond_pickaxe.png" alt="pickaxe"> {title}</h1>

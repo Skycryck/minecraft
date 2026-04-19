@@ -477,6 +477,13 @@
 - **Résumé :** Nouvelle fonction `buildSparklineSvg(daily, color)` dans `stats/assets/app.js` (SVG inline 100×20, viewBox non proportionnel, `preserveAspectRatio="none"`). Affichée sous le chiffre "playtime" dans `profile-header` (juste après `deltaSub`), couleur = `PLAYER_COLORS_MAP[name]`. Fenêtre = 30 derniers jours finissant aujourd'hui ; polyline cassée en segments consécutifs aux jours manquants (pas de faux zéros, cohérent avec la convention heatmap) ; dernier point défini marqué d'un petit `<circle>` (r=1.8) avec `<title>` tooltip `YYYY-MM-DD — Xh`. Silencieuse (retourne `''`) si < 7 points connus sur la fenêtre.
 - **Effets de bord :** nouvelle règle CSS `.sparkline` dans `stats/assets/styles.css` (`display:block; width:100px; height:20px; margin:.4rem auto 0; opacity:.85` ; override mobile `margin:.3rem 0 0` sous 768 px). Régénération des 2 dashboards (diff = timestamp sync uniquement, la sparkline est rendue côté JS à la volée dans `buildPlayerSection`). `serveur-2020` n'a pas de `daily_hours` → silencieuse pour tous les joueurs ; `serveur-2026` : rendu attendu pour les joueurs avec ≥ 7 jours de snapshots consécutifs.
 
+### 2026-04-19 — Tâche 14 (refreshed plan) : A11y skip-link + aria treemap
+
+- **Branche :** refactor/task-14-a11y
+- **Commits :** ead5492, 595f609, d349b48
+- **Résumé :** Ajout d'un skip-link en tête de body (invisible jusqu'au focus, cible #content). Chaque .treemap-item reçoit role="img" + aria-label. La nav player select avait déjà un aria-label (confirmé).
+- **Effets de bord :** 1 règle CSS ajoutée, régénération des 2 dashboards
+
 ---
 
 ## 🚫 Anti-patterns à éviter

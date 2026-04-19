@@ -206,7 +206,7 @@ function buildTreemapHtml(entries){
     // An area-based check mis-hides tall+narrow rects that have room for text.
     const showLabel=r.w>=10 && r.h>=9;
     const tip=`${label(r.k)} · ${fmt(r.v)} (${p.toFixed(1)}%)`;
-    return `<div class="treemap-item" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
+    return `<div class="treemap-item" role="img" aria-label="${tip}" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
   }).join('')}</div>`;
 }
 

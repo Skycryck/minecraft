@@ -513,6 +513,16 @@
 - Tailles des HTML générés inchangées : `serveur-2026` 50 047 o, `serveur-2020` 65 851 o, `hermitcraft-s10` 379 141 o — logique, le JS est externe et le JSON embarqué identique.
 - `python -m py_compile scripts/generate.py` OK, `deno check stats/assets/app.js` exit 0. 3 dashboards régénérés sans erreur.
 
+### 2026-04-19 — Tâche 9 (refreshed plan) : Bar overview unifiée
+
+- **Branche :** `refactor/task-9-overview-unified-bar`
+- **Commits :** `1da1e8b` feat(ui): unify overview bar charts behind a metric selector, `b420b3b` chore: regenerate dashboards
+- **Résumé :** Les 4 bar charts de l'overview (playtime/distance/mined/kills) sont remplacés par 1 seule carte `chart-overview-bar` avec un `<select id="overviewMetric">` à 6 options (play_hours, total_mined, mob_kills, total_distance_km, total_crafted, deaths). Les labels d'options réutilisent les clés `radar_*` existantes. `renderOverviewCharts` expose un tableau `METRICS` et invoque le helper `mkBar` existant (signature inchangée) avec la métrique courante ; le listener `change` est branché une seule fois via le flag `sel.dataset.wired`. Radar et stat-tiles intouchés. Persistance localStorage (`mc-overview-metric`) implémentée — 5 lignes, trivial.
+- **Effets de bord i18n :** ajout de `chart_overview_bar`, `overview_metric_label`, `axis_deaths` dans `T.fr` et `T.en`. Suppression des 4 clés orphelines `chart_playtime`/`chart_distance`/`chart_mined`/`chart_kills` dans les deux dicts (grep confirme : usage uniquement dans les 4 cartes supprimées). `axis_crafted` non ajouté — on réutilise `axis_blocks` comme prévu par le plan.
+- **CSS :** nouvelle classe `.overview-metric-select` (mime `.nav-player-select` mais min-height 36px au lieu de 50) + `.overview-bar-header` (flex space-between pour poser le select à droite du h3) + `.sr-only` (utility pour le `<label>` accessible). Dans `stats/assets/styles.css`.
+- **Régénération :** `serveur-2026` 50 047 o et `serveur-2020` 65 851 o régénérés (tailles identiques, JS externe).
+- **Smoke test navigateur :** non effectué (pas de browser dans ce worktree) ; vérification par grep — 0 occurrence des 4 anciens canvas IDs dans `app.js`, 7 occurrences de `overviewMetric`/`chart-overview-bar`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

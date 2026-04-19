@@ -151,7 +151,7 @@ This repo has **two remotes**: `origin` (private-ish personal data hosted via Pa
 
 `scripts/mirror-to-public.ps1` rebuilds `public-main` from `main`:
 
-- Switches to `public-main` (creates as orphan if missing), recopies `main`'s tree, removes paths listed in `-Exclude` (default: `stats/serveur-2026`, `stats/serveur-2020`, `scripts/sync-stats.ps1`, `PLAN.md`), commits `"mirror from main @ <sha>"`.
+- Switches to `public-main` (creates as orphan if missing), recopies `main`'s tree, removes paths listed in `-Exclude` (default: `stats/serveur-2026`, `stats/serveur-2020`, `stats/hermitcraft-s10`, `scripts/sync-stats.ps1`, `scripts/mirror-to-public.ps1`, `docs`), commits `"mirror from main @ <sha>"`.
 - `public-main` history is a linear chain of mirror commits (orphan root). Personal-data commits from `main` never appear in `public-main`'s history, so pushing to the public remote doesn't leak them.
 - Run after every code change that should land in the public template: `.\scripts\mirror-to-public.ps1 -Push` (requires `git remote add public <url>` once).
 
@@ -159,6 +159,6 @@ This repo has **two remotes**: `origin` (private-ish personal data hosted via Pa
 
 - `stats/serveur-2026/`, `stats/serveur-2020/`, `stats/hermitcraft-s10/` — personal and demo server data + snapshots
 - `scripts/sync-stats.ps1` — Crafty-specific + Windows-specific, too niche for a template
-- `PLAN.md` — internal dev planning log
+- `docs/` — internal dev planning logs (historiques FR des refactorings)
 
 Shared assets (`stats/assets/`), workflows, generator, badges, and docs are all kept — the template is fully functional out of the box, users just drop their own `stats/<server>/data/*.json` in.

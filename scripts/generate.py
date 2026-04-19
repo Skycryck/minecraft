@@ -237,6 +237,7 @@ window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
 window.BASELINE_DATE = {baseline_json};
 window.ICONS_HR = {icons_json};
 </script>
+<script src="../assets/colors.js"></script>
 <script src="../assets/app.js"></script>
 </body>
 </html>'''

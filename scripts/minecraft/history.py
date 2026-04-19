@@ -140,6 +140,148 @@ def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]
     return result
 
 
+def compute_streaks(
+    daily_hours: dict[str, dict[str, float]],
+    today: date | None = None,
+) -> dict[str, dict]:
+    """Per UUID, return {current, longest, total_active_days}.
+
+    - total_active_days = count of entries in daily_hours[uuid]
+    - longest = max run of consecutive ISO dates present in daily_hours[uuid]
+    - current = length of the consecutive run ending at `today` (default
+      `date.today()`); 0 if today's date isn't in the dict.
+
+    Returns {} if `daily_hours` is empty. UUIDs with no entries are skipped.
+    """
+    if not daily_hours:
+        return {}
+    today = today or date.today()
+    out: dict[str, dict] = {}
+    for uuid, days in daily_hours.items():
+        if not days:
+            continue
+        parsed: list[date] = []
+        for iso in days.keys():
+            try:
+                parsed.append(date.fromisoformat(iso))
+            except ValueError:
+                continue
+        if not parsed:
+            continue
+        parsed.sort()
+        # Longest consecutive run
+        longest = 1
+        run = 1
+        for i in range(1, len(parsed)):
+            if (parsed[i] - parsed[i - 1]).days == 1:
+                run += 1
+                if run > longest:
+                    longest = run
+            else:
+                run = 1
+        # Current run ending at `today`
+        day_set = set(parsed)
+        current = 0
+        if today in day_set:
+            cursor = today
+            while cursor in day_set:
+                current += 1
+                cursor = cursor - timedelta(days=1)
+        out[uuid] = {
+            "current": current,
+            "longest": longest,
+            "total_active_days": len(parsed),
+        }
+    return out
+
+
+def aggregate_daily_hours(
+    daily_hours: dict[str, dict[str, float]],
+) -> dict[str, float]:
+    """Sum per-day hours across all players.
+
+    Input: {uuid: {YYYY-MM-DD: hours}}
+    Output: {YYYY-MM-DD: total_hours_across_all_players} rounded to 2 decimals.
+    """
+    totals: dict[str, float] = {}
+    for per_day in daily_hours.values():
+        for iso, hours in per_day.items():
+            totals[iso] = totals.get(iso, 0.0) + hours
+    return {iso: round(h, 2) for iso, h in totals.items()}
+
+
+def compute_rank_changes(
+    current_players: dict[str, dict],
+    baseline_metrics: dict[str, dict],
+    uuid_to_name: dict[str, str],
+    keys: tuple[str, ...] = DELTA_KEYS,
+) -> list[dict]:
+    """Return the list of significant rank changes between baseline and now.
+
+    For each tracked metric we rank players by descending value at baseline
+    and today, then emit an entry whenever a player's rank improved (delta
+    > 0) AND a specific "overtaken" player can be identified — namely the
+    player now just behind them who was ahead of them at baseline.
+
+    Returned list is sorted by `delta_rank` desc then `current_value` desc
+    and capped at 10 entries. No "loss" narrative is ever emitted — only
+    improvements, so the feature stays feel-good on a public dashboard.
+    """
+    if not current_players or not baseline_metrics:
+        return []
+    name_to_uuid = {v: k for k, v in uuid_to_name.items()}
+    out: list[dict] = []
+    for metric in keys:
+        ranked_cur = sorted(
+            [
+                (name, p.get(metric, 0) or 0)
+                for name, p in current_players.items()
+                if name_to_uuid.get(name) in baseline_metrics
+            ],
+            key=lambda x: -x[1],
+        )
+        ranked_base = sorted(
+            [
+                (uuid_to_name[uuid], m.get(metric, 0) or 0)
+                for uuid, m in baseline_metrics.items()
+                if uuid in uuid_to_name
+            ],
+            key=lambda x: -x[1],
+        )
+        cur_rank = {name: i for i, (name, _) in enumerate(ranked_cur)}
+        base_rank = {name: i for i, (name, _) in enumerate(ranked_base)}
+        cur_value = dict(ranked_cur)
+        base_value = dict(ranked_base)
+        for name, _ in ranked_cur:
+            if name not in base_rank:
+                continue
+            delta = base_rank[name] - cur_rank[name]
+            if delta <= 0:
+                continue
+            my_cur = cur_rank[name]
+            my_base = base_rank[name]
+            overtaken = next(
+                (
+                    n
+                    for n, r in cur_rank.items()
+                    if r == my_cur + 1 and base_rank.get(n, 10**9) < my_base
+                ),
+                None,
+            )
+            if not overtaken:
+                continue
+            out.append({
+                "metric": metric,
+                "player": name,
+                "overtaken": overtaken,
+                "delta_rank": delta,
+                "current_value": cur_value[name],
+                "baseline_value": base_value.get(name, 0),
+            })
+    out.sort(key=lambda x: (-x["delta_rank"], -x["current_value"]))
+    return out[:10]
+
+
 def compute_deltas(current: dict, baseline: dict | None) -> dict | None:
     """Return `{key: current - baseline}` for `DELTA_KEYS`, or None.
 

@@ -6,239 +6,29 @@ const PLAYERS_DATA = window.PLAYERS_DATA;
 // ═══════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════
-// 8 curated hues for the first 8 players — intentionally excludes the brand
-// accent (#7c6aef) so the player-dot stays visible on the active nav button.
-// The palette already fills most of the hue wheel, so adding *new* hues for
-// overflow players always lands near an existing one. Instead we reuse each
-// palette hue at a very different lightness: pass 1 uses pastels (L=82),
-// pass 2 uses dark (L=40). That gives 24 visually distinct identities before
-// any duplication, without creating indistinguishable near-hues.
-const PALETTE = ['#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#ef6ac0','#6aefd9','#efd96a','#a86aef'];
-const _PALETTE_HUES = [153, 0, 29, 209, 321, 170, 50, 268];
-function _hslHex(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l);const f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4)}
-function playerColor(i){
-  if(i<PALETTE.length)return PALETTE[i];
-  const pass=Math.floor(i/PALETTE.length);
-  const h=_PALETTE_HUES[i%PALETTE.length];
-  const l=pass===1?82:pass===2?40:60;
-  return _hslHex(h,70,l);
-}
+// PALETTE, playerColor, CHART_PALETTE and the BLOCK_COLORS family live in
+// stats/assets/colors.js (loaded before this script). PLAYER_COLORS_MAP is
+// derived here because it depends on PLAYERS_DATA, which is injected above.
 const PLAYER_COLORS_MAP = {};
 const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_hours-PLAYERS_DATA[a].play_hours);
 playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=playerColor(i));
 
 // ═══════════════════════════════════════
-// MINECRAFT ITEM ICONS
-// ═══════════════════════════════════════
-const _MI='https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/assets/minecraft/textures/item/';
-const _HR='../assets/icons/';
-// Hi-res local icons — list injected by generate.py from stats/assets/icons/manifest.json
-// (written by scripts/build_icons.py). Anything outside the set falls back to the CDN.
-const MC_ICONS_HR=new Set(window.ICONS_HR||[]);
-function mcIcon(name){
-  if(MC_ICONS_HR.has(name)){
-    return '<img class="mc-icon-hr" src="'+_HR+name+'.png" alt="'+name+'" loading="lazy">';
-  }
-  return '<img class="mc-icon" src="'+_MI+name+'.png" alt="'+name+'" loading="lazy">';
-}
-
-// ═══════════════════════════════════════
-// I18N
+// I18N + ICON HELPER — see stats/assets/i18n.js (loaded before this file)
+// Shared bindings (classic-script top-level scope): lang, T, t, label, mcIcon.
 // ═══════════════════════════════════════
 const SYNC_FR=window.SYNC.fr,SYNC_EN=window.SYNC.en;
-let lang=localStorage.getItem('mc-dash-lang')||(navigator.language.startsWith('fr')?'fr':'en');
 let currentSection='overview';
-const T={fr:{
-subtitle:'Dashboard de statistiques du serveur',sync_prefix:'Dernière synchronisation',
-players:'joueurs',hours_played:'h de jeu',blocks_mined_meta:'blocs minés',mobs_killed_meta:'mobs tués',
-nav_overview:mcIcon('new_realm')+' Vue globale',nav_leaderboards:mcIcon('nether_star')+' Classements',
-nav_player_placeholder:'Choisir un joueur…',nav_player_label:'Sélectionner un joueur',
-total_playtime:'Temps de jeu total',blocks_mined:'Blocs minés',mobs_killed:'Mobs tués',items_crafted:'Items craftés',
-chart_playtime:'Temps de jeu par joueur',chart_distance:'Distance totale (km)',
-chart_mined:'Blocs minés par joueur',chart_kills:'Mobs tués par joueur',chart_multi:'Comparaison multi-stats',
-axis_hours:'Heures',axis_blocks:'Blocs',axis_kills:'Kills',axis_km:'km',
-radar_playtime:'Temps de jeu',radar_mined:'Blocs minés',radar_kills:'Mobs tués',
-radar_distance:'Distance',radar_crafted:'Items craftés',radar_deaths:'Morts',
-radar_avg:'Moyenne serveur',
-lb_playtime:mcIcon('recovery_compass')+' Temps de jeu',lb_mined:mcIcon('diamond_pickaxe')+' Blocs minés',lb_kills:mcIcon('diamond_sword')+' Mobs tués',
-lb_deaths:mcIcon('skeleton_skull')+' Morts',lb_distance:mcIcon('filled_map')+' Distance',lb_crafted:mcIcon('crafting_table')+' Items craftés',
-lb_pvp:mcIcon('iron_sword')+' PvP Kills',lb_enchant:mcIcon('enchanted_book')+' Enchantements',lb_fish:mcIcon('cod')+' Poissons',
-lb_trades:mcIcon('emerald')+' Échanges PNJ',lb_breed:mcIcon('egg')+' Élevage',lb_jumps:mcIcon('rabbit_foot')+' Sauts',
-lb_cat_top:mcIcon('nether_star')+' Top',lb_cat_combat:mcIcon('diamond_sword')+' Combat',lb_cat_exploration:mcIcon('compass')+' Exploration',
-lb_cat_economy:mcIcon('emerald')+' Économie',lb_cat_production:mcIcon('diamond_pickaxe')+' Production',
-chart_deathcauses:'Causes de mort (tous)',chart_dist_type:'Distances par type',
-d_walk:'Marche',d_sprint:'Sprint',d_swim:'Nage',d_fly:'Vol créatif',
-d_aviate:'Elytra',d_boat:'Bateau',d_horse:'Cheval',d_minecart:'Minecart',
-d_climb:'Escalade',d_crouch:'Accroupi',d_fall:'Chute',
-d_walk_on_water:"Sur l'eau",d_walk_under_water:"Sous l'eau",
-arch_new:'Nouveau',arch_miner:'Mineur',arch_fighter:'Combattant',
-arch_explorer:'Explorateur',arch_builder:'Bâtisseur',arch_farmer:'Fermier',
-playtime:'Temps de jeu',kd_ratio:'K/D ratio',traveled:'Parcourus',per_hour:'/h',delta_unit:'j',
-deaths:'Morts',enchantments:'Enchantements',chests_opened:'Coffres ouverts',
-fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
-card_distances:'Distances parcourues',
-travel_time_sub:(h,pct)=>`≈ ${h}h en déplacement · ${pct}% du temps de jeu`,
-card_killed_by:'Tué par',card_treemap:'Blocs minés — Treemap',
-card_heatmap:"Activité quotidienne",
-hm_days_active:'jours actifs',hm_no_data:'pas de snapshot',
-hm_less:'Moins',hm_more:'Plus',
-hm_hours_unit:'h',
-card_top15_mined:'Top 15 blocs minés',card_top10_killed:'Top 10 mobs tués',
-card_top10_crafted:'Top 10 items craftés',card_tools_broken:'Outils cassés',card_fun_facts:'Fun Facts',
-no_death:'Aucune mort',no_data:'Pas assez de données',
-no_blocks:'Aucun bloc miné',no_tools:'Aucun outil cassé',
-badges_title:'Badges & Achievements',badges_unlocked:'badges débloqués',
-tier_locked:'🔒',tier_bronze:mcIcon('copper_ingot')+' Bronze',tier_silver:mcIcon('iron_ingot')+' Argent',tier_gold:mcIcon('gold_ingot')+' Or',tier_diamond:mcIcon('diamond')+' Diamant',
-cat_mining:mcIcon('diamond_pickaxe')+' Minage',cat_combat:mcIcon('diamond_sword')+' Combat',cat_survival:mcIcon('skeleton_skull')+' Survie',
-cat_exploration:mcIcon('compass')+' Exploration',cat_farming:mcIcon('wheat')+' Farming & Économie',
-cat_craft:mcIcon('crafting_table')+' Craft & Technique',cat_daily:mcIcon('white_bed')+' Vie Quotidienne',cat_prestige:mcIcon('nether_star')+' Prestige',
-b_mineur:'Mineur',b_diamantaire:'Diamantaire',b_nether_mole:'Taupe du Nether',
-b_ancient_debris:'Ancient Debris',b_bucheron:'Bûcheron',b_chasseur:'Chasseur',
-b_ender_slayer:'Ender Slayer',b_nether_warrior:'Nether Warrior',b_berserker:'Berserker',
-b_pvp_champion:'PvP Champion',b_raid_master:'Raid Master',b_increvable:'Increvable',
-b_kamikaze:'Kamikaze',b_bouclier_humain:'Bouclier Humain',b_punching_bag:'Punching Bag',
-b_globe_trotter:'Globe-trotter',b_marathonien:'Marathonien',b_sprinter:'Sprinter',
-b_aviateur:'Aviateur',b_marin:'Marin',b_cavalier:'Cavalier',
-b_fermier:'Fermier',b_pecheur:'Pêcheur',b_commercant:'Commerçant',
-b_recolte:'Récolte',b_artisan:'Artisan',b_enchanteur:'Enchanteur',
-b_paperasse:'Paperasse',b_forgeron:'Forgeron',b_rat_de_coffre:'Rat de coffre',
-b_dormeur:'Dormeur',b_kangourou:'Kangourou',b_no_life:'No-Life',
-b_all_rounder:'All-Rounder',b_legende:'Légende',
-bd_mineur:'Miner des blocs au total',bd_diamantaire:'Miner du minerai de diamant',
-bd_nether_mole:'Miner de la netherrack',bd_ancient_debris:'Miner des ancient debris',
-bd_bucheron:'Couper des bûches (tous types)',bd_chasseur:'Tuer des mobs',
-bd_ender_slayer:'Tuer des Endermen',bd_nether_warrior:'Tuer des Wither Skeletons & Blazes',
-bd_berserker:'Infliger des dégâts (en cœurs)',bd_pvp_champion:"Tuer d'autres joueurs",
-bd_raid_master:'Tuer Pillagers, Vindicators & Ravagers',bd_increvable:'Ratio heures jouées / morts',
-bd_kamikaze:'Mourir de nombreuses fois',bd_bouclier_humain:"Se faire tuer par d'autres joueurs",
-bd_punching_bag:'Encaisser des dégâts (en cœurs)',bd_globe_trotter:'Parcourir des km au total',
-bd_marathonien:'Marcher en km',bd_sprinter:'Sprinter en km',bd_aviateur:'Voler en Elytra en km',
-bd_marin:'Naviguer en bateau en km',bd_cavalier:'Chevaucher en km',bd_fermier:'Élever des animaux',
-bd_pecheur:'Pêcher des poissons',bd_commercant:'Échanger avec des villageois',
-bd_recolte:'Récolter blé, betteraves, carottes & patates',bd_artisan:'Crafter des items au total',
-bd_enchanteur:'Enchanter des items',bd_paperasse:'Crafter du papier',
-bd_forgeron:"Casser des outils à force d'usage",bd_rat_de_coffre:'Ouvrir des coffres',
-bd_dormeur:'Dormir dans un lit',bd_kangourou:'Faire des sauts',
-bd_no_life:'Accumuler des heures de jeu',bd_all_rounder:'Bronze dans chaque catégorie',
-bd_legende:'Obtenir Or ou mieux sur des badges',
-ff_endermen:(n,s)=>`A tué ${n} Endermen — environ ${s} stacks d'Ender Pearls`,
-ff_death_rate:(m)=>`Meurt en moyenne toutes les ${m} minutes`,
-ff_walk:(km,mar)=>`A marché ${km} km — soit ${mar} marathons`,
-ff_jumps:(jph)=>`Saute ${jph} fois par heure en moyenne`,
-ff_mining:(bpm)=>`Mine ${bpm} blocs par minute en moyenne`,
-ff_sleep:(n,nph)=>`A dormi ${n} nuits Minecraft — ${nph} par heure de jeu`,
-ff_chests:(n)=>`A ouvert ${n} coffres — un vrai fouineur`,
-ff_pvp_target:(n)=>`Tué ${n} fois par d'autres joueurs — cible favorite du serveur`,
-ff_elytra:(km,n)=>`${km} km en Elytra — l'équivalent de ${n} traversées de Paris`,
-ff_damage:(h)=>`A infligé ${h} cœurs de dégâts au total`,
-ff_trades:(n)=>`${n} échanges avec des villageois — le capitaliste du serveur`,
-ff_tools:(n)=>`A cassé ${n} outils — pas très soigneux`,
-ff_mob_kills:(n,kph)=>`${n} mobs tués — soit ${kph} par heure`,
-ff_breeding:(n)=>`A élevé ${n} animaux — fermier dans l'âme`,
-ff_fishing:(n)=>`A pêché ${n} poissons — le pêcheur du serveur`,
-ff_total_dist:(km,n,eq)=>`${km} km parcourus au total — soit ${n} allers ${eq}`,
-ff_equiv_long:'Paris-Barcelone',ff_equiv_short:'Paris-Londres',
-other_slice:'Autres',
-expand_show_all:(hidden)=>`Voir tout (+${hidden})`,
-expand_show_less:'Voir moins'
-},en:{
-// EN contains only overrides where the translation differs from FR.
-// Identical values fall through to T.fr via the ?? lookup in t() / label().
-subtitle:'Server statistics dashboard',sync_prefix:'Last sync',
-players:'players',hours_played:'hours played',blocks_mined_meta:'blocks mined',mobs_killed_meta:'mobs killed',
-nav_overview:mcIcon('new_realm')+' Overview',nav_leaderboards:mcIcon('nether_star')+' Leaderboards',
-nav_player_placeholder:'Select a player…',nav_player_label:'Select a player',
-total_playtime:'Total playtime',blocks_mined:'Blocks mined',mobs_killed:'Mobs killed',items_crafted:'Items crafted',
-delta_unit:'d',
-chart_playtime:'Playtime per player',chart_distance:'Total distance (km)',
-chart_mined:'Blocks mined per player',chart_kills:'Mobs killed per player',chart_multi:'Multi-stats comparison',
-axis_hours:'Hours',axis_blocks:'Blocks',
-radar_playtime:'Playtime',radar_mined:'Blocks mined',radar_kills:'Mobs killed',
-radar_crafted:'Items crafted',radar_deaths:'Deaths',
-radar_avg:'Server average',
-lb_playtime:mcIcon('recovery_compass')+' Playtime',lb_mined:mcIcon('diamond_pickaxe')+' Blocks mined',lb_kills:mcIcon('diamond_sword')+' Mobs killed',
-lb_deaths:mcIcon('skeleton_skull')+' Deaths',lb_crafted:mcIcon('crafting_table')+' Items crafted',
-lb_enchant:mcIcon('enchanted_book')+' Enchantments',lb_fish:mcIcon('cod')+' Fish caught',
-lb_trades:mcIcon('emerald')+' NPC trades',lb_breed:mcIcon('egg')+' Breeding',lb_jumps:mcIcon('rabbit_foot')+' Jumps',
-lb_cat_economy:mcIcon('emerald')+' Economy',lb_cat_production:mcIcon('diamond_pickaxe')+' Production',
-chart_deathcauses:'Death causes (all)',chart_dist_type:'Distance by type',
-d_walk:'Walk',d_swim:'Swim',d_fly:'Creative flight',
-d_boat:'Boat',d_horse:'Horse',
-d_climb:'Climbing',d_crouch:'Crouching',d_fall:'Falling',
-d_walk_on_water:'On water',d_walk_under_water:'Underwater',
-card_heatmap:'Daily activity',
-hm_days_active:'active days',hm_no_data:'no snapshot',
-hm_less:'Less',hm_more:'More',
-arch_new:'Newcomer',arch_miner:'Miner',arch_fighter:'Fighter',
-arch_explorer:'Explorer',arch_builder:'Builder',arch_farmer:'Farmer',
-playtime:'Playtime',traveled:'Traveled',
-deaths:'Deaths',enchantments:'Enchantments',chests_opened:'Chests opened',
-fish_caught:'Fish caught',npc_trades:'NPC trades',
-card_distances:'Distances traveled',
-travel_time_sub:(h,pct)=>`≈ ${h}h traveling · ${pct}% of playtime`,
-card_killed_by:'Killed by',card_treemap:'Blocks mined — Treemap',
-card_top15_mined:'Top 15 blocks mined',card_top10_killed:'Top 10 mobs killed',
-card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',
-no_death:'No deaths',no_data:'Not enough data',
-no_blocks:'No blocks mined',no_tools:'No tools broken',
-badges_unlocked:'badges unlocked',
-tier_silver:mcIcon('iron_ingot')+' Silver',tier_gold:mcIcon('gold_ingot')+' Gold',tier_diamond:mcIcon('diamond')+' Diamond',
-cat_mining:mcIcon('diamond_pickaxe')+' Mining',cat_survival:mcIcon('skeleton_skull')+' Survival',
-cat_farming:mcIcon('wheat')+' Farming & Economy',
-cat_craft:mcIcon('crafting_table')+' Craft & Tech',cat_daily:mcIcon('white_bed')+' Daily life',
-b_mineur:'Miner',b_diamantaire:'Diamond Hunter',b_nether_mole:'Nether Mole',
-b_bucheron:'Lumberjack',b_chasseur:'Hunter',
-b_increvable:'Unkillable',
-b_bouclier_humain:'Human Shield',
-b_marathonien:'Marathoner',
-b_aviateur:'Aviator',b_marin:'Sailor',b_cavalier:'Rider',
-b_fermier:'Farmer',b_pecheur:'Angler',b_commercant:'Merchant',
-b_recolte:'Harvest',b_enchanteur:'Enchanter',
-b_paperasse:'Paperwork',b_forgeron:'Blacksmith',b_rat_de_coffre:'Chest rat',
-b_dormeur:'Sleeper',b_kangourou:'Kangaroo',
-b_legende:'Legend',
-bd_mineur:'Mine blocks in total',bd_diamantaire:'Mine diamond ore',
-bd_nether_mole:'Mine netherrack',bd_ancient_debris:'Mine ancient debris',
-bd_bucheron:'Chop logs (all types)',bd_chasseur:'Kill mobs',
-bd_ender_slayer:'Kill Endermen',bd_nether_warrior:'Kill Wither Skeletons & Blazes',
-bd_berserker:'Deal damage (in hearts)',bd_pvp_champion:'Kill other players',
-bd_raid_master:'Kill Pillagers, Vindicators & Ravagers',bd_increvable:'Hours played / deaths ratio',
-bd_kamikaze:'Die many times',bd_bouclier_humain:'Get killed by other players',
-bd_punching_bag:'Take damage (in hearts)',bd_globe_trotter:'Travel km in total',
-bd_marathonien:'Walk in km',bd_sprinter:'Sprint in km',bd_aviateur:'Fly with Elytra in km',
-bd_marin:'Sail by boat in km',bd_cavalier:'Ride in km',bd_fermier:'Breed animals',
-bd_pecheur:'Catch fish',bd_commercant:'Trade with villagers',
-bd_recolte:'Harvest wheat, beetroot, carrots & potatoes',bd_artisan:'Craft items in total',
-bd_enchanteur:'Enchant items',bd_paperasse:'Craft paper',
-bd_forgeron:'Break tools from use',bd_rat_de_coffre:'Open chests',
-bd_dormeur:'Sleep in a bed',bd_kangourou:'Jump',
-bd_no_life:'Accumulate play hours',bd_all_rounder:'Bronze in every category',
-bd_legende:'Get Gold or better on badges',
-ff_endermen:(n,s)=>`Killed ${n} Endermen — about ${s} stacks of Ender Pearls`,
-ff_death_rate:(m)=>`Dies on average every ${m} minutes`,
-ff_walk:(km,mar)=>`Walked ${km} km — that's ${mar} marathons`,
-ff_jumps:(jph)=>`Jumps ${jph} times per hour on average`,
-ff_mining:(bpm)=>`Mines ${bpm} blocks per minute on average`,
-ff_sleep:(n,nph)=>`Slept ${n} Minecraft nights — ${nph} per hour played`,
-ff_chests:(n)=>`Opened ${n} chests — a real snoop`,
-ff_pvp_target:(n)=>`Killed ${n} times by other players — the server's favorite target`,
-ff_elytra:(km,n)=>`${km} km by Elytra — the equivalent of ${n} trips across Paris`,
-ff_damage:(h)=>`Dealt ${h} hearts of damage in total`,
-ff_trades:(n)=>`${n} trades with villagers — the server's capitalist`,
-ff_tools:(n)=>`Broke ${n} tools — not very careful`,
-ff_mob_kills:(n,kph)=>`${n} mobs killed — that's ${kph} per hour`,
-ff_breeding:(n)=>`Bred ${n} animals — farmer at heart`,
-ff_fishing:(n)=>`Caught ${n} fish — the server's angler`,
-ff_total_dist:(km,n,eq)=>`${km} km traveled in total — that's ${n} ${eq} trips`,
-ff_equiv_long:'Paris-Barcelona',ff_equiv_short:'Paris-London',
-other_slice:'Others',
-expand_show_all:(hidden)=>`Show all (+${hidden})`,
-expand_show_less:'Show less'
-}};
-function t(k){const a=[].slice.call(arguments,1);const v=T[lang]?.[k]??T.fr[k];return typeof v==='function'?v.apply(null,a):(v||k)}
-function label(k){const dl=T[lang]?.['d_'+k]??T.fr['d_'+k];if(dl)return dl;return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString(lang==='fr'?'fr-FR':'en-US')}
 function pct(v,m){return m?Math.round(v/m*100):0}
+// Render a "X% du serveur" / "X% of server" sub-line for a stat-tile.
+// Returns '' if total is 0 or value missing (no division-by-zero, no "0%" clutter).
+function ctxPct(value,total){
+  if(!total||value==null)return'';
+  const p=Math.round((value/total)*100);
+  if(p===0)return'';
+  return`<div class="sub ctx-sub">${p}% ${t('ctx_of_server')}</div>`;
+}
 
 // ═══════════════════════════════════════
 // MOBILE TOP-N + EXPAND TOGGLE
@@ -356,69 +146,9 @@ function getFunFacts(name,p){
 }
 
 // ═══════════════════════════════════════
-// BLOCK → COLOR MAP — approximate in-game hue per block id
-// ═══════════════════════════════════════
-// Used by the treemap so rects hint at what you're looking at (grey for
-// stone, green for grass, dark red for netherrack, …). Explicit entries
-// cover the blocks most commonly mined; suffix helpers catch colored
-// variants (16 wools × 3 material families = 48 keys we don't list by
-// hand) and wood / leaf families. Unknowns fall back to the rainbow
-// palette so variety is preserved.
-const DYE_COLORS={white:'#f0f0f0',orange:'#f9801d',magenta:'#c74ebd',light_blue:'#3ab3da',yellow:'#fed83d',lime:'#80c71f',pink:'#f38baa',gray:'#474f52',light_gray:'#9d9d97',cyan:'#169c9c',purple:'#8932b8',blue:'#3c44aa',brown:'#835432',green:'#5e7c16',red:'#b02e26',black:'#1d1d21'};
-const WOOD_COLORS={oak:'#b08a50',spruce:'#725232',birch:'#d7cfa0',jungle:'#b08545',acacia:'#b8713e',dark_oak:'#402919',mangrove:'#763431',cherry:'#e2aba2',pale_oak:'#d4c6a8',bamboo:'#c4b962',crimson:'#6a2e46',warped:'#2d8b7f'};
-const LEAF_COLORS={oak:'#4a7829',spruce:'#4b6440',birch:'#6d8a4a',jungle:'#2f8a1b',acacia:'#4e802e',dark_oak:'#365923',mangrove:'#78aa3f',cherry:'#e49dbc',pale_oak:'#a8b3a0',azalea:'#6aa03b',flowering_azalea:'#e493cb'};
-const BLOCK_COLORS={
-  stone:'#7e7e7e',cobblestone:'#6e6e6e',deepslate:'#494b4d',cobbled_deepslate:'#3f4143',
-  tuff:'#6a6966',andesite:'#888784',diorite:'#c9c8c3',granite:'#9d6b56',calcite:'#d8d8d4',
-  basalt:'#4e4e54',smooth_basalt:'#52525a',blackstone:'#2e292e',stone_bricks:'#7a7a7a',
-  dripstone_block:'#876d5e',amethyst_block:'#866cb6',
-  dirt:'#8b6a3f',grass_block:'#6aa03b',coarse_dirt:'#7c5a36',rooted_dirt:'#916b4d',
-  podzol:'#6b4a2a',mycelium:'#847581',mud:'#3e3127',sand:'#dbd0a6',red_sand:'#b8552a',
-  gravel:'#828282',clay:'#a3a8b3',packed_mud:'#9c7c5b',mud_bricks:'#8c6e4f',
-  farmland:'#524022',dirt_path:'#7a5f2f',
-  netherrack:'#6b2a26',nether_gold_ore:'#7d3a2e',ancient_debris:'#513431',
-  crimson_nylium:'#841919',warped_nylium:'#1f7566',soul_sand:'#3f2f23',soul_soil:'#4e3929',
-  nether_quartz_ore:'#9a7a70',nether_wart_block:'#751413',warped_wart_block:'#167272',
-  snow:'#fafefe',snow_block:'#f5fcff',ice:'#8ec3e8',packed_ice:'#85b6df',blue_ice:'#6fa4e8',
-  coal_ore:'#373737',iron_ore:'#c6ad97',gold_ore:'#d6bc4d',diamond_ore:'#5ecfd5',
-  emerald_ore:'#2cb85c',lapis_ore:'#3058bb',redstone_ore:'#c13c3c',copper_ore:'#c27a4b',
-  deepslate_coal_ore:'#2a2d30',deepslate_iron_ore:'#796e5c',deepslate_gold_ore:'#a4883b',
-  deepslate_diamond_ore:'#3a8e94',deepslate_emerald_ore:'#208a48',deepslate_lapis_ore:'#2e4d90',
-  deepslate_redstone_ore:'#8c2d2d',deepslate_copper_ore:'#8a5535',
-  sculk:'#111828',sculk_vein:'#0e1621',moss_block:'#5d743c',short_grass:'#7c9b4c',
-  sugar_cane:'#82b84a',wheat:'#d8ca6e',bamboo:'#879430',pumpkin:'#d88926',melon:'#a5ca2a',
-  sandstone:'#d6ca79',red_sandstone:'#a9481f',
-  terracotta:'#975c42',obsidian:'#110d1b',end_stone:'#e0dba1',scaffolding:'#c6a477',
-  torch:'#e3b94a',glowstone:'#d2ab55',brown_mushroom_block:'#966e56',red_mushroom_block:'#c64a42',
-  mangrove_roots:'#5a4131',bamboo_block:'#6f7a26'
-};
-const DYE_SUFFIXES=['_wool','_concrete','_concrete_powder','_terracotta','_stained_glass','_stained_glass_pane','_glazed_terracotta','_carpet','_shulker_box','_candle','_bed'];
-const WOOD_SUFFIXES=['_log','_wood','_planks','_stem','_hyphae','_fence','_door','_slab','_stairs','_trapdoor'];
-function blockColor(key,fallback){
-  if(BLOCK_COLORS[key]) return BLOCK_COLORS[key];
-  const bare=key.startsWith('stripped_')?key.slice(9):key;
-  for(const suf of WOOD_SUFFIXES){
-    if(bare.endsWith(suf)){
-      const sp=bare.slice(0,-suf.length);
-      if(WOOD_COLORS[sp]) return WOOD_COLORS[sp];
-    }
-  }
-  if(key.endsWith('_leaves')){
-    const sp=key.slice(0,-7);
-    if(LEAF_COLORS[sp]) return LEAF_COLORS[sp];
-  }
-  for(const suf of DYE_SUFFIXES){
-    if(key.endsWith(suf)){
-      const sp=key.slice(0,-suf.length);
-      if(DYE_COLORS[sp]) return DYE_COLORS[sp];
-    }
-  }
-  return fallback;
-}
-
-// ═══════════════════════════════════════
 // TREEMAP BUILDER — squarified layout (Bruls, Huijing, van Wijk 2000)
 // ═══════════════════════════════════════
+// BLOCK_COLORS / blockColor() and the dye/wood/leaf helpers live in colors.js.
 // Layout happens in abstract coords W×H (aspect 2:1, matched by CSS).
 // Each rect is emitted as an absolutely-positioned % box so the card scales.
 function squarifyLayout(items, x, y, w, h){
@@ -464,7 +194,7 @@ function buildTreemapHtml(entries){
   if(!entries.length)return '<div style="color:var(--text-muted);padding:1rem;font-family:var(--font-mono);font-size:.8rem">'+t('no_blocks')+'</div>';
   const data=entries.slice(0,15);
   const total=data.reduce((s,[_,v])=>s+v,0);
-  const fallback=['#7c6aef','#3ecf8e','#ef6a6a','#efaa6a','#6aafef','#6aefd9','#efd96a','#ef6ac0','#a86aef','#5a9e6f','#9e5a5a','#5a6f9e','#9e8b5a','#5a9e9e','#8b8b96'];
+  const fallback=CHART_PALETTE;
   const W=200,H=100;
   const items=data.map(([k,v],i)=>({k,v,color:blockColor(k,fallback[i%fallback.length]),area:v/total*W*H}));
   const rects=squarifyLayout(items,0,0,W,H);
@@ -474,9 +204,12 @@ function buildTreemapHtml(entries){
     // Label threshold uses min dimension rather than area: a rect with enough
     // width AND height can fit the 2-line label regardless of its total area.
     // An area-based check mis-hides tall+narrow rects that have room for text.
-    const showLabel=r.w>=10 && r.h>=9;
+    // Higher threshold on mobile: rects under ~50px wide can't fit a label
+    // without mid-word breaks, tooltip (tap) covers those.
+    const mobile=isMobile();
+    const showLabel=mobile?(r.w>=18 && r.h>=14):(r.w>=10 && r.h>=9);
     const tip=`${label(r.k)} · ${fmt(r.v)} (${p.toFixed(1)}%)`;
-    return `<div class="treemap-item" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
+    return `<div class="treemap-item" role="img" aria-label="${tip}" style="left:${pct(r.x,W)}%;top:${pct(r.y,H)}%;width:${pct(r.w,W)}%;height:${pct(r.h,H)}%;background:${r.color}" data-tm-label="${tip}" title="${tip}">${showLabel?`<span>${label(r.k)}<br><span class=tm-count>${fmt(r.v)}</span></span>`:''}</div>`;
   }).join('')}</div>`;
 }
 
@@ -505,6 +238,25 @@ function initTreemapTooltip(){
     const y=Math.min(e.clientY+14, window.innerHeight-tip.offsetHeight-8);
     tip.style.left=x+'px'; tip.style.top=y+'px';
   });
+  // Touch support: tap a rect to show the label at the touch point, auto-hide after 2.5s.
+  // Tapping elsewhere hides immediately. Coexists with the mouse handlers above (both
+  // assignments to the same node are idempotent on hybrid devices).
+  document.addEventListener('touchstart',e=>{
+    const el=e.target.closest?.('.treemap-item');
+    const node=ensure();
+    if(el){
+      node.textContent=el.dataset.tmLabel||'';
+      node.classList.add('visible');
+      const tch=e.touches[0];
+      const x=Math.min(tch.clientX+14, window.innerWidth-node.offsetWidth-8);
+      const y=Math.min(tch.clientY+14, window.innerHeight-node.offsetHeight-8);
+      node.style.left=x+'px'; node.style.top=y+'px';
+      clearTimeout(window._tmTimer);
+      window._tmTimer=setTimeout(()=>node.classList.remove('visible'),2500);
+    } else {
+      node.classList.remove('visible');
+    }
+  },{passive:true});
 }
 
 // ═══════════════════════════════════════
@@ -602,11 +354,19 @@ const deltaTotals=_hasBaseline?{
   play_hours:_sumDelta('play_hours'),total_mined:_sumDelta('total_mined'),
   mob_kills:_sumDelta('mob_kills'),total_crafted:_sumDelta('total_crafted'),
 }:null;
-// Render a "↑ +12h (6j)" sub-line; returns '' if delta missing or ≤ 0.
+// Render a delta sub-line ("↑ +12h (6j)" / "= 0h (6j)" / "↓ -3h (6j)").
+// Returns '' only when no baseline exists — otherwise shows the real state
+// (inactive = neutral grey, regression = red) so players without progress
+// can't be confused with players that have no baseline.
 function deltaSub(value,suffix=''){
-  if(value==null||value<=0||!_baselineDays)return'';
-  const v=Number.isInteger(value)?fmt(value):fmt(Math.round(value*10)/10);
-  return `<div class="sub delta-sub">↑ +${v}${suffix} (${_baselineDays}${t('delta_unit')})</div>`;
+  if(value==null||!_baselineDays)return'';
+  const abs=Math.abs(value);
+  const v=Number.isInteger(abs)?fmt(abs):fmt(Math.round(abs*10)/10);
+  let mod,arrow,sign;
+  if(value>0){mod='pos';arrow='↑';sign='+'}
+  else if(value<0){mod='neg';arrow='↓';sign='-'}
+  else{mod='zero';arrow='=';sign=''}
+  return `<div class="sub delta-sub delta-sub--${mod}">${arrow} ${sign}${v}${suffix} (${_baselineDays}${t('delta_unit')})</div>`;
 }
 
 function updateGlobalMeta(){
@@ -635,17 +395,68 @@ function buildNav(){
     h+=`<option value="${name}">${name} — ${hrs}h</option>`;
   });
   h+=`</select>`;
+  // Compare entry point — button + inline 2-select form (hidden until toggled).
+  h+=`<div class="nav-compare-wrap">`;
+  h+=`<button type="button" class="nav-tab nav-compare-btn" id="compareBtn" aria-label="${t('nav_compare_label')}" aria-expanded="false">${t('nav_compare_btn')}</button>`;
+  h+=`<div class="nav-compare-form" id="compareForm" role="dialog" aria-label="${t('nav_compare_label')}">`;
+  const opts=`<option value="">${t('compare_select_placeholder')}</option>`+playerNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+  h+=`<select class="nav-compare-select" id="cmpA" aria-label="${t('nav_compare_label')}">${opts}</select>`;
+  h+=`<select class="nav-compare-select" id="cmpB" aria-label="${t('nav_compare_label')}">${opts}</select>`;
+  h+=`<button type="button" class="nav-compare-go" id="cmpGo">${t('compare_go')}</button>`;
+  h+=`</div></div>`;
   navEl.innerHTML=h;
-  navEl.querySelectorAll('.nav-tab').forEach(btn=>{
+  navEl.querySelectorAll('.nav-tab[data-section]').forEach(btn=>{
     btn.addEventListener('click',()=>navigateTo(btn.dataset.section));
   });
   document.getElementById('playerSelect').addEventListener('change',e=>{
     if(e.target.value)navigateTo('player-'+e.target.value);
   });
+  const cBtn=document.getElementById('compareBtn');
+  const cForm=document.getElementById('compareForm');
+  const cA=document.getElementById('cmpA');
+  const cB=document.getElementById('cmpB');
+  const cGo=document.getElementById('cmpGo');
+  const closeForm=()=>{cForm.classList.remove('open');cBtn.setAttribute('aria-expanded','false')};
+  cBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const isOpen=cForm.classList.toggle('open');
+    cBtn.setAttribute('aria-expanded',isOpen?'true':'false');
+    if(isOpen){
+      // Pre-fill with top-2 most-played when empty — sensible default.
+      if(!cA.value&&playerNames.length>=2){cA.value=playerNames[0];cB.value=playerNames[1]}
+    }
+  });
+  // Click outside the form closes it. Registered once globally — the listener
+  // re-fetches the current form/btn from the DOM, so it survives buildNav()
+  // re-renders (e.g. on lang switch) without stacking duplicate listeners.
+  if(!buildNav._outsideClickBound){
+    buildNav._outsideClickBound=true;
+    document.addEventListener('click',(e)=>{
+      const form=document.getElementById('compareForm');
+      const btn=document.getElementById('compareBtn');
+      if(!form||!form.classList.contains('open'))return;
+      if(form.contains(e.target)||(btn&&btn.contains(e.target)))return;
+      form.classList.remove('open');
+      if(btn)btn.setAttribute('aria-expanded','false');
+    });
+  }
+  const doCompare=()=>{
+    const a=cA.value,b=cB.value;
+    if(!a||!b)return;
+    if(a===b){navigateTo('player-'+a);closeForm();return}
+    navigateTo(`compare-${a}__${b}`);
+    closeForm();
+  };
+  cGo.addEventListener('click',doCompare);
+  // Enter key on either select triggers Go.
+  [cA,cB].forEach(sel=>sel.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doCompare()}}));
 }
 
 function updateNavActive(section){
-  navEl.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+  // .nav-tab without data-section (e.g. the compare button) should never go active here.
+  navEl.querySelectorAll('.nav-tab[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===section));
+  const cBtn=document.getElementById('compareBtn');
+  if(cBtn)cBtn.classList.toggle('active',section.startsWith('compare-'));
   const sel=document.getElementById('playerSelect');
   if(!sel)return;
   if(section.startsWith('player-')){
@@ -663,6 +474,10 @@ function updateNavActive(section){
 function sectionToHash(id){
   if(id==='leaderboards')return '#leaderboards';
   if(id.startsWith('player-'))return '#player/'+encodeURIComponent(id.replace('player-',''));
+  if(id.startsWith('compare-')){
+    const [a,b]=id.slice('compare-'.length).split('__');
+    return '#compare/'+encodeURIComponent(a)+'/'+encodeURIComponent(b);
+  }
   return '';
 }
 function hashToSection(hash){
@@ -672,6 +487,18 @@ function hashToSection(hash){
   if(h.startsWith('player/')){
     const name=decodeURIComponent(h.slice(7));
     if(playerNames.includes(name))return 'player-'+name;
+  }
+  if(h.startsWith('compare/')){
+    const parts=h.slice('compare/'.length).split('/');
+    if(parts.length>=2){
+      const a=decodeURIComponent(parts[0]);
+      const b=decodeURIComponent(parts[1]);
+      if(playerNames.includes(a)&&playerNames.includes(b)){
+        // Guard against self-compare: redirect to single-player view.
+        if(a===b){location.hash='#player/'+encodeURIComponent(a);return 'player-'+a}
+        return 'compare-'+a+'__'+b;
+      }
+    }
   }
   return 'overview';
 }
@@ -695,12 +522,20 @@ function showSection(id){
   }
   currentSection=id;
   if(id.startsWith('player-'))ensurePlayerSection(id.replace('player-',''));
+  if(id.startsWith('compare-')){
+    const [a,b]=id.slice('compare-'.length).split('__');
+    ensureCompareSection(a,b);
+  }
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);
   if(el)el.classList.add('active');
   if(id==='overview')renderOverviewCharts();
   if(id==='leaderboards')renderLeaderboardCharts();
   if(id.startsWith('player-'))renderPlayerCharts(id.replace('player-',''));
+  if(id.startsWith('compare-')){
+    const [a,b]=id.slice('compare-'.length).split('__');
+    renderCompareChart(a,b);
+  }
   setTimeout(animateCounters,50);
 }
 
@@ -725,9 +560,11 @@ window.matchMedia('(max-width:600px)').addEventListener('change',()=>{
 // first visit via ensurePlayerSection() and memoized for re-entry. Keeps
 // the initial innerHTML small even with 20+ players.
 const renderedPlayers=new Set();
+const renderedCompares=new Set();
 function buildAllSections(){
   contentEl.innerHTML=buildOverview()+buildLeaderboards();
   renderedPlayers.clear();
+  renderedCompares.clear();
 }
 function ensurePlayerSection(name){
   if(renderedPlayers.has(name))return;
@@ -735,10 +572,33 @@ function ensurePlayerSection(name){
   contentEl.insertAdjacentHTML('beforeend',buildPlayerSection(name));
   renderedPlayers.add(name);
 }
+function ensureCompareSection(a,b){
+  const id=`compare-${a}__${b}`;
+  if(renderedCompares.has(id))return;
+  if(!playerNames.includes(a)||!playerNames.includes(b))return;
+  contentEl.insertAdjacentHTML('beforeend',buildCompareSection(a,b));
+  renderedCompares.add(id);
+}
 
 // ═══════════════════════════════════════
 // OVERVIEW
 // ═══════════════════════════════════════
+function buildRankChangesHtml(){
+  const changes=window.RANK_CHANGES||[];
+  if(!changes.length)return '';
+  const metricKey={play_hours:'playtime',total_mined:'mined',mob_kills:'kills',total_crafted:'crafted'};
+  const rows=changes.slice(0,5).map(c=>{
+    const metricLabel=t('radar_'+(metricKey[c.metric]||c.metric));
+    const pColor=PLAYER_COLORS_MAP[c.player]||'var(--accent-light)';
+    const oColor=PLAYER_COLORS_MAP[c.overtaken]||'var(--text-dim)';
+    const playerLink=`<a href="#player/${encodeURIComponent(c.player)}" style="color:${pColor};font-weight:600">${c.player}</a>`;
+    const overtakenLink=`<a href="#player/${encodeURIComponent(c.overtaken)}" style="color:${oColor}">${c.overtaken}</a>`;
+    return `<li>${playerLink} ${t('rank_passes')} ${overtakenLink} ${t('rank_on')} <b>${metricLabel}</b> (+${c.delta_rank})</li>`;
+  }).join('');
+  return `<div class="card" id="rank-changes-card"><h3><span class="icon">${mcIcon('nether_star')}</span> ${t('card_rank_changes')}</h3>
+    <ul class="rank-changes">${rows}</ul></div>`;
+}
+
 function buildOverview(){
   return `
   <div class="section active" id="overview">
@@ -748,11 +608,22 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div>${deltaSub(deltaTotals?.mob_kills)}</div>
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
-    <div class="grid grid-2-fixed">
-      <div class="card" data-chart-card="chart-playtime"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('chart_playtime')}</h3><div class="chart-wrap"><canvas id="chart-playtime"></canvas></div></div>
-      <div class="card" data-chart-card="chart-distance"><h3><span class="icon">${mcIcon('filled_map')}</span> ${t('chart_distance')}</h3><div class="chart-wrap"><canvas id="chart-distance"></canvas></div></div>
-      <div class="card" data-chart-card="chart-mined"><h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('chart_mined')}</h3><div class="chart-wrap"><canvas id="chart-mined"></canvas></div></div>
-      <div class="card" data-chart-card="chart-kills"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('chart_kills')}</h3><div class="chart-wrap"><canvas id="chart-kills"></canvas></div></div>
+    ${buildRankChangesHtml()}
+    ${buildServerHeatmapHtml()}
+    <div class="card" data-chart-card="chart-overview-bar">
+      <div class="overview-bar-header">
+        <h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_overview_bar')}</h3>
+        <label class="sr-only" for="overviewMetric">${t('overview_metric_label')}</label>
+        <select id="overviewMetric" class="overview-metric-select" aria-label="${t('overview_metric_label')}">
+          <option value="play_hours">${t('radar_playtime')}</option>
+          <option value="total_mined">${t('radar_mined')}</option>
+          <option value="mob_kills">${t('radar_kills')}</option>
+          <option value="total_distance_km">${t('radar_distance')}</option>
+          <option value="total_crafted">${t('radar_crafted')}</option>
+          <option value="deaths">${t('radar_deaths')}</option>
+        </select>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-overview-bar"></canvas></div>
     </div>
     <div class="card"><h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_multi')}</h3>
       <div class="chart-wrap" style="max-height:420px"><canvas id="chart-radar"></canvas></div>
@@ -793,10 +664,32 @@ function renderOverviewCharts(){
     const card=document.querySelector(`[data-chart-card="${id}"]`);
     attachExpandToggle(card,id,sorted.length,()=>mkBar(id,metric,tooltipSuffix,yLabel));
   };
-  mkBar('chart-playtime','play_hours','h',t('axis_hours'));
-  mkBar('chart-distance','total_distance_km',' km',t('axis_km'));
-  mkBar('chart-mined','total_mined',' blocs',t('axis_blocks'));
-  mkBar('chart-kills','mob_kills',' kills',t('axis_kills'));
+  const METRICS=[
+    {key:'play_hours',       labelKey:'radar_playtime', suffix:'h',    axisKey:'axis_hours'},
+    {key:'total_mined',      labelKey:'radar_mined',    suffix:'',     axisKey:'axis_blocks'},
+    {key:'mob_kills',        labelKey:'radar_kills',    suffix:'',     axisKey:'axis_kills'},
+    {key:'total_distance_km',labelKey:'radar_distance', suffix:' km',  axisKey:'axis_km'},
+    {key:'total_crafted',    labelKey:'radar_crafted',  suffix:'',     axisKey:'axis_blocks'},
+    {key:'deaths',           labelKey:'radar_deaths',   suffix:'',     axisKey:'axis_deaths'},
+  ];
+  const sel=document.getElementById('overviewMetric');
+  if(sel){
+    const saved=localStorage.getItem('mc-overview-metric');
+    if(saved&&METRICS.some(m=>m.key===saved))sel.value=saved;
+    const renderOverviewBar=()=>{
+      const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+      mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
+    };
+    renderOverviewBar();
+    if(!sel.dataset.wired){
+      sel.addEventListener('change',()=>{
+        localStorage.setItem('mc-overview-metric',sel.value);
+        const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+        mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
+      });
+      sel.dataset.wired='1';
+    }
+  }
 
   destroyChart('chart-radar');
   const top5=playerNames.slice(0,5);
@@ -819,7 +712,7 @@ function renderOverviewCharts(){
     plugins:{tooltip:{callbacks:{label:ctx=>{
       const idx=ctx.dataIndex;const name=ctx.dataset.label;
       const raw=name===avgLabel?avg[idx]:(PLAYERS_DATA[name]?.[rm[idx]]||0);
-      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(Math.round(raw))}`;
+      return `${name}: ${raw>=1000?fmt(raw):(raw%1?raw.toFixed(1):String(Math.round(raw)))}`;
     }}}}}});
 }
 
@@ -908,7 +801,7 @@ function renderLeaderboardCharts(){
   const main=[];let otherSum=0;
   sorted.forEach(([k,v])=>{if(v>=threshold)main.push([k,v]);else otherSum+=v});
   const deathSorted=otherSum>0?main.concat([['__other__',otherSum]]):main;
-  const deathColors=['#ef6a6a','#efaa6a','#efd96a','#3ecf8e','#6aafef','#7c6aef','#ef6ac0','#6aefd9','#a86aef','#8b8b96'];
+  const deathColors=CHART_PALETTE;
   charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{type:'doughnut',data:{
     labels:deathSorted.map(d=>d[0]==='__other__'?t('other_slice'):label(d[0])),
     datasets:[{data:deathSorted.map(d=>d[1]),backgroundColor:deathSorted.map((d,i)=>d[0]==='__other__'?'#5c5c6888':deathColors[i%deathColors.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
@@ -920,7 +813,7 @@ function renderLeaderboardCharts(){
 function renderDistStackedChart(){
   destroyChart('chart-dist-stacked');
   const distTypes=['walk','sprint','fly','aviate','swim','boat','horse','climb','crouch','fall'];
-  const distColors=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#8b8b96','#ef6a6a'];
+  const distColors=CHART_PALETTE;
   const sortedPlayers=[...playerNames].sort((a,b)=>(PLAYERS_DATA[b].total_distance_km||0)-(PLAYERS_DATA[a].total_distance_km||0));
   const filteredPlayers=isExpanded('chart-dist-stacked')?sortedPlayers:sortedPlayers.slice(0,MOBILE_TOP_N);
   const distHorizontal=filteredPlayers.length>8;
@@ -1047,11 +940,103 @@ function buildHeatmapHtml(name){
   }
   // Legend swatches (5 buckets)
   const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
-  return `<div class="card"><h3><span class="icon">${mcIcon('clock')}</span> ${t('card_heatmap')}</h3>
-    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}</div>
+  const streakSuffix=p.streaks
+    ?` · ${t('hm_streak_longest')} ${p.streaks.longest}${t('delta_unit')} · ${t('hm_streak_current')} ${p.streaks.current}${t('delta_unit')}`
+    :'';
+  return `<div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('card_heatmap')}</h3>
+    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}${streakSuffix}</div>
     <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
   </div>`;
+}
+
+// Server-wide activity heatmap (52 weeks × 7 days).
+// Reads window.SERVER_DAILY = {YYYY-MM-DD: total_hours_all_players} (Python-side
+// sum of each player's daily_hours). Differs from buildHeatmapHtml: uses --accent
+// as the hue (no player identity) and buckets scaled for server totals.
+// Duplication with buildHeatmapHtml is intentional — bucketing & coloring diverge
+// enough that sharing logic would hurt readability.
+function buildServerHeatmapHtml(){
+  const daily=window.SERVER_DAILY||{};
+  if(!Object.keys(daily).length)return'';
+  const color='#7c6aef'; // matches --accent
+  const weeks=52,cell=11,gap=2;
+  const today=new Date();today.setHours(0,0,0,0);
+  const dow=(today.getDay()+6)%7;
+  const lastMon=new Date(today);lastMon.setDate(today.getDate()-dow);
+  const bucket=v=>v<1?0:v<5?1:v<15?2:v<30?3:4;
+  const op=[0,0.3,0.55,0.8,1.0];
+  const w=weeks*(cell+gap)-gap,h=7*(cell+gap)-gap;
+  const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let cells='',totalHours=0,daysActive=0,monthLabels='';
+  let lastMonthLabel=-1;
+  for(let wi=0;wi<weeks;wi++){
+    const colMon=new Date(lastMon);colMon.setDate(lastMon.getDate()-(weeks-1-wi)*7);
+    if(colMon.getMonth()!==lastMonthLabel&&colMon.getDate()<=7){
+      monthLabels+=`<text x="${wi*(cell+gap)}" y="-3" class="hm-label">${colMon.toLocaleDateString(lang==='fr'?'fr-FR':'en-US',{month:'short'})}</text>`;
+      lastMonthLabel=colMon.getMonth();
+    }
+    for(let di=0;di<7;di++){
+      const day=new Date(colMon);day.setDate(colMon.getDate()+di);
+      if(day>today)continue;
+      const iso=isoLocal(day);
+      const v=daily[iso];
+      const x=wi*(cell+gap),y=di*(cell+gap);
+      if(v===undefined){
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} — ${t('hm_no_data')}</title></rect>`;
+      }else{
+        totalHours+=v;daysActive++;
+        const b=bucket(v);
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} — ${v}${t('hm_hours_unit')}</title></rect>`;
+      }
+    }
+  }
+  const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
+  return `<div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('card_server_heatmap')}</h3>
+    <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(0)}${t('hm_hours_unit')} total</div>
+    <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
+    <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
+  </div>`;
+}
+
+// Tiny 30-day playtime sparkline — last 30 days ending today.
+// Returns '' when we have fewer than 7 data points (not enough signal).
+// Missing days render as gaps (polyline segments broken at null values)
+// rather than fake zeros, mirroring the heatmap's "no snapshot" convention.
+function buildSparklineSvg(daily,color){
+  if(!daily)return'';
+  const today=new Date();today.setHours(0,0,0,0);
+  const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const W=100,H=20,PAD=1;
+  const days=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    const iso=isoLocal(d);
+    days.push({iso,v:daily[iso]});
+  }
+  const known=days.filter(d=>d.v!=null).map(d=>d.v);
+  if(known.length<7)return'';
+  const max=Math.max(...known,0.1);
+  const stepX=(W-2*PAD)/(days.length-1);
+  const segments=[];let cur=[];
+  days.forEach((d,i)=>{
+    if(d.v!=null){
+      const x=PAD+i*stepX;
+      const y=H-PAD-(d.v/max)*(H-2*PAD);
+      cur.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }else if(cur.length){segments.push(cur);cur=[];}
+  });
+  if(cur.length)segments.push(cur);
+  const lines=segments.map(s=>`<polyline points="${s.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>`).join('');
+  const lastDefined=[...days].reverse().find(d=>d.v!=null);
+  let dot='';
+  if(lastDefined){
+    const i=days.indexOf(lastDefined);
+    const x=PAD+i*stepX;
+    const y=H-PAD-(lastDefined.v/max)*(H-2*PAD);
+    dot=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.8" fill="${color}"><title>${lastDefined.iso} — ${lastDefined.v}${t('hm_hours_unit')}</title></circle>`;
+  }
+  return `<svg class="sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${lines}${dot}</svg>`;
 }
 
 function buildPlayerSection(name){
@@ -1097,16 +1082,16 @@ function buildPlayerSection(name){
         ${recBadges}
       </div>
       <div class="profile-stats">
-        <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">${t('playtime')}</div>${deltaSub(p.delta_7d?.play_hours,'h')}</div>
+        <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">${t('playtime')}</div>${deltaSub(p.delta_7d?.play_hours,'h')}${buildSparklineSvg(p.daily_hours,PLAYER_COLORS_MAP[name]||'var(--accent-light)')}</div>
         <div class="profile-stat"><div class="pv" style="color:var(--c-combat)">${kd}</div><div class="pl">${t('kd_ratio')}</div></div>
         <div class="profile-stat"><div class="pv" style="color:var(--c-travel)">${fmt(p.total_distance_km)} km</div><div class="pl">${t('traveled')}</div></div>
       </div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.total_mined)}</div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.mob_kills)}</div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(p.delta_7d?.total_crafted)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.total_mined)}${ctxPct(p.total_mined,totalMined)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.mob_kills)}${ctxPct(p.mob_kills,totalKills)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div>${ctxPct(p.deaths,totalDeaths)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(p.delta_7d?.total_crafted)}${ctxPct(p.total_crafted,totalCrafted)}</div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.enchant_item}">0</div><div class="label">${t('enchantments')}</div></div>
@@ -1120,13 +1105,9 @@ function buildPlayerSection(name){
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
-    <div class="card desktop-only">
+    <div class="card">
       <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_treemap')}</h3>
       ${buildTreemapHtml(Object.entries(p.mined_top15||{}))}
-    </div>
-    <div class="card mobile-only">
-      <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_top15_mined')}</h3>
-      <ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--c-combat)')}</ol></div>
@@ -1150,7 +1131,7 @@ function renderPlayerCharts(name){
   const dists=p.distances||{};
   const de=Object.entries(dists).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(de.length&&document.getElementById(distId)){
-    const dp=['#7c6aef','#3ecf8e','#6aafef','#efd96a','#6aefd9','#efaa6a','#ef6ac0','#a86aef','#ef6a6a','#8b8b96','#5c5c68','#3a3a48','#222230'];
+    const dp=CHART_PALETTE;
     charts[distId]=new Chart(document.getElementById(distId),{type:'bar',data:{
       labels:de.map(d=>label(d[0])),datasets:[{data:de.map(d=>d[1]),
         backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}]
@@ -1158,6 +1139,103 @@ function renderPlayerCharts(name){
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const mode=de[ctx.dataIndex][0];const km=ctx.parsed.x;return ` ${km.toFixed(2)} km — ~${fmtDuration(travelSeconds(mode,km))}`}}}},
       scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}});
   }
+}
+
+// ═══════════════════════════════════════
+// COMPARE SECTION — 2-player side-by-side (#compare/a/b)
+// ═══════════════════════════════════════
+// Lazy-rendered per unique pair. Metric set mirrors the overview radar
+// (6 axes). The diff column highlights the leader using that player's
+// identity color — same colors the radar uses, so the chart and table
+// read together without a separate legend.
+const COMPARE_METRICS=[
+  {key:'play_hours',    labelKey:'radar_playtime',suffix:'h'},
+  {key:'total_mined',   labelKey:'radar_mined',   suffix:''},
+  {key:'mob_kills',     labelKey:'radar_kills',   suffix:''},
+  {key:'total_distance_km',labelKey:'radar_distance',suffix:' km'},
+  {key:'total_crafted', labelKey:'radar_crafted', suffix:''},
+  {key:'deaths',        labelKey:'radar_deaths',  suffix:''},
+];
+function _fmtMetric(v,suffix){
+  const s=(typeof v==='number'&&v%1!==0)?v.toFixed(1):fmt(Math.round(v));
+  return s+suffix;
+}
+function buildCompareSection(a,b){
+  const pA=PLAYERS_DATA[a],pB=PLAYERS_DATA[b];
+  const cA=PLAYER_COLORS_MAP[a],cB=PLAYER_COLORS_MAP[b];
+  const id=`compare-${a}__${b}`;
+  const avatarA=`https://mc-heads.net/avatar/${pA.uuid}/64`;
+  const avatarB=`https://mc-heads.net/avatar/${pB.uuid}/64`;
+  const rows=COMPARE_METRICS.map(m=>{
+    const va=pA[m.key]||0,vb=pB[m.key]||0;
+    const diff=va-vb;
+    const leader=diff>0?a:diff<0?b:null;
+    const arrow=diff>0?'▲':diff<0?'▼':'=';
+    const leaderColor=leader===a?cA:leader===b?cB:'var(--text-muted)';
+    return `<tr>
+      <td class="cmp-m">${t(m.labelKey)}</td>
+      <td class="cmp-v" style="color:${cA}">${_fmtMetric(va,m.suffix)}</td>
+      <td class="cmp-v" style="color:${cB}">${_fmtMetric(vb,m.suffix)}</td>
+      <td class="cmp-diff" style="color:${leaderColor}">${arrow} ${_fmtMetric(Math.abs(diff),m.suffix)}</td>
+    </tr>`;
+  }).join('');
+  return `
+  <div class="section" id="${id}">
+    <div class="compare-headers">
+      <div class="profile-header compare-header" style="border-left:4px solid ${cA}">
+        <img class="profile-avatar" src="${avatarA}" alt="${a}" onerror="this.style.display='none'">
+        <div class="profile-info">
+          <h2 style="color:${cA}"><a href="#player/${encodeURIComponent(a)}" style="color:inherit">${a}</a></h2>
+          <div class="uuid">${pA.uuid}</div>
+        </div>
+      </div>
+      <div class="profile-header compare-header" style="border-left:4px solid ${cB}">
+        <img class="profile-avatar" src="${avatarB}" alt="${b}" onerror="this.style.display='none'">
+        <div class="profile-info">
+          <h2 style="color:${cB}"><a href="#player/${encodeURIComponent(b)}" style="color:inherit">${b}</a></h2>
+          <div class="uuid">${pB.uuid}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('compare_radar')}</h3>
+      <div class="chart-wrap" style="max-height:420px"><canvas id="chart-compare-${a}__${b}"></canvas></div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">${mcIcon('writable_book')}</span> ${t('compare_table')}</h3>
+      <table class="compare-table">
+        <thead><tr><th>${t('compare_metric')}</th><th style="color:${cA}">${a}</th><th style="color:${cB}">${b}</th><th>Δ</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderCompareChart(a,b){
+  const canvasId=`chart-compare-${a}__${b}`;
+  destroyChart(canvasId);
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const pA=PLAYERS_DATA[a],pB=PLAYERS_DATA[b];
+  const rm=COMPARE_METRICS.map(m=>m.key);
+  const rl=COMPARE_METRICS.map(m=>t(m.labelKey));
+  const mx=rm.map(m=>Math.max(pA[m]||0,pB[m]||0));
+  charts[canvasId]=new Chart(canvas,{type:'radar',data:{
+    labels:rl,datasets:[
+      {label:a,data:rm.map((m,i)=>mx[i]?((pA[m]||0)/mx[i]*100):0),
+        borderColor:PLAYER_COLORS_MAP[a],backgroundColor:PLAYER_COLORS_MAP[a]+'33',
+        borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[a]},
+      {label:b,data:rm.map((m,i)=>mx[i]?((pB[m]||0)/mx[i]*100):0),
+        borderColor:PLAYER_COLORS_MAP[b],backgroundColor:PLAYER_COLORS_MAP[b]+'33',
+        borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[b]},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},ticks:{display:false},pointLabels:{font:{size:12}}}},
+    plugins:{tooltip:{callbacks:{label:ctx=>{
+      const idx=ctx.dataIndex;const name=ctx.dataset.label;
+      const raw=(PLAYERS_DATA[name]?.[rm[idx]]||0);
+      return `${name}: ${raw>=1000?fmt(raw):(raw%1?raw.toFixed(1):String(Math.round(raw)))}`;
+    }}}}}});
 }
 
 // ═══════════════════════════════════════

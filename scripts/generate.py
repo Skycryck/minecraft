@@ -29,8 +29,11 @@ from pathlib import Path
 
 from minecraft.badges import compute_player_badges
 from minecraft.history import (
+    aggregate_daily_hours,
     compute_daily_play_hours,
     compute_deltas,
+    compute_rank_changes,
+    compute_streaks,
     find_baseline_snapshot,
     load_baseline_metrics,
 )
@@ -200,11 +203,19 @@ def load_icons_manifest() -> list[str]:
         return json.load(f)
 
 
-def generate_html(players_data: dict, title: str, baseline_date: str | None = None) -> str:
+def generate_html(
+    players_data: dict,
+    title: str,
+    baseline_date: str | None = None,
+    server_daily: dict | None = None,
+    rank_changes: list | None = None,
+) -> str:
     """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
     baseline_json = json.dumps(baseline_date)
     icons_json = json.dumps(load_icons_manifest(), separators=(",", ":"))
+    server_daily_json = json.dumps(server_daily or {}, separators=(",", ":"))
+    rank_changes_json = json.dumps(rank_changes or [], separators=(",", ":"))
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
     sync_date_en = now.strftime("%Y-%m-%d at %H:%M")
@@ -215,11 +226,12 @@ def generate_html(players_data: dict, title: str, baseline_date: str | None = No
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
 <link rel="icon" href="https://cdn2.steamgriddb.com/icon/0678c572b0d5597d2d4a6b5bd135754c/32/128x128.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/styles.css">
 </head>
 <body>
+<a href="#content" class="skip-link">Aller au contenu</a>
 <div class="app">
 <div class="header">
   <h1><img class="mc-icon-hr" style="width:48px;height:48px;margin-right:.3rem" src="../assets/icons/diamond_pickaxe.png" alt="pickaxe"> {title}</h1>
@@ -236,7 +248,11 @@ window.PLAYERS_DATA = {data_json};
 window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
 window.BASELINE_DATE = {baseline_json};
 window.ICONS_HR = {icons_json};
+window.SERVER_DAILY = {server_daily_json};
+window.RANK_CHANGES = {rank_changes_json};
 </script>
+<script src="../assets/colors.js"></script>
+<script src="../assets/i18n.js"></script>
 <script src="../assets/app.js"></script>
 </body>
 </html>'''
@@ -321,6 +337,10 @@ def main():
     daily_hours = compute_daily_play_hours(snapshots_dir)
     if daily_hours:
         print(f"[HIST] Daily heatmap data: {sum(len(v) for v in daily_hours.values())} cells across {len(daily_hours)} players")
+    streaks = compute_streaks(daily_hours)
+    if streaks:
+        print(f"[HIST] Streaks computed for {len(streaks)} players")
+    server_daily = aggregate_daily_hours(daily_hours)
 
     # Process stats
     print("\n[STATS] Processing statistics...")
@@ -334,12 +354,22 @@ def main():
             player["delta_7d"] = delta
         if daily_hours.get(uuid):
             player["daily_hours"] = daily_hours[uuid]
+        if streaks.get(uuid):
+            player["streaks"] = streaks[uuid]
         players_data[name] = player
         print(f"  + {name}: {player['play_hours']}h, {player['total_mined']} blocks, {player['mob_kills']} kills")
 
+    # Rank movements vs baseline (only computed when we have a baseline)
+    rank_changes = (
+        compute_rank_changes(players_data, baseline_metrics, uuid_to_name)
+        if baseline_metrics else []
+    )
+    if rank_changes:
+        print(f"[HIST] Rank changes detected: {len(rank_changes)}")
+
     # Generate HTML
     print(f"\n[HTML] Generating HTML...")
-    html = generate_html(players_data, title, baseline_date)
+    html = generate_html(players_data, title, baseline_date, server_daily, rank_changes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

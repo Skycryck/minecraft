@@ -394,8 +394,6 @@
 - **CSS :** styles pour `.compare-headers` (2 colonnes desktop, 1 mobile), `.compare-table` (tabular-nums), `.nav-compare-wrap` + `.nav-compare-form` (position absolue desktop, fixed bottom mobile).
 - **Effets de bord :** `app.js` 1197 → 1378 lignes (+181), `styles.css` 295 → 334 (+39). Régénération des 2 dashboards (`serveur-2026` 50 047 o, `serveur-2020` 65 851 o). `deno check` OK, `python -m py_compile` OK.
 
-### 2026-04-17 — Tâche 1 : Extraction CSS
-
 ### 2026-04-19 — Tâche 1 : Deltas négatifs/nuls honnêtes
 
 - **Branche :** refactor/task-1-delta-signs

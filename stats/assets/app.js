@@ -709,7 +709,7 @@ function renderOverviewCharts(){
     plugins:{tooltip:{callbacks:{label:ctx=>{
       const idx=ctx.dataIndex;const name=ctx.dataset.label;
       const raw=name===avgLabel?avg[idx]:(PLAYERS_DATA[name]?.[rm[idx]]||0);
-      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(Math.round(raw))}`;
+      return `${name}: ${raw>=1000?fmt(raw):(raw%1?raw.toFixed(1):String(Math.round(raw)))}`;
     }}}}}});
 }
 
@@ -1231,7 +1231,7 @@ function renderCompareChart(a,b){
     plugins:{tooltip:{callbacks:{label:ctx=>{
       const idx=ctx.dataIndex;const name=ctx.dataset.label;
       const raw=(PLAYERS_DATA[name]?.[rm[idx]]||0);
-      return `${name}: ${typeof raw==='number'&&raw%1?raw.toFixed(1):fmt(Math.round(raw))}`;
+      return `${name}: ${raw>=1000?fmt(raw):(raw%1?raw.toFixed(1):String(Math.round(raw)))}`;
     }}}}}});
 }
 

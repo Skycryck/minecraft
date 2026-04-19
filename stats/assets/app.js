@@ -235,6 +235,25 @@ function initTreemapTooltip(){
     const y=Math.min(e.clientY+14, window.innerHeight-tip.offsetHeight-8);
     tip.style.left=x+'px'; tip.style.top=y+'px';
   });
+  // Touch support: tap a rect to show the label at the touch point, auto-hide after 2.5s.
+  // Tapping elsewhere hides immediately. Coexists with the mouse handlers above (both
+  // assignments to the same node are idempotent on hybrid devices).
+  document.addEventListener('touchstart',e=>{
+    const el=e.target.closest?.('.treemap-item');
+    const node=ensure();
+    if(el){
+      node.textContent=el.dataset.tmLabel||'';
+      node.classList.add('visible');
+      const tch=e.touches[0];
+      const x=Math.min(tch.clientX+14, window.innerWidth-node.offsetWidth-8);
+      const y=Math.min(tch.clientY+14, window.innerHeight-node.offsetHeight-8);
+      node.style.left=x+'px'; node.style.top=y+'px';
+      clearTimeout(window._tmTimer);
+      window._tmTimer=setTimeout(()=>node.classList.remove('visible'),2500);
+    } else {
+      node.classList.remove('visible');
+    }
+  },{passive:true});
 }
 
 // ═══════════════════════════════════════
@@ -1083,13 +1102,9 @@ function buildPlayerSection(name){
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
-    <div class="card desktop-only">
+    <div class="card">
       <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_treemap')}</h3>
       ${buildTreemapHtml(Object.entries(p.mined_top15||{}))}
-    </div>
-    <div class="card mobile-only">
-      <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_top15_mined')}</h3>
-      <ol class="leaderboard">${mkList(Object.entries(p.mined_top15||{}),color)}</ol>
     </div>
     <div class="grid grid-2">
       <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--c-combat)')}</ol></div>

@@ -484,6 +484,13 @@
 - **Résumé :** Ajout d'un skip-link en tête de body (invisible jusqu'au focus, cible #content). Chaque .treemap-item reçoit role="img" + aria-label. La nav player select avait déjà un aria-label (confirmé).
 - **Effets de bord :** 1 règle CSS ajoutée, régénération des 2 dashboards
 
+### 2026-04-19 — Tâche 15 (refreshed plan) : Treemap tap mobile
+
+- **Branche :** refactor/task-15-treemap-mobile
+- **Commits :** 2ade449 (feat tooltip touch + dégatée mobile), 092fad1 (style mobile), 06d5984 (régen dashboards), + chore journal
+- **Résumé :** Treemap card désormais visible sur mobile (suppression `.desktop-only` / `.mobile-only` sur ce cas d'usage). `initTreemapTooltip` gère `touchstart` (position au point de touche, auto-hide 2.5s, tap ailleurs masque immédiatement). Police mobile agrandie (`.65rem` / `.58rem` pour `.tm-count`), `aspect-ratio: 1/1` sous 600 px pour donner plus d'espace vertical aux labels.
+- **Effets de bord :** card `.mobile-only` avec `mkList(mined_top15)` supprimée du profil joueur ; utilitaires CSS `.desktop-only` / `.mobile-only` retirés de `styles.css` (aucun autre usage grep dans le repo). Régénération des 2 dashboards actifs (`serveur-2026` 50 047 o, `serveur-2020` 65 851 o — taille inchangée, le diff est côté assets externes). Les handlers `mousemove` / `mouseover` restent en place pour desktop.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

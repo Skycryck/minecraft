@@ -103,7 +103,8 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .stat-tile .value{font-size:1.8rem;font-weight:700;font-family:var(--font-mono);line-height:1.1;margin-bottom:.2rem}
 .stat-tile .label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-mono)}
 .stat-tile .sub{font-size:.7rem;color:var(--text-dim);margin-top:.15rem;font-family:var(--font-mono)}
-.stat-tile .delta-sub{color:var(--c-mining);font-weight:600}
+.stat-tile .delta-sub,.profile-stat .delta-sub{color:var(--c-mining);font-weight:600}
+.profile-stat .delta-sub{margin-top:.15rem;font-size:.7rem}
 .leaderboard{list-style:none}
 .leaderboard li{
   display:flex;align-items:center;gap:.75rem;

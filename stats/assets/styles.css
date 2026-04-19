@@ -123,6 +123,9 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .delta-sub--pos{color:var(--c-mining)}
 .delta-sub--zero{color:var(--text-muted)}
 .delta-sub--neg{color:var(--c-combat)}
+.stat-tile .ctx-sub,.profile-stat .ctx-sub{
+  color:var(--text-muted);font-size:.7rem;font-family:var(--font-mono);margin-top:.15rem;
+}
 .leaderboard{list-style:none}
 .leaderboard li{
   display:flex;align-items:center;gap:.75rem;

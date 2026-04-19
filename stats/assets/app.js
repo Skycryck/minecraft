@@ -21,6 +21,14 @@ const SYNC_FR=window.SYNC.fr,SYNC_EN=window.SYNC.en;
 let currentSection='overview';
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString(lang==='fr'?'fr-FR':'en-US')}
 function pct(v,m){return m?Math.round(v/m*100):0}
+// Render a "X% du serveur" / "X% of server" sub-line for a stat-tile.
+// Returns '' if total is 0 or value missing (no division-by-zero, no "0%" clutter).
+function ctxPct(value,total){
+  if(!total||value==null)return'';
+  const p=Math.round((value/total)*100);
+  if(p===0)return'';
+  return`<div class="sub ctx-sub">${p}% ${t('ctx_of_server')}</div>`;
+}
 
 // ═══════════════════════════════════════
 // MOBILE TOP-N + EXPAND TOGGLE
@@ -917,10 +925,10 @@ function buildPlayerSection(name){
       </div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.total_mined)}</div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.mob_kills)}</div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(p.delta_7d?.total_crafted)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.total_mined)}${ctxPct(p.total_mined,totalMined)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.mob_kills)}${ctxPct(p.mob_kills,totalKills)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div>${ctxPct(p.deaths,totalDeaths)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(p.delta_7d?.total_crafted)}${ctxPct(p.total_crafted,totalCrafted)}</div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.enchant_item}">0</div><div class="label">${t('enchantments')}</div></div>

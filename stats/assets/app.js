@@ -477,6 +477,22 @@ function ensurePlayerSection(name){
 // ═══════════════════════════════════════
 // OVERVIEW
 // ═══════════════════════════════════════
+function buildRankChangesHtml(){
+  const changes=window.RANK_CHANGES||[];
+  if(!changes.length)return '';
+  const metricKey={play_hours:'playtime',total_mined:'mined',mob_kills:'kills',total_crafted:'crafted'};
+  const rows=changes.slice(0,5).map(c=>{
+    const metricLabel=t('radar_'+(metricKey[c.metric]||c.metric));
+    const pColor=PLAYER_COLORS_MAP[c.player]||'var(--accent-light)';
+    const oColor=PLAYER_COLORS_MAP[c.overtaken]||'var(--text-dim)';
+    const playerLink=`<a href="#player/${encodeURIComponent(c.player)}" style="color:${pColor};font-weight:600">${c.player}</a>`;
+    const overtakenLink=`<a href="#player/${encodeURIComponent(c.overtaken)}" style="color:${oColor}">${c.overtaken}</a>`;
+    return `<li>${playerLink} ${t('rank_passes')} ${overtakenLink} ${t('rank_on')} <b>${metricLabel}</b> (+${c.delta_rank})</li>`;
+  }).join('');
+  return `<div class="card" id="rank-changes-card"><h3><span class="icon">${mcIcon('nether_star')}</span> ${t('card_rank_changes')}</h3>
+    <ul class="rank-changes">${rows}</ul></div>`;
+}
+
 function buildOverview(){
   return `
   <div class="section active" id="overview">
@@ -486,6 +502,7 @@ function buildOverview(){
       <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${totalKills}">0</div><div class="label">${t('mobs_killed')}</div>${deltaSub(deltaTotals?.mob_kills)}</div>
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${totalCrafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(deltaTotals?.total_crafted)}</div>
     </div>
+    ${buildRankChangesHtml()}
     ${buildServerHeatmapHtml()}
     <div class="card" data-chart-card="chart-overview-bar">
       <div class="overview-bar-header">

@@ -452,6 +452,13 @@
 - **Résumé :** 4 stat-tiles joueur (mined, kills, deaths, crafted) affichent "X% du serveur" en sous-ligne. Nouvelle classe `.ctx-sub` + helper `ctxPct()`. Filtre 0% pour ne pas polluer.
 - **Effets de bord :** 1 clé i18n (`ctx_of_server`), régénération des 2 dashboards
 
+### 2026-04-19 — Tâche 11 (refreshed plan) : Mouvements cette semaine
+
+- **Branche :** refactor/task-11-rank-changes
+- **Commits :** a80f398 feat(history): compute rank changes vs baseline, dc795b9 feat(ui): display weekly rank movements on overview, aba81f7 chore: regenerate dashboards
+- **Résumé :** Nouvelle fonction `compute_rank_changes` (history.py) détecte les dépassements joueur-sur-joueur entre baseline et maintenant pour les 4 métriques suivies (`play_hours`, `total_mined`, `mob_kills`, `total_crafted`). Pour chaque métrique, on classe les joueurs par valeur décroissante à J-baseline et aujourd'hui ; on émet une entrée seulement si (a) le joueur a gagné au moins 1 rang et (b) on peut nommer un joueur dépassé précis = celui actuellement juste derrière qui était devant à la baseline. Narrative "gain uniquement" — pas de "X s'est fait dépasser" (demande explicite du plan). Cap à 10 en Python, top 5 affiché en UI. Exposée sous `window.RANK_CHANGES`, affichée en overview via `buildRankChangesHtml` entre les 4 stat-tiles et la grille de bar charts. Deep-links vers les sections joueur (`#player/<name>`) avec couleur `PLAYER_COLORS_MAP`. Carte absente si pas de baseline (`RANK_CHANGES = []`).
+- **Effets de bord :** 3 clés i18n ajoutées (`card_rank_changes`, `rank_passes`, `rank_on`) en FR+EN. Signature `generate_html` élargie avec `rank_changes: list | None = None`. 3 dashboards régénérés — serveur-2026 a 1 entrée (Villkax a passé Martel0w sur mob_kills, +2 rangs) ; serveur-2020 et hermitcraft-s10 n'ont pas de snapshot ≥ 6j donc `[]`.
+
 ---
 
 ## 🚫 Anti-patterns à éviter

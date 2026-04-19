@@ -893,6 +893,46 @@ function buildServerHeatmapHtml(){
   </div>`;
 }
 
+// Tiny 30-day playtime sparkline — last 30 days ending today.
+// Returns '' when we have fewer than 7 data points (not enough signal).
+// Missing days render as gaps (polyline segments broken at null values)
+// rather than fake zeros, mirroring the heatmap's "no snapshot" convention.
+function buildSparklineSvg(daily,color){
+  if(!daily)return'';
+  const today=new Date();today.setHours(0,0,0,0);
+  const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const W=100,H=20,PAD=1;
+  const days=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    const iso=isoLocal(d);
+    days.push({iso,v:daily[iso]});
+  }
+  const known=days.filter(d=>d.v!=null).map(d=>d.v);
+  if(known.length<7)return'';
+  const max=Math.max(...known,0.1);
+  const stepX=(W-2*PAD)/(days.length-1);
+  const segments=[];let cur=[];
+  days.forEach((d,i)=>{
+    if(d.v!=null){
+      const x=PAD+i*stepX;
+      const y=H-PAD-(d.v/max)*(H-2*PAD);
+      cur.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }else if(cur.length){segments.push(cur);cur=[];}
+  });
+  if(cur.length)segments.push(cur);
+  const lines=segments.map(s=>`<polyline points="${s.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>`).join('');
+  const lastDefined=[...days].reverse().find(d=>d.v!=null);
+  let dot='';
+  if(lastDefined){
+    const i=days.indexOf(lastDefined);
+    const x=PAD+i*stepX;
+    const y=H-PAD-(lastDefined.v/max)*(H-2*PAD);
+    dot=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.8" fill="${color}"><title>${lastDefined.iso} — ${lastDefined.v}${t('hm_hours_unit')}</title></circle>`;
+  }
+  return `<svg class="sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${lines}${dot}</svg>`;
+}
+
 function buildPlayerSection(name){
   const p=PLAYERS_DATA[name];const color=PLAYER_COLORS_MAP[name];
   const avatarUrl=`https://mc-heads.net/avatar/${p.uuid}/64`;
@@ -936,7 +976,7 @@ function buildPlayerSection(name){
         ${recBadges}
       </div>
       <div class="profile-stats">
-        <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">${t('playtime')}</div>${deltaSub(p.delta_7d?.play_hours,'h')}</div>
+        <div class="profile-stat"><div class="pv">${p.play_hours}h</div><div class="pl">${t('playtime')}</div>${deltaSub(p.delta_7d?.play_hours,'h')}${buildSparklineSvg(p.daily_hours,PLAYER_COLORS_MAP[name]||'var(--accent-light)')}</div>
         <div class="profile-stat"><div class="pv" style="color:var(--c-combat)">${kd}</div><div class="pl">${t('kd_ratio')}</div></div>
         <div class="profile-stat"><div class="pv" style="color:var(--c-travel)">${fmt(p.total_distance_km)} km</div><div class="pl">${t('traveled')}</div></div>
       </div>

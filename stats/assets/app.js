@@ -78,6 +78,7 @@ deaths:'Morts',enchantments:'Enchantements',chests_opened:'Coffres ouverts',
 fish_caught:'Poissons pêchés',npc_trades:'Échanges PNJ',pvp:'PvP',pve:'PvE',
 card_distances:'Distances parcourues',
 travel_time_sub:(h,pct)=>`≈ ${h}h en déplacement · ${pct}% du temps de jeu`,
+ctx_of_server:'du serveur',
 card_killed_by:'Tué par',card_treemap:'Blocs minés — Treemap',
 card_heatmap:"Activité quotidienne",
 hm_days_active:'jours actifs',hm_no_data:'pas de snapshot',
@@ -176,6 +177,7 @@ deaths:'Deaths',enchantments:'Enchantments',chests_opened:'Chests opened',
 fish_caught:'Fish caught',npc_trades:'NPC trades',
 card_distances:'Distances traveled',
 travel_time_sub:(h,pct)=>`≈ ${h}h traveling · ${pct}% of playtime`,
+ctx_of_server:'of server',
 card_killed_by:'Killed by',card_treemap:'Blocks mined — Treemap',
 card_top15_mined:'Top 15 blocks mined',card_top10_killed:'Top 10 mobs killed',
 card_top10_crafted:'Top 10 items crafted',card_tools_broken:'Tools broken',
@@ -239,6 +241,14 @@ function t(k){const a=[].slice.call(arguments,1);const v=T[lang]?.[k]??T.fr[k];r
 function label(k){const dl=T[lang]?.['d_'+k]??T.fr['d_'+k];if(dl)return dl;return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return n.toLocaleString(lang==='fr'?'fr-FR':'en-US')}
 function pct(v,m){return m?Math.round(v/m*100):0}
+// Render a "X% du serveur" / "X% of server" sub-line for a stat-tile.
+// Returns '' if total is 0 or value missing (no division-by-zero, no "0%" clutter).
+function ctxPct(value,total){
+  if(!total||value==null)return'';
+  const p=Math.round((value/total)*100);
+  if(p===0)return'';
+  return`<div class="sub ctx-sub">${p}% ${t('ctx_of_server')}</div>`;
+}
 
 // ═══════════════════════════════════════
 // MOBILE TOP-N + EXPAND TOGGLE
@@ -1103,10 +1113,10 @@ function buildPlayerSection(name){
       </div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
-      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.total_mined)}</div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.mob_kills)}</div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div></div>
-      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(p.delta_7d?.total_crafted)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-mining)" data-target="${p.total_mined}">0</div><div class="label">${t('blocks_mined')}</div><div class="sub">${fmt(mph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.total_mined)}${ctxPct(p.total_mined,totalMined)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-combat)" data-target="${p.mob_kills}">0</div><div class="label">${t('mobs_killed')}</div><div class="sub">${fmt(kph)}${t('per_hour')}</div>${deltaSub(p.delta_7d?.mob_kills)}${ctxPct(p.mob_kills,totalKills)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-survival)" data-target="${p.deaths}">0</div><div class="label">${t('deaths')}</div><div class="sub">${mcIcon('iron_sword')} ${pvpDeaths} ${t('pvp')} · ${mcIcon('rotten_flesh')} ${pveDeaths} ${t('pve')}</div>${ctxPct(p.deaths,totalDeaths)}</div>
+      <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.total_crafted}">0</div><div class="label">${t('items_crafted')}</div>${deltaSub(p.delta_7d?.total_crafted)}${ctxPct(p.total_crafted,totalCrafted)}</div>
     </div>
     <div class="grid grid-4" style="margin-bottom:1rem">
       <div class="stat-tile"><div class="value" style="color:var(--c-craft)" data-target="${p.enchant_item}">0</div><div class="label">${t('enchantments')}</div></div>

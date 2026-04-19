@@ -105,6 +105,9 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .stat-tile .sub{font-size:.7rem;color:var(--text-dim);margin-top:.15rem;font-family:var(--font-mono)}
 .stat-tile .delta-sub,.profile-stat .delta-sub{color:var(--c-mining);font-weight:600}
 .profile-stat .delta-sub{margin-top:.15rem;font-size:.7rem}
+.stat-tile .ctx-sub,.profile-stat .ctx-sub{
+  color:var(--text-muted);font-size:.7rem;font-family:var(--font-mono);margin-top:.15rem;
+}
 .leaderboard{list-style:none}
 .leaderboard li{
   display:flex;align-items:center;gap:.75rem;

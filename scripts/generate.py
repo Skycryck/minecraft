@@ -29,6 +29,7 @@ from pathlib import Path
 
 from minecraft.badges import compute_player_badges
 from minecraft.history import (
+    aggregate_daily_hours,
     compute_daily_play_hours,
     compute_deltas,
     find_baseline_snapshot,
@@ -200,11 +201,17 @@ def load_icons_manifest() -> list[str]:
         return json.load(f)
 
 
-def generate_html(players_data: dict, title: str, baseline_date: str | None = None) -> str:
+def generate_html(
+    players_data: dict,
+    title: str,
+    baseline_date: str | None = None,
+    server_daily: dict | None = None,
+) -> str:
     """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
     baseline_json = json.dumps(baseline_date)
     icons_json = json.dumps(load_icons_manifest(), separators=(",", ":"))
+    server_daily_json = json.dumps(server_daily or {}, separators=(",", ":"))
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
     sync_date_en = now.strftime("%Y-%m-%d at %H:%M")
@@ -236,6 +243,7 @@ window.PLAYERS_DATA = {data_json};
 window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};
 window.BASELINE_DATE = {baseline_json};
 window.ICONS_HR = {icons_json};
+window.SERVER_DAILY = {server_daily_json};
 </script>
 <script src="../assets/app.js"></script>
 </body>
@@ -321,6 +329,7 @@ def main():
     daily_hours = compute_daily_play_hours(snapshots_dir)
     if daily_hours:
         print(f"[HIST] Daily heatmap data: {sum(len(v) for v in daily_hours.values())} cells across {len(daily_hours)} players")
+    server_daily = aggregate_daily_hours(daily_hours)
 
     # Process stats
     print("\n[STATS] Processing statistics...")
@@ -339,7 +348,7 @@ def main():
 
     # Generate HTML
     print(f"\n[HTML] Generating HTML...")
-    html = generate_html(players_data, title, baseline_date)
+    html = generate_html(players_data, title, baseline_date, server_daily)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

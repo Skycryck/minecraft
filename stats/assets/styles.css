@@ -336,6 +336,8 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
   padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
   background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;
 }
+.theme-toggle{padding:.35rem .55rem;display:inline-flex;align-items:center;justify-content:center}
+.theme-toggle svg{display:block}
 .lang-toggle:hover,.theme-toggle:hover{border-color:var(--accent);color:var(--text)}
 
 /* Scroll-to-top floating button (visible after scrolling past ~300px) */

@@ -229,6 +229,7 @@ def generate_html(
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/styles.css">
+<script>(function(){{var t=localStorage.getItem('mc-dash-theme')||'dark';document.documentElement.dataset.theme=t}})();</script>
 </head>
 <body>
 <a href="#content" class="skip-link">Aller au contenu</a>
@@ -238,7 +239,10 @@ def generate_html(
   <p id="subtitle"></p>
   <div class="meta" id="globalMeta"></div>
   <div class="sync-date" id="syncDate"></div>
-  <button id="langToggle" class="lang-toggle"></button>
+  <div class="header-actions">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Basculer le thème"></button>
+    <button id="langToggle" class="lang-toggle" type="button" aria-label="Changer de langue"></button>
+  </div>
 </div>
 <div class="nav" id="nav"></div>
 <div id="content"></div>

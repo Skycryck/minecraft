@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════
 // PLAYER IDENTITY PALETTE
 // ═══════════════════════════════════════
-// 8 curated hues for the first 8 players — intentionally excludes the brand
+// 8 curated hues for the first 8 players - intentionally excludes the brand
 // accent (#7c6aef) so the player-dot stays visible on the active nav button.
 // The palette already fills most of the hue wheel, so adding *new* hues for
 // overflow players always lands near an existing one. Instead we reuse each
@@ -20,13 +20,13 @@ function playerColor(i){
 }
 
 // ═══════════════════════════════════════
-// CHART PALETTE — shared fallback hues for categorical chart slices
+// CHART PALETTE - shared fallback hues for categorical chart slices
 // ═══════════════════════════════════════
 // Unified 15-color array replacing 4 previously-inline palettes (death-causes
 // doughnut, distance-type stacked bar, per-player distance bar, treemap
 // fallback). First 8 mirror the identity PALETTE (but start with brand violet
 // #7c6aef since no player-identity overlap matters here), then 7 additional
-// muted/darkened hues to reach 15 — matches the longest original inline array
+// muted/darkened hues to reach 15 - matches the longest original inline array
 // (treemap fallback) so no chart loses distinct hues.
 const CHART_PALETTE = [
   '#7c6aef', '#3ecf8e', '#ef6a6a', '#efaa6a',
@@ -36,7 +36,7 @@ const CHART_PALETTE = [
 ];
 
 // ═══════════════════════════════════════
-// BLOCK → COLOR MAP — approximate in-game hue per block id
+// BLOCK → COLOR MAP - approximate in-game hue per block id
 // ═══════════════════════════════════════
 // Used by the treemap so rects hint at what you're looking at (grey for
 // stone, green for grass, dark red for netherrack, …). Explicit entries
@@ -70,7 +70,8 @@ const BLOCK_COLORS={
   sandstone:'#d6ca79',red_sandstone:'#a9481f',
   terracotta:'#975c42',obsidian:'#110d1b',end_stone:'#e0dba1',scaffolding:'#c6a477',
   torch:'#e3b94a',glowstone:'#d2ab55',brown_mushroom_block:'#966e56',red_mushroom_block:'#c64a42',
-  mangrove_roots:'#5a4131',bamboo_block:'#6f7a26'
+  mangrove_roots:'#5a4131',bamboo_block:'#6f7a26',
+  shulker_box:'#704e70'
 };
 const DYE_SUFFIXES=['_wool','_concrete','_concrete_powder','_terracotta','_stained_glass','_stained_glass_pane','_glazed_terracotta','_carpet','_shulker_box','_candle','_bed'];
 const WOOD_SUFFIXES=['_log','_wood','_planks','_stem','_hyphae','_fence','_door','_slab','_stairs','_trapdoor'];

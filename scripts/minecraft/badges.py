@@ -1,5 +1,5 @@
 """
-badges.py — Dashboard badge definitions and computation.
+badges.py - Dashboard badge definitions and computation.
 
 Each badge = id + name + icon + category + thresholds (bronze/silver/gold/diamond)
            + a `val(player)` function that reads the normalized player dict.
@@ -8,7 +8,7 @@ Each badge = id + name + icon + category + thresholds (bronze/silver/gold/diamon
 the two meta badges `all_rounder` and `legende`), ready to be serialized
 into the JSON injected on the client side.
 
-Note: badge `name` values are in French on purpose — they are user-facing
+Note: badge `name` values are in French on purpose - they are user-facing
 UI labels rendered in the dashboard.
 """
 

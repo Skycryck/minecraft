@@ -1,6 +1,6 @@
 """Unit tests for scripts/minecraft/history.py.
 
-Black-box tests — we don't touch history.py, only exercise its public API
+Black-box tests - we don't touch history.py, only exercise its public API
 through temporary snapshot directories built on the fly.
 
 Run with:
@@ -35,7 +35,7 @@ def _make_snapshot(root: Path, iso_date: str, players: dict[str, dict]) -> Path:
     """Create ``root/<iso_date>/<uuid>.json`` for each player.
 
     ``players`` is ``{uuid: {"play_hours": float, "mined": {name: n}, "mob_kills": n,
-    "crafted": {name: n}}}``. Any field may be omitted — defaults apply.
+    "crafted": {name: n}}}``. Any field may be omitted - defaults apply.
     """
     snap_dir = root / iso_date
     snap_dir.mkdir(parents=True, exist_ok=True)
@@ -124,7 +124,7 @@ class TestLoadBaselineMetrics(unittest.TestCase):
                     }
                 },
             )
-            # Add a malformed JSON file — should be silently skipped.
+            # Add a malformed JSON file - should be silently skipped.
             (snap / "uuid-broken.json").write_text("{not valid json")
             metrics = load_baseline_metrics(snap)
             self.assertIn("uuid-a", metrics)
@@ -142,7 +142,7 @@ class TestLoadBaselineMetrics(unittest.TestCase):
 
 class TestComputeDailyPlayHours(unittest.TestCase):
     def test_non_consecutive_dates_are_skipped(self) -> None:
-        # D0, D2, D3 — gap between D0 and D2 → only D2→D3 produces an entry
+        # D0, D2, D3 - gap between D0 and D2 → only D2→D3 produces an entry
         # for date D3. No entry for D2 (D1 missing) and no entry for D0 (first snap).
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

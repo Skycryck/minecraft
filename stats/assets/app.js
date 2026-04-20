@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════
-// DATA — injected via <script> in index.html (generate.py)
+// DATA - injected via <script> in index.html (generate.py)
 // ═══════════════════════════════════════
 const PLAYERS_DATA = window.PLAYERS_DATA;
 
@@ -14,7 +14,7 @@ const playerNames = Object.keys(PLAYERS_DATA).sort((a,b)=>PLAYERS_DATA[b].play_h
 playerNames.forEach((n,i)=>PLAYER_COLORS_MAP[n]=playerColor(i));
 
 // ═══════════════════════════════════════
-// I18N + ICON HELPER — see stats/assets/i18n.js (loaded before this file)
+// I18N + ICON HELPER - see stats/assets/i18n.js (loaded before this file)
 // Shared bindings (classic-script top-level scope): lang, T, t, label, mcIcon.
 // ═══════════════════════════════════════
 const SYNC_FR=window.SYNC.fr,SYNC_EN=window.SYNC.en;
@@ -146,7 +146,7 @@ function getFunFacts(name,p){
 }
 
 // ═══════════════════════════════════════
-// TREEMAP BUILDER — squarified layout (Bruls, Huijing, van Wijk 2000)
+// TREEMAP BUILDER - squarified layout (Bruls, Huijing, van Wijk 2000)
 // ═══════════════════════════════════════
 // BLOCK_COLORS / blockColor() and the dye/wood/leaf helpers live in colors.js.
 // Layout happens in abstract coords W×H (aspect 2:1, matched by CSS).
@@ -213,7 +213,7 @@ function buildTreemapHtml(entries){
   }).join('')}</div>`;
 }
 
-// Floating tooltip shared across all treemap items — lives on <body>
+// Floating tooltip shared across all treemap items - lives on <body>
 // so it escapes the .treemap overflow:hidden clip. Native `title=` is
 // kept as a11y fallback but shows with a ~1.5s OS delay and is clipped
 // out of view on small rects.
@@ -343,7 +343,7 @@ const totalCrafted=playerNames.reduce((s,n)=>s+PLAYERS_DATA[n].total_crafted,0);
 const _hasBaseline=playerNames.some(n=>PLAYERS_DATA[n].delta_7d);
 const _baselineISO=window.BASELINE_DATE;
 // Use whole-date arithmetic (zeroed midnight) so the window matches Python's
-// (today - snapshot_date).days — avoids "6.6 days → rounds to 7" off-by-one.
+// (today - snapshot_date).days - avoids "6.6 days → rounds to 7" off-by-one.
 const _baselineDays=(()=>{
   if(!_baselineISO)return null;
   const today=new Date();today.setHours(0,0,0,0);
@@ -355,7 +355,7 @@ const deltaTotals=_hasBaseline?{
   mob_kills:_sumDelta('mob_kills'),total_crafted:_sumDelta('total_crafted'),
 }:null;
 // Render a delta sub-line ("↑ +12h (6j)" / "= 0h (6j)" / "↓ -3h (6j)").
-// Returns '' only when no baseline exists — otherwise shows the real state
+// Returns '' only when no baseline exists - otherwise shows the real state
 // (inactive = neutral grey, regression = red) so players without progress
 // can't be confused with players that have no baseline.
 function deltaSub(value,suffix=''){
@@ -392,10 +392,10 @@ function buildNav(){
   h+=`<option value="">${t('nav_player_placeholder')}</option>`;
   playerNames.forEach(name=>{
     const hrs=PLAYERS_DATA[name].play_hours;
-    h+=`<option value="${name}">${name} — ${hrs}h</option>`;
+    h+=`<option value="${name}">${name} - ${hrs}h</option>`;
   });
   h+=`</select>`;
-  // Compare entry point — button + inline 2-select form (hidden until toggled).
+  // Compare entry point - button + inline 2-select form (hidden until toggled).
   h+=`<div class="nav-compare-wrap">`;
   h+=`<button type="button" class="nav-tab nav-compare-btn" id="compareBtn" aria-label="${t('nav_compare_label')}" aria-expanded="false">${t('nav_compare_btn')}</button>`;
   h+=`<div class="nav-compare-form" id="compareForm" role="dialog" aria-label="${t('nav_compare_label')}">`;
@@ -422,11 +422,11 @@ function buildNav(){
     const isOpen=cForm.classList.toggle('open');
     cBtn.setAttribute('aria-expanded',isOpen?'true':'false');
     if(isOpen){
-      // Pre-fill with top-2 most-played when empty — sensible default.
+      // Pre-fill with top-2 most-played when empty - sensible default.
       if(!cA.value&&playerNames.length>=2){cA.value=playerNames[0];cB.value=playerNames[1]}
     }
   });
-  // Click outside the form closes it. Registered once globally — the listener
+  // Click outside the form closes it. Registered once globally - the listener
   // re-fetches the current form/btn from the DOM, so it survives buildNav()
   // re-renders (e.g. on lang switch) without stacking duplicate listeners.
   if(!buildNav._outsideClickBound){
@@ -514,7 +514,7 @@ function navigateTo(section){
 }
 
 function showSection(id){
-  // Destroy all charts from the section we are leaving — cheapest correct
+  // Destroy all charts from the section we are leaving - cheapest correct
   // path: each render function re-creates its own charts on entry, and
   // destroyChart() is idempotent, so double-destroy is harmless.
   if(id!==currentSection){
@@ -870,7 +870,7 @@ function buildBadgesHtml(name){
       const tl=b.tier>0?tierLabel(b.tier):t('tier_locked');
       const tc=b.tier>0?'tier-'+tn:'locked';
       const pc=TIER_COLORS[Math.max(b.tier,1)];
-      const dv=b.value==null?'—':(b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value))));
+      const dv=b.value==null?'-':(b.id==='increvable'&&b.value>=999?'∞':(typeof b.value==='number'&&b.value%1!==0?b.value.toFixed(1):fmt(Math.round(b.value))));
       const nt=b.tier>=4?'MAX':fmt(b.nextTarget);
       const desc=t('bd_'+b.id);
       const ttTiers=b.tiers.map((th,i)=>{const cls=i<b.tier?'tt-done':(i===b.tier&&b.tier<4?'tt-next':'');return `<span class="tt-tier ${cls}">${TIER_EMOJIS[i]} ${fmt(th)}</span>`}).join(' · ');
@@ -908,7 +908,7 @@ function buildHeatmapHtml(name){
   const color=PLAYER_COLORS_MAP[name];
   const weeks=52,cell=11,gap=2;
   const today=new Date();today.setHours(0,0,0,0);
-  // Monday of the week containing today (Mon=0..Sun=6 — French week start)
+  // Monday of the week containing today (Mon=0..Sun=6 - French week start)
   const dow=(today.getDay()+6)%7;
   const lastMon=new Date(today);lastMon.setDate(today.getDate()-dow);
   const bucket=v=>v<0.5?0:v<2?1:v<4?2:v<6?3:4;
@@ -930,11 +930,11 @@ function buildHeatmapHtml(name){
       const v=daily[iso];
       const x=wi*(cell+gap),y=di*(cell+gap);
       if(v===undefined){
-        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} — ${t('hm_no_data')}</title></rect>`;
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} - ${t('hm_no_data')}</title></rect>`;
       }else{
         totalHours+=v;daysActive++;
         const b=bucket(v);
-        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} — ${v}${t('hm_hours_unit')}</title></rect>`;
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} - ${v}${t('hm_hours_unit')}</title></rect>`;
       }
     }
   }
@@ -954,7 +954,7 @@ function buildHeatmapHtml(name){
 // Reads window.SERVER_DAILY = {YYYY-MM-DD: total_hours_all_players} (Python-side
 // sum of each player's daily_hours). Differs from buildHeatmapHtml: uses --accent
 // as the hue (no player identity) and buckets scaled for server totals.
-// Duplication with buildHeatmapHtml is intentional — bucketing & coloring diverge
+// Duplication with buildHeatmapHtml is intentional - bucketing & coloring diverge
 // enough that sharing logic would hurt readability.
 function buildServerHeatmapHtml(){
   const daily=window.SERVER_DAILY||{};
@@ -983,11 +983,11 @@ function buildServerHeatmapHtml(){
       const v=daily[iso];
       const x=wi*(cell+gap),y=di*(cell+gap);
       if(v===undefined){
-        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} — ${t('hm_no_data')}</title></rect>`;
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} - ${t('hm_no_data')}</title></rect>`;
       }else{
         totalHours+=v;daysActive++;
         const b=bucket(v);
-        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} — ${v}${t('hm_hours_unit')}</title></rect>`;
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${color}" fill-opacity="${op[b]||0.15}" class="hm-cell"><title>${iso} - ${v}${t('hm_hours_unit')}</title></rect>`;
       }
     }
   }
@@ -999,7 +999,7 @@ function buildServerHeatmapHtml(){
   </div>`;
 }
 
-// Tiny 30-day playtime sparkline — last 30 days ending today.
+// Tiny 30-day playtime sparkline - last 30 days ending today.
 // Returns '' when we have fewer than 7 data points (not enough signal).
 // Missing days render as gaps (polyline segments broken at null values)
 // rather than fake zeros, mirroring the heatmap's "no snapshot" convention.
@@ -1034,7 +1034,7 @@ function buildSparklineSvg(daily,color){
     const i=days.indexOf(lastDefined);
     const x=PAD+i*stepX;
     const y=H-PAD-(lastDefined.v/max)*(H-2*PAD);
-    dot=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.8" fill="${color}"><title>${lastDefined.iso} — ${lastDefined.v}${t('hm_hours_unit')}</title></circle>`;
+    dot=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.8" fill="${color}"><title>${lastDefined.iso} - ${lastDefined.v}${t('hm_hours_unit')}</title></circle>`;
   }
   return `<svg class="sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${lines}${dot}</svg>`;
 }
@@ -1054,7 +1054,7 @@ function buildPlayerSection(name){
   const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--c-combat);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">'+t('no_death')+'</li>';
 
   const mkList=(entries,color)=>{
-    if(!entries.length)return '<li style="color:var(--text-muted)">—</li>';
+    if(!entries.length)return '<li style="color:var(--text-muted)">-</li>';
     const mx=Math.max(...entries.map(e=>e[1]));
     return entries.map(([k,v])=>{
       const w=mx>0?(v/mx*100):0;
@@ -1103,7 +1103,7 @@ function buildPlayerSection(name){
       <div class="card"><h3><span class="icon">${mcIcon('diamond_boots')}</span> ${t('card_distances')}</h3><div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem">${t('travel_time_sub',totalTravelHours(p.distances).toFixed(1),p.play_hours>0?Math.round(totalTravelHours(p.distances)/p.play_hours*100):0)}</div><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('skeleton_skull')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
+      <div class="card"><h3><span class="icon">${mcIcon('creeper_head')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
     <div class="card">
       <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_treemap')}</h3>
@@ -1136,17 +1136,17 @@ function renderPlayerCharts(name){
       labels:de.map(d=>label(d[0])),datasets:[{data:de.map(d=>d[1]),
         backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}]
     },options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const mode=de[ctx.dataIndex][0];const km=ctx.parsed.x;return ` ${km.toFixed(2)} km — ~${fmtDuration(travelSeconds(mode,km))}`}}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const mode=de[ctx.dataIndex][0];const km=ctx.parsed.x;return ` ${km.toFixed(2)} km - ~${fmtDuration(travelSeconds(mode,km))}`}}}},
       scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}});
   }
 }
 
 // ═══════════════════════════════════════
-// COMPARE SECTION — 2-player side-by-side (#compare/a/b)
+// COMPARE SECTION - 2-player side-by-side (#compare/a/b)
 // ═══════════════════════════════════════
 // Lazy-rendered per unique pair. Metric set mirrors the overview radar
 // (6 axes). The diff column highlights the leader using that player's
-// identity color — same colors the radar uses, so the chart and table
+// identity color - same colors the radar uses, so the chart and table
 // read together without a separate legend.
 const COMPARE_METRICS=[
   {key:'play_hours',    labelKey:'radar_playtime',suffix:'h'},
@@ -1269,6 +1269,14 @@ buildNav();buildAllSections();initLeaderboardTabs();initLeaderboardCollapse();in
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);
 animateCounters();
+
+const scrollTopBtn=document.getElementById('scrollTopBtn');
+if(scrollTopBtn){
+  const toggleScrollBtn=()=>scrollTopBtn.classList.toggle('visible',window.scrollY>300);
+  window.addEventListener('scroll',toggleScrollBtn,{passive:true});
+  scrollTopBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+  toggleScrollBtn();
+}
 // Re-render current section once fonts finish loading. Chart.js' first pass
 // may measure labels with the fallback font (shorter glyphs) and clip the
 // longest y-axis label once the real font kicks in.

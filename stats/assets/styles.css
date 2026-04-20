@@ -4,7 +4,7 @@
   --border:#2a2a35;--border-light:#3a3a48;
   --text:#e8e6e3;--text-dim:#8b8b96;--text-muted:#8080a0;
   --accent:#7c6aef;--accent-light:#9b8df7;--accent-dim:#5a4bb8;
-  /* Semantic stat categories — each maps a category (mining/combat/survival/travel/craft) to one color. */
+  /* Semantic stat categories - each maps a category (mining/combat/survival/travel/craft) to one color. */
   --c-mining:#3ecf8e;--c-combat:#ef6a6a;--c-survival:#efaa6a;--c-travel:#6aafef;--c-craft:#6aefd9;
   --font-mono:'JetBrains Mono',monospace;
   --font-sans:'Space Grotesk',system-ui,sans-serif;
@@ -317,6 +317,19 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
   background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;z-index:10;
 }
 .lang-toggle:hover{border-color:var(--accent);color:var(--text)}
+
+/* Scroll-to-top floating button (visible after scrolling past ~300px) */
+.scroll-top{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:150;
+  width:48px;height:48px;padding:0;display:flex;align-items:center;justify-content:center;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:50%;
+  cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);
+  opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:opacity .2s,transform .2s,visibility .2s,border-color .15s;
+}
+.scroll-top.visible{opacity:1;visibility:visible;transform:translateY(0)}
+.scroll-top:hover{border-color:var(--accent)}
+.scroll-top img{width:28px;height:28px}
 
 /* Compare view (2-player side-by-side #compare/a/b) */
 .compare-headers{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}

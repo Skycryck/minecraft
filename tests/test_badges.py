@@ -2,7 +2,7 @@
 
 Safety net for tier thresholds, progress math, _increvable edge cases, and the
 two meta-badges (all_rounder, legende). An off-by-one in any BADGES threshold
-would propagate silently through the generated dashboard — these tests catch it.
+would propagate silently through the generated dashboard - these tests catch it.
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ def _player_maxed() -> dict:
 
 
 def _player_empty() -> dict:
-    """Player dict with no stats — every badge should be locked (tier 0)."""
+    """Player dict with no stats - every badge should be locked (tier 0)."""
     return {"badge_data": {}, "distances": {}, "killed_by": {}}
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate.py — Tickstats Dashboard Generator
+generate.py - Tickstats Dashboard Generator
 ===================================================
 Reads Minecraft stats JSON files from a directory,
 resolves UUIDs to usernames via the Mojang API,
@@ -197,7 +197,7 @@ ICONS_MANIFEST_PATH = Path(__file__).resolve().parent.parent / "stats" / "assets
 def load_icons_manifest() -> list[str]:
     """Return the list of hi-res icons shipped locally (written by build_icons.py)."""
     if not ICONS_MANIFEST_PATH.exists():
-        print(f"[WARN] Icons manifest not found at {ICONS_MANIFEST_PATH} — all icons will use CDN fallback")
+        print(f"[WARN] Icons manifest not found at {ICONS_MANIFEST_PATH} - all icons will use CDN fallback")
         return []
     with open(ICONS_MANIFEST_PATH, encoding="utf-8") as f:
         return json.load(f)
@@ -243,6 +243,7 @@ def generate_html(
 <div class="nav" id="nav"></div>
 <div id="content"></div>
 </div>
+<button id="scrollTopBtn" class="scroll-top" type="button" aria-label="Remonter en haut"><img class="mc-icon-hr" src="../assets/icons/firework_rocket.png" alt=""></button>
 <script>
 window.PLAYERS_DATA = {data_json};
 window.SYNC = {{"fr": "{sync_date_fr}", "en": "{sync_date_en}"}};

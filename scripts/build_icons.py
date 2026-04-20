@@ -3,7 +3,7 @@ One-shot builder: downloads Minecraft icons, upscales with nearest-neighbor
 to 256x256, writes to stats/assets/icons/. Uses pure Python stdlib.
 
 Run once after changing the ICONS dict below. Commit the output PNGs.
-Also writes manifest.json listing every icon shipped in the folder —
+Also writes manifest.json listing every icon shipped in the folder -
 generate.py reads it to drive the hi-res vs CDN-fallback decision in app.js.
 """
 
@@ -22,7 +22,7 @@ _MG = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.5/as
 _WIKI_THUMB = 'https://minecraft.wiki/wiki/Special:FilePath/{filename}?width=256'
 
 # name -> (source_url, expected_native_size)
-# Icons at native 16x16 get ×16 upscale, at 32x32 get ×8 — all end at 256x256.
+# Icons at native 16x16 get ×16 upscale, at 32x32 get ×8 - all end at 256x256.
 ICONS = {
     # Items (16x16 native)
     'diamond_pickaxe': (_MI + 'diamond_pickaxe.png', 16),
@@ -38,6 +38,7 @@ ICONS = {
     'diamond': (_MI + 'diamond.png', 16),
     'blaze_rod': (_MI + 'blaze_rod.png', 16),
     'ender_pearl': (_MI + 'ender_pearl.png', 16),
+    'ender_eye': (_MI + 'ender_eye.png', 16),
     'emerald': (_MI + 'emerald.png', 16),
     'nether_star': (_MI + 'nether_star.png', 16),
     'golden_apple': (_MI + 'golden_apple.png', 16),
@@ -62,18 +63,20 @@ ICONS = {
     'oak_boat': (_MI + 'oak_boat.png', 16),
     'egg': (_MI + 'egg.png', 16),
     'cod': (_MI + 'cod.png', 16),
-    'oak_door': (_MI + 'oak_door.png', 16),
+    'comparator': (_MI + 'comparator.png', 16),
+    'firework_rocket': (_MI + 'firework_rocket.png', 16),
+    'writable_book': (_MI + 'writable_book.png', 16),
     # Blocks (16x16 native)
     'torch': (_MB + 'torch.png', 16),
     'oak_sapling': (_MB + 'oak_sapling.png', 16),
 }
 
-# Wiki hi-res 3D renders — saved as-is (no upscale). Filenames include
+# Wiki hi-res 3D renders - saved as-is (no upscale). Filenames include
 # version suffix because the wiki stores per-version renders.
-# Shield.png is front+back stacked vertically; we crop to the top half.
+# Tall/wide renders (front+back stacked) are cropped to the top square.
 WIKI_HIRES = {
-    'shield': 'Shield.png',
     'skeleton_skull': 'Skeleton_Skull.png',
+    'creeper_head': 'Creeper_Head.png',
     'oak_planks': 'Oak_Planks.png',
     'netherrack': 'Netherrack.png',
     'ancient_debris': 'Ancient_Debris.png',
@@ -81,7 +84,6 @@ WIKI_HIRES = {
     'chest': 'Chest.png',
     'white_bed': 'White_Bed_JE3_BE3.png',
     'anvil': 'Anvil_JE3_BE3.png',
-    'tnt': 'TNT.png',
     'target': 'Target.png',
 }
 
@@ -361,7 +363,7 @@ def main():
             w, h, bd, ct, pal, trns, raw = parse_png(data)
             if w != h:
                 # Tall/wide images (e.g. shield = front+back stacked): take top half,
-                # then pass through — normalize pass will auto-center to square.
+                # then pass through - normalize pass will auto-center to square.
                 samples = BPP[ct]
                 bpp = max(1, samples * bd // 8)
                 row_len = (w * samples * bd + 7) // 8

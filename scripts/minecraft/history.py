@@ -1,5 +1,5 @@
 """
-history.py — Time-based deltas from snapshot archive.
+history.py - Time-based deltas from snapshot archive.
 
 Reads the closest snapshot to N days back (default 7) under
 `stats/<server>/snapshots/YYYY-MM-DD/` and exposes per-player
@@ -52,7 +52,7 @@ def find_baseline_snapshot(
     """Return the snapshot directory closest to `target_days` ago.
 
     Only directories named `YYYY-MM-DD` whose age (in days) falls in
-    `[min_days, max_days]` are considered — too-recent snapshots would
+    `[min_days, max_days]` are considered - too-recent snapshots would
     produce noisy "weekly" deltas, and too-old ones would be misleading
     after a long pause (e.g. 2-week hiatus). Returns None if no snapshot
     qualifies. The actual window may differ from `target_days`; callers
@@ -107,7 +107,7 @@ def _load_play_hours(snapshot_dir: Path) -> dict[str, float]:
 def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]]:
     """Map UUID → {YYYY-MM-DD: hours_played_that_day} from consecutive snapshots.
 
-    Only days where snapshot D and snapshot D-1 both exist contribute an entry —
+    Only days where snapshot D and snapshot D-1 both exist contribute an entry -
     the delta is attributed to date D. Gap days are omitted entirely (no faked
     zeros), so the heatmap renders them as empty cells. Negative deltas (world
     reset, data corruption) are filtered out.
@@ -220,11 +220,11 @@ def compute_rank_changes(
 
     For each tracked metric we rank players by descending value at baseline
     and today, then emit an entry whenever a player's rank improved (delta
-    > 0) AND a specific "overtaken" player can be identified — namely the
+    > 0) AND a specific "overtaken" player can be identified - namely the
     player now just behind them who was ahead of them at baseline.
 
     Returned list is sorted by `delta_rank` desc then `current_value` desc
-    and capped at 10 entries. No "loss" narrative is ever emitted — only
+    and capped at 10 entries. No "loss" narrative is ever emitted - only
     improvements, so the feature stays feel-good on a public dashboard.
     """
     if not current_players or not baseline_metrics:

@@ -315,8 +315,12 @@ function animateCounters(){
   document.querySelectorAll('[data-target]').forEach(c=>obs.observe(c));
 }
 
-Chart.defaults.color='#8b8b96';
-Chart.defaults.borderColor='rgba(42,42,53,0.5)';
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function applyChartTheme(){
+  Chart.defaults.color=cssVar('--text-dim');
+  Chart.defaults.borderColor=cssVar('--chart-grid-strong');
+}
+applyChartTheme();
 Chart.defaults.font.family="'JetBrains Mono',monospace";
 Chart.defaults.font.size=11;
 Chart.defaults.plugins.legend.labels.boxWidth=12;
@@ -650,11 +654,11 @@ function renderOverviewCharts(){
     }
     const opts=useHorizontal?{
       responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
-      scales:{x:{title:{display:true,text:yLabel},grid:{color:'rgba(42,42,53,0.3)'}},
+      scales:{x:{title:{display:true,text:yLabel},grid:{color:cssVar('--chart-grid')}},
         y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}},afterFit:padAxis}}
     }:{
       responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{title:{display:true,text:yLabel},grid:{color:'rgba(42,42,53,0.3)'}},
+      scales:{y:{title:{display:true,text:yLabel},grid:{color:cssVar('--chart-grid')}},
         x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:60,minRotation:45,font:{size:10}}}}
     };
     charts[id]=new Chart(canvas,{type:'bar',data:{
@@ -700,15 +704,15 @@ function renderOverviewCharts(){
   const avgLabel=t('radar_avg');
   const avgDataset={label:avgLabel,
     data:rm.map((m,i)=>mx[i]?(avg[i]/mx[i]*100):0),
-    borderColor:'#8b8b96',backgroundColor:'transparent',borderDash:[6,4],
-    borderWidth:2,pointRadius:2,pointBackgroundColor:'#8b8b96'};
+    borderColor:cssVar('--text-dim'),backgroundColor:'transparent',borderDash:[6,4],
+    borderWidth:2,pointRadius:2,pointBackgroundColor:cssVar('--text-dim')};
   charts['chart-radar']=new Chart(document.getElementById('chart-radar'),{type:'radar',data:{
     labels:rl,datasets:top5.map(name=>({label:name,
       data:rm.map((m,i)=>mx[i]?((PLAYERS_DATA[name][m]||0)/mx[i]*100):0),
       borderColor:PLAYER_COLORS_MAP[name],backgroundColor:PLAYER_COLORS_MAP[name]+'22',
       borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[name]})).concat([avgDataset])
   },options:{responsive:true,maintainAspectRatio:false,
-    scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},ticks:{display:false},pointLabels:{font:{size:12}}}},
+    scales:{r:{grid:{color:cssVar('--chart-grid-strong')},angleLines:{color:cssVar('--chart-grid')},ticks:{display:false},pointLabels:{font:{size:12}}}},
     plugins:{tooltip:{callbacks:{label:ctx=>{
       const idx=ctx.dataIndex;const name=ctx.dataset.label;
       const raw=name===avgLabel?avg[idx]:(PLAYERS_DATA[name]?.[rm[idx]]||0);
@@ -804,7 +808,7 @@ function renderLeaderboardCharts(){
   const deathColors=CHART_PALETTE;
   charts['chart-deathcauses']=new Chart(document.getElementById('chart-deathcauses'),{type:'doughnut',data:{
     labels:deathSorted.map(d=>d[0]==='__other__'?t('other_slice'):label(d[0])),
-    datasets:[{data:deathSorted.map(d=>d[1]),backgroundColor:deathSorted.map((d,i)=>d[0]==='__other__'?'#5c5c6888':deathColors[i%deathColors.length]+'cc'),borderColor:'#16161a',borderWidth:2}]
+    datasets:[{data:deathSorted.map(d=>d[1]),backgroundColor:deathSorted.map((d,i)=>d[0]==='__other__'?'#5c5c6888':deathColors[i%deathColors.length]+'cc'),borderColor:cssVar('--bg-card'),borderWidth:2}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
 
   renderDistStackedChart();
@@ -830,10 +834,10 @@ function renderDistStackedChart(){
   },options:{responsive:true,maintainAspectRatio:false,indexAxis:distHorizontal?'y':'x',
     scales:distHorizontal?{
       y:{stacked:true,grid:{display:false},ticks:{autoSkip:false,font:{size:10}},afterFit:(s)=>{s.width+=8}},
-      x:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}
+      x:{stacked:true,title:{display:true,text:'km'},grid:{color:cssVar('--chart-grid')}}
     }:{
       x:{stacked:true,grid:{display:false},ticks:{autoSkip:false,maxRotation:60,minRotation:45,font:{size:10}}},
-      y:{stacked:true,title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}}
+      y:{stacked:true,title:{display:true,text:'km'},grid:{color:cssVar('--chart-grid')}}
     },
     plugins:{legend:{position:'bottom',labels:{font:{size:9}}}}}});
   const card=document.querySelector(`[data-chart-card="chart-dist-stacked"]`);
@@ -959,7 +963,7 @@ function buildHeatmapHtml(name){
 function buildServerHeatmapHtml(){
   const daily=window.SERVER_DAILY||{};
   if(!Object.keys(daily).length)return'';
-  const color='#7c6aef'; // matches --accent
+  const color=cssVar('--accent')||'#7c6aef';
   const weeks=52,cell=11,gap=2;
   const today=new Date();today.setHours(0,0,0,0);
   const dow=(today.getDay()+6)%7;
@@ -1137,7 +1141,7 @@ function renderPlayerCharts(name){
         backgroundColor:de.map((_,i)=>dp[i%dp.length]+'cc'),borderColor:de.map((_,i)=>dp[i%dp.length]),borderWidth:1,borderRadius:4}]
     },options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const mode=de[ctx.dataIndex][0];const km=ctx.parsed.x;return ` ${km.toFixed(2)} km - ~${fmtDuration(travelSeconds(mode,km))}`}}}},
-      scales:{x:{title:{display:true,text:'km'},grid:{color:'rgba(42,42,53,0.3)'}},y:{grid:{display:false}}}}});
+      scales:{x:{title:{display:true,text:'km'},grid:{color:cssVar('--chart-grid')}},y:{grid:{display:false}}}}});
   }
 }
 
@@ -1230,7 +1234,7 @@ function renderCompareChart(a,b){
         borderWidth:2,pointRadius:3,pointBackgroundColor:PLAYER_COLORS_MAP[b]},
     ]
   },options:{responsive:true,maintainAspectRatio:false,
-    scales:{r:{grid:{color:'rgba(42,42,53,0.4)'},angleLines:{color:'rgba(42,42,53,0.3)'},ticks:{display:false},pointLabels:{font:{size:12}}}},
+    scales:{r:{grid:{color:cssVar('--chart-grid-strong')},angleLines:{color:cssVar('--chart-grid')},ticks:{display:false},pointLabels:{font:{size:12}}}},
     plugins:{tooltip:{callbacks:{label:ctx=>{
       const idx=ctx.dataIndex;const name=ctx.dataset.label;
       const raw=(PLAYERS_DATA[name]?.[rm[idx]]||0);
@@ -1258,6 +1262,29 @@ function switchLang(newLang){
 }
 
 // ═══════════════════════════════════════
+// THEME SWITCH (dark / light)
+// ═══════════════════════════════════════
+let theme=localStorage.getItem('mc-dash-theme')||'dark';
+document.documentElement.dataset.theme=theme;
+applyChartTheme();
+function applyThemeToggleLabel(){
+  const btn=document.getElementById('themeToggle');
+  if(btn)btn.textContent=theme==='dark'?'☀️ Light':'🌙 Dark';
+}
+function switchTheme(newTheme){
+  theme=newTheme;
+  localStorage.setItem('mc-dash-theme',theme);
+  document.documentElement.dataset.theme=theme;
+  applyThemeToggleLabel();
+  applyChartTheme();
+  buildAllSections();
+  initLeaderboardTabs();
+  initLeaderboardCollapse();
+  showSection(currentSection);
+  updateNavActive(currentSection);
+}
+
+// ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
 document.getElementById('html-root').lang=lang;
@@ -1265,6 +1292,8 @@ document.getElementById('subtitle').textContent=t('subtitle');
 document.getElementById('syncDate').textContent=t('sync_prefix')+' : '+(lang==='fr'?SYNC_FR:SYNC_EN);
 document.getElementById('langToggle').textContent=lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
 document.getElementById('langToggle').addEventListener('click',function(){switchLang(lang==='fr'?'en':'fr')});
+applyThemeToggleLabel();
+document.getElementById('themeToggle').addEventListener('click',function(){switchTheme(theme==='dark'?'light':'dark')});
 buildNav();buildAllSections();initLeaderboardTabs();initLeaderboardCollapse();initTreemapTooltip();
 const _initialSection=hashToSection(location.hash);
 showSection(_initialSection);updateNavActive(_initialSection);

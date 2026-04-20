@@ -6,17 +6,33 @@
   --accent:#7c6aef;--accent-light:#9b8df7;--accent-dim:#5a4bb8;
   /* Semantic stat categories - each maps a category (mining/combat/survival/travel/craft) to one color. */
   --c-mining:#3ecf8e;--c-combat:#ef6a6a;--c-survival:#efaa6a;--c-travel:#6aafef;--c-craft:#6aefd9;
+  /* Chart + tooltip + misc surfaces - overridden per theme so app.js can read them via getComputedStyle. */
+  --chart-grid:rgba(42,42,53,0.3);--chart-grid-strong:rgba(42,42,53,0.5);
+  --bar-bg:rgba(255,255,255,0.10);
+  --tooltip-bg:rgba(12,12,15,.95);--tooltip-text:#fff;
+  --bg-glow-1:rgba(124,106,239,.08);--bg-glow-2:rgba(62,207,142,.04);
   --font-mono:'JetBrains Mono',monospace;
   --font-sans:'Space Grotesk',system-ui,sans-serif;
   --radius:10px;--radius-sm:6px;
+}
+[data-theme="light"]{
+  --bg:#f5f6fa;--bg-card:#ffffff;--bg-card-alt:#eef0f5;--bg-hover:#e2e5ed;
+  --border:#d4d6de;--border-light:#b4b8c4;
+  --text:#181820;--text-dim:#54556a;--text-muted:#6a6c82;
+  --accent:#5b4cc9;--accent-light:#7c6aef;--accent-dim:#b5add4;
+  --c-mining:#1a9e5d;--c-combat:#d63d3d;--c-survival:#cc7622;--c-travel:#2d72c4;--c-craft:#1f9e8e;
+  --chart-grid:rgba(24,24,32,0.12);--chart-grid-strong:rgba(24,24,32,0.22);
+  --bar-bg:rgba(24,24,32,0.08);
+  --tooltip-bg:rgba(24,24,32,.92);--tooltip-text:#fff;
+  --bg-glow-1:rgba(124,106,239,.10);--bg-glow-2:rgba(62,207,142,.08);
 }
 html{font-size:15px;scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--text);font-family:var(--font-sans);
   min-height:100vh;line-height:1.5;
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%,rgba(124,106,239,.08),transparent),
-    radial-gradient(ellipse 60% 40% at 80% 100%,rgba(62,207,142,.04),transparent);
+    radial-gradient(ellipse 80% 50% at 50% -20%,var(--bg-glow-1),transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%,var(--bg-glow-2),transparent);
 }
 a{color:var(--accent-light);text-decoration:none}
 .skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:10000}
@@ -143,7 +159,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .leaderboard li:nth-child(3) .rank{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;border:none}
 .leaderboard .name{flex:1;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .leaderboard .val{color:var(--accent-light);font-weight:600;text-align:right;min-width:55px;font-variant-numeric:tabular-nums}
-.leaderboard .bar-bg{flex:0 1 120px;height:8px;background:rgba(255,255,255,0.10);border-radius:4px;overflow:hidden;min-width:60px}
+.leaderboard .bar-bg{flex:0 1 120px;height:8px;background:var(--bar-bg);border-radius:4px;overflow:hidden;min-width:60px}
 .leaderboard .bar-fill{display:block;height:100%;border-radius:4px;transition:width .6s ease;min-width:2px}
 .chart-wrap{position:relative;width:100%;max-height:350px}
 .chart-wrap canvas{width:100%!important}
@@ -222,7 +238,7 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .treemap-item:hover{opacity:.8}
 .treemap-item span{font-family:var(--font-mono);font-size:.58rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);line-height:1.15;overflow-wrap:normal;word-break:normal}
 .treemap-item .tm-count{opacity:.7;font-size:.52rem}
-.tm-tooltip{position:fixed;left:0;top:0;pointer-events:none;padding:.35rem .6rem;background:rgba(12,12,15,.95);color:#fff;border:1px solid var(--c-craft);border-radius:4px;font-family:var(--font-mono);font-size:.72rem;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5);opacity:0;transition:opacity .12s;z-index:9999}
+.tm-tooltip{position:fixed;left:0;top:0;pointer-events:none;padding:.35rem .6rem;background:var(--tooltip-bg);color:var(--tooltip-text);border:1px solid var(--c-craft);border-radius:4px;font-family:var(--font-mono);font-size:.72rem;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5);opacity:0;transition:opacity .12s;z-index:9999}
 .tm-tooltip.visible{opacity:1}
 @media(max-width:600px){
   .treemap{aspect-ratio:1/1}
@@ -311,12 +327,16 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 .tt-tier.tt-done{color:var(--c-mining)}
 .tt-tier.tt-next{color:var(--accent-light);font-weight:700}
 @media(max-width:768px){.badges-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}}
-.lang-toggle{
-  position:absolute;top:1rem;right:1rem;font-family:var(--font-mono);font-size:.78rem;
-  padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
-  background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;z-index:10;
+.header-actions{
+  position:absolute;top:1rem;right:1rem;z-index:10;
+  display:flex;gap:.4rem;align-items:center;
 }
-.lang-toggle:hover{border-color:var(--accent);color:var(--text)}
+.lang-toggle,.theme-toggle{
+  font-family:var(--font-mono);font-size:.78rem;
+  padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg-card);color:var(--text-dim);cursor:pointer;transition:all .2s;
+}
+.lang-toggle:hover,.theme-toggle:hover{border-color:var(--accent);color:var(--text)}
 
 /* Scroll-to-top floating button (visible after scrolling past ~300px) */
 .scroll-top{

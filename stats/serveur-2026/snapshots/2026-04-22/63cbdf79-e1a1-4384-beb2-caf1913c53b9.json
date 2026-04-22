@@ -1,0 +1,76 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:stone_axe": 10,
+      "minecraft:birch_sapling": 2,
+      "minecraft:stone_sword": 6,
+      "minecraft:yellow_bed": 1,
+      "minecraft:copper_sword": 1,
+      "minecraft:diamond_shovel": 3,
+      "minecraft:firework_rocket": 4,
+      "minecraft:diamond_pickaxe": 4,
+      "minecraft:chest": 1,
+      "minecraft:oak_sapling": 2,
+      "minecraft:cooked_porkchop": 2,
+      "minecraft:white_bed": 1,
+      "minecraft:written_book": 1,
+      "minecraft:dirt": 3
+    },
+    "minecraft:mined": {
+      "minecraft:oak_leaves": 1,
+      "minecraft:dirt": 1,
+      "minecraft:birch_log": 2,
+      "minecraft:oak_log": 5,
+      "minecraft:grass_block": 1,
+      "minecraft:stone": 1
+    },
+    "minecraft:killed": {
+      "minecraft:zombie": 2,
+      "minecraft:skeleton": 1,
+      "minecraft:creeper": 1
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 2134,
+      "minecraft:walk_one_cm": 58235,
+      "minecraft:leave_game": 4,
+      "minecraft:mob_kills": 4,
+      "minecraft:damage_taken": 351,
+      "minecraft:play_time": 80781,
+      "minecraft:damage_dealt": 1033,
+      "minecraft:jump": 273,
+      "minecraft:time_since_death": 2107,
+      "minecraft:sprint_one_cm": 124800,
+      "minecraft:open_chest": 1,
+      "minecraft:fall_one_cm": 2789,
+      "minecraft:total_world_time": 80781,
+      "minecraft:fly_one_cm": 266902,
+      "minecraft:crouch_one_cm": 204,
+      "minecraft:sneak_time": 195,
+      "minecraft:deaths": 5
+    },
+    "minecraft:picked_up": {
+      "minecraft:yellow_bed": 2,
+      "minecraft:diamond_axe": 1,
+      "minecraft:dirt": 3,
+      "minecraft:birch_sapling": 2,
+      "minecraft:stick": 16,
+      "minecraft:cobblestone": 2,
+      "minecraft:white_bed": 2,
+      "minecraft:bone": 1,
+      "minecraft:diamond_pickaxe": 1,
+      "minecraft:oak_sapling": 2,
+      "minecraft:written_book": 1,
+      "minecraft:diamond_shovel": 1,
+      "minecraft:oak_log": 10,
+      "minecraft:stone_axe": 1,
+      "minecraft:birch_log": 24,
+      "minecraft:leather_helmet": 1,
+      "minecraft:chest": 1,
+      "minecraft:gunpowder": 1
+    },
+    "minecraft:killed_by": {
+      "minecraft:skeleton": 1
+    }
+  },
+  "DataVersion": 4788
+}

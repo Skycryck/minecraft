@@ -54,7 +54,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 1. **UUID resolution** — Mojang API with local `.uuid_cache.json` to avoid rate limits (0.5s delay between calls)
 2. **Stats extraction** — `process_player()` normalizes Minecraft JSON: ticks→hours, cm→km, strips `minecraft:` prefixes, then calls `compute_player_badges()` and attaches the result under the `badges` key
 3. **7-day deltas** — `main()` calls `find_baseline_snapshot()` once, loads the baseline metrics, then attaches `delta_7d` to each player dict via `compute_deltas()` (key absent when no usable baseline)
-4. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` / `window.BASELINE_DATE` / `window.ICONS_HR` / `window.SERVER_DAILY` / `window.RANK_CHANGES`, then loads `../assets/styles.css` + the three JS assets in order: `colors.js`, `i18n.js`, `app.js` (classic scripts, shared global scope). CSS/JS are not embedded — they ship as static files under `stats/assets/`.
+4. **HTML generation** — Small f-string shell (~30 lines) that injects `window.PLAYERS_DATA` / `window.SYNC` / `window.BASELINE_DATE` / `window.ICONS_HR` / `window.SERVER_DAILY` / `window.RANK_CHANGES` / `window.SNAPSHOT_DATES`, then loads `../assets/styles.css` + the three JS assets in order: `colors.js`, `i18n.js`, `app.js` (classic scripts, shared global scope). CSS/JS are not embedded — they ship as static files under `stats/assets/`.
 
 ### build_icons.py internals
 
@@ -92,6 +92,7 @@ No dependencies beyond Python 3.12+ stdlib. No pip install needed.
 - `compute_streaks(daily_hours, today=None)` — per UUID, returns `{current, longest, total_active_days}` computed from the output of `compute_daily_play_hours`. `current` is the run ending at `today` (0 if today's date isn't present). Drives the streak suffix under the heatmap meta line. `generate.py` attaches it under `player["streaks"]` (key absent if no entries).
 - `aggregate_daily_hours(daily_hours)` — sums per-day hours across every player, rounded to 2 decimals. Injected as `window.SERVER_DAILY` and drives the server-wide heatmap card on the overview. Empty dict → card absent (returns `''` client-side).
 - `compute_rank_changes(current_players, baseline_metrics, uuid_to_name, keys=DELTA_KEYS)` — per metric, ranks players at baseline and now, emits an entry only when a player improved rank AND a specific overtaken player (just behind now, ahead at baseline) can be named. Gain-only narrative (never "X got overtaken"). Sorted by `|delta_rank|` desc, capped at 10. Exposed as `window.RANK_CHANGES`.
+- `list_snapshot_dates(snapshots_root)` — sorted list of ISO dates with a snapshot dir on disk. Injected as `window.SNAPSHOT_DATES` so the heatmap tooltip can distinguish *"no snapshot for this day"* from *"snapshot present but the previous day is missing, so no delta is computable"* (two tooltip strings: `hm_no_data` vs `hm_snapshot_gap`). Both cases still render as empty cells — the cadence-gap rule from `compute_daily_play_hours` is untouched.
 
 ### Snapshots archive
 

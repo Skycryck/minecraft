@@ -37,6 +37,7 @@ from minecraft.history import (
     compute_rank_changes,
     compute_streaks,
     find_baseline_snapshot,
+    list_snapshot_dates,
     load_baseline_metrics,
 )
 
@@ -211,6 +212,7 @@ def generate_html(
     baseline_date: str | None = None,
     server_daily: dict | None = None,
     rank_changes: list | None = None,
+    snapshot_dates: list | None = None,
 ) -> str:
     """Generate the full HTML dashboard file."""
     data_json = json.dumps(players_data, separators=(",", ":"))
@@ -218,6 +220,7 @@ def generate_html(
     icons_json = json.dumps(load_icons_manifest(), separators=(",", ":"))
     server_daily_json = json.dumps(server_daily or {}, separators=(",", ":"))
     rank_changes_json = json.dumps(rank_changes or [], separators=(",", ":"))
+    snapshot_dates_json = json.dumps(snapshot_dates or [], separators=(",", ":"))
     now = datetime.now(ZoneInfo("Europe/Paris"))
     sync_date_fr = now.strftime("%d/%m/%Y à %H:%M")
     sync_date_en = now.strftime("%Y-%m-%d at %H:%M")
@@ -257,6 +260,7 @@ window.BASELINE_DATE = {baseline_json};
 window.ICONS_HR = {icons_json};
 window.SERVER_DAILY = {server_daily_json};
 window.RANK_CHANGES = {rank_changes_json};
+window.SNAPSHOT_DATES = {snapshot_dates_json};
 </script>
 <script src="../assets/colors.js"></script>
 <script src="../assets/i18n.js"></script>
@@ -348,6 +352,7 @@ def main():
     if streaks:
         print(f"[HIST] Streaks computed for {len(streaks)} players")
     server_daily = aggregate_daily_hours(daily_hours)
+    snapshot_dates = list_snapshot_dates(snapshots_dir)
 
     # Process stats
     print("\n[STATS] Processing statistics...")
@@ -376,7 +381,7 @@ def main():
 
     # Generate HTML
     print(f"\n[HTML] Generating HTML...")
-    html = generate_html(players_data, title, baseline_date, server_daily, rank_changes)
+    html = generate_html(players_data, title, baseline_date, server_daily, rank_changes, snapshot_dates)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

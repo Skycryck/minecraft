@@ -2,6 +2,10 @@
 // DATA - injected via <script> in index.html (generate.py)
 // ═══════════════════════════════════════
 const PLAYERS_DATA = window.PLAYERS_DATA;
+// Set of ISO dates that have a snapshot on disk. Lets the heatmap tooltip
+// distinguish "no snapshot for this day" (truly missing) from "snapshot
+// present but delta isn't computable because D-1 is missing".
+const SNAPSHOT_DATES = new Set(window.SNAPSHOT_DATES || []);
 
 // ═══════════════════════════════════════
 // HELPERS
@@ -979,7 +983,7 @@ function buildHeatmapHtml(name){
       const v=daily[iso];
       const x=wi*(cell+gap),y=di*(cell+gap);
       if(v===undefined){
-        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} - ${t('hm_no_data')}</title></rect>`;
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} - ${t(SNAPSHOT_DATES.has(iso)?'hm_snapshot_gap':'hm_no_data')}</title></rect>`;
       }else{
         totalHours+=v;daysActive++;
         const b=bucket(v);
@@ -1032,7 +1036,7 @@ function buildServerHeatmapHtml(){
       const v=daily[iso];
       const x=wi*(cell+gap),y=di*(cell+gap);
       if(v===undefined){
-        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} - ${t('hm_no_data')}</title></rect>`;
+        cells+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" class="hm-cell hm-empty"><title>${iso} - ${t(SNAPSHOT_DATES.has(iso)?'hm_snapshot_gap':'hm_no_data')}</title></rect>`;
       }else{
         totalHours+=v;daysActive++;
         const b=bucket(v);

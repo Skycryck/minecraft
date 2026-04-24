@@ -214,6 +214,9 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 }
 .player-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 @media(max-width:768px){
+  /* Extra top padding keeps the title clear of the absolutely-positioned
+     theme/lang controls (top:1rem) on narrow viewports. */
+  .header{padding-top:3.75rem}
   .header h1{font-size:1.6rem}
   .grid-2,.grid-2-fixed,.grid-3,.grid-4{grid-template-columns:1fr}
   .profile-header{flex-direction:column;align-items:flex-start}
@@ -350,7 +353,9 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
   transition:opacity .2s,transform .2s,visibility .2s,border-color .15s;
 }
 .scroll-top.visible{opacity:1;visibility:visible;transform:translateY(0)}
-.scroll-top:hover{border-color:var(--accent)}
+/* iOS Safari interprets the first tap on a :hover element as "apply hover"
+   and only fires click on the second tap. Scope hover to real pointers. */
+@media(hover:hover){.scroll-top:hover{border-color:var(--accent)}}
 .scroll-top img{width:28px;height:28px}
 
 /* Compare view (2-player side-by-side #compare/a/b) */
@@ -393,7 +398,20 @@ img.mc-icon-hr{image-rendering:auto;vertical-align:middle;display:inline-block;w
 
 /* Activity heatmap (52 weeks × 7 days, GitHub style) */
 .heatmap-meta{font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem}
-.heatmap-wrap{width:100%;overflow-x:auto}
+/* Outer wrapper hosts the edge fades (fixed to its box, not the scroll
+   content). Inner .heatmap-scroll is the actual scrolling viewport — JS
+   scrolls it and toggles .has-overflow / .at-start / .at-end on the wrap. */
+.heatmap-wrap{width:100%;position:relative}
+.heatmap-scroll{width:100%;overflow-x:auto}
+.heatmap-wrap::before,.heatmap-wrap::after{
+  content:"";position:absolute;top:0;bottom:0;width:28px;
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:1;
+}
+.heatmap-wrap::before{left:0;background:linear-gradient(90deg,var(--bg-card) 0%,transparent 100%)}
+.heatmap-wrap::after{right:0;background:linear-gradient(270deg,var(--bg-card) 0%,transparent 100%)}
+.heatmap-wrap.has-overflow::before,.heatmap-wrap.has-overflow::after{opacity:1}
+.heatmap-wrap.at-start::before{opacity:0}
+.heatmap-wrap.at-end::after{opacity:0}
 .heatmap{display:block;width:100%;height:auto;min-width:520px;max-height:140px}
 .heatmap .hm-cell{stroke:var(--bg);stroke-width:.5}
 .heatmap .hm-empty{fill:var(--bg-card-alt)}

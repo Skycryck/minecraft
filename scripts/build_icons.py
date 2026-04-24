@@ -87,6 +87,98 @@ WIKI_HIRES = {
     'target': 'Target.png',
 }
 
+# Mob "head" icons from github.com/Simplexity-Development/Entity-Icons
+# (CC0-licensed, 16x16 pixel-art front-facing heads, all same style).
+# Local name (matches the Minecraft entity id our stats JSON uses) -> path
+# relative to assets/png_files/ in that repo. We fetch the 16x16 variant
+# and upscale x16 via the same pipeline as the item textures.
+_EI_BASE = 'https://raw.githubusercontent.com/Simplexity-Development/Entity-Icons/main/assets/png_files/'
+MOB_ICONS = {
+    'allay':            'allay/16x16/allay.png',
+    'armadillo':        'armadillo/16x16/armadillo.png',
+    'armor_stand':      'armorstand/16x16/armorstand.png',
+    'axolotl':          'axolotl/16x16/pink.png',
+    'bat':              'bat/16x16/bat.png',
+    'bee':              'bee/16x16/bee.png',
+    'blaze':            'blaze/16x16/blaze.png',
+    'bogged':           'skeleton/16x16/bogged.png',
+    'breeze':           'breeze/16x16/breeze.png',
+    'camel':            'camel/16x16/camel.png',
+    'cat':              'cat/16x16/default.png',
+    'cave_spider':      'spider/16x16/cave_spider.png',
+    'chicken':          'chicken/16x16/temperate_chicken.png',
+    'cod':              'fish/16x16/cod.png',
+    'cow':              'cow/16x16/temperate.png',
+    'creaking':         'creaking/16x16/creaking.png',
+    'creeper':          'creeper/16x16/creeper.png',
+    'dolphin':          'dolphin/16x16/dolphin.png',
+    'donkey':           'horse/16x16/donkey.png',
+    'drowned':          'zombie/16x16/drowned.png',
+    'elder_guardian':   'elder_guardian/16x16/elder_guardian.png',
+    'ender_dragon':     'enderdragon/16x16/ender_dragon.png',
+    'enderman':         'enderman/16x16/enderman.png',
+    'endermite':        'endermite/16x16/endermite.png',
+    'evoker':           'illager/16x16/evoker.png',
+    'fox':              'fox/16x16/fox.png',
+    'frog':             'frog/16x16/temperate.png',
+    'ghast':            'ghast/16x16/ghast.png',
+    'glow_squid':       'squid/16x16/glow_squid.png',
+    'goat':             'goat/16x16/goat.png',
+    'guardian':         'guardian/16x16/guardian.png',
+    'happy_ghast':      'ghast/16x16/happy_ghast.png',
+    'hoglin':           'hoglin/16x16/hoglin.png',
+    'horse':            'horse/16x16/horse.png',
+    'husk':             'zombie/16x16/husk.png',
+    'iron_golem':       'iron_golem/16x16/iron_golem.png',
+    'llama':            'llama/16x16/creamy.png',
+    'magma_cube':       'slime/16x16/magma_cube.png',
+    'mooshroom':        'cow/16x16/mooshroom.png',
+    'mule':             'horse/16x16/mule.png',
+    'ocelot':           'cat/16x16/ocelot.png',
+    'panda':            'panda/16x16/panda.png',
+    'parrot':           'parrot/16x16/red_blue.png',
+    'phantom':          'phantom/16x16/phantom.png',
+    'pig':              'pig/16x16/temperate_pig.png',
+    'piglin':           'piglin/16x16/piglin.png',
+    'piglin_brute':     'piglin/16x16/piglin_brute.png',
+    'pillager':         'illager/16x16/pillager.png',
+    'polar_bear':       'bear/16x16/polar.png',
+    'pufferfish':       'fish/16x16/pufferfish.png',
+    'rabbit':           'rabbit/16x16/brown.png',
+    'ravager':          'illager/16x16/ravager.png',
+    'salmon':           'fish/16x16/salmon.png',
+    'sheep':            'sheep/16x16/white.png',
+    'shulker':          'shulker/16x16/shulker.png',
+    'silverfish':       'silverfish/16x16/silver_fish.png',
+    'skeleton':         'skeleton/16x16/skeleton.png',
+    'skeleton_horse':   'horse/16x16/skeleton.png',
+    'slime':            'slime/16x16/slime.png',
+    'sniffer':          'sniffer/16x16/sniffer.png',
+    'snow_golem':       'snow_golem/16x16/pumpkin_golem.png',
+    'spider':           'spider/16x16/spider.png',
+    'squid':            'squid/16x16/squid.png',
+    'stray':            'skeleton/16x16/stray.png',
+    'strider':          'strider/16x16/warm_strider.png',
+    'tadpole':          'tadpole/16x16/tadpole.png',
+    'trader_llama':     'llama/16x16/creamy.png',
+    'tropical_fish':    'fish/16x16/tropical_fish.png',
+    'turtle':           'turtle/16x16/turtle.png',
+    'vex':              'illager/16x16/vex.png',
+    'villager':         'villager/16x16/villager.png',
+    'vindicator':       'illager/16x16/vindicator.png',
+    'wandering_trader': 'wandering_trader/16x16/wandering_trader.png',
+    'warden':           'warden/16x16/warden.png',
+    'witch':            'witch/16x16/witch.png',
+    'wither':           'wither/16x16/wither.png',
+    'wither_skeleton':  'skeleton/16x16/wither_skeleton.png',
+    'wolf':             'wolf/16x16/pale.png',
+    'zoglin':           'hoglin/16x16/zombified_hoglin.png',
+    'zombie':           'zombie/16x16/zombie.png',
+    'zombie_horse':     'horse/16x16/zombie.png',
+    'zombie_villager':  'zombie_villager/16x16/zombie_villager.png',
+    'zombified_piglin': 'piglin/16x16/zombified_piglin.png',
+}
+
 TARGET_SIZE = 256
 OUT_DIR = Path(__file__).resolve().parent.parent / 'stats' / 'assets' / 'icons'
 
@@ -330,7 +422,7 @@ def fetch(url):
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     errors = []
-    total = len(ICONS) + len(WIKI_HIRES)
+    total = len(ICONS) + len(WIKI_HIRES) + len(MOB_ICONS)
     # Native low-res textures: nearest-neighbor upscale to 256x256.
     for name, (url, expected_native) in ICONS.items():
         out_path = OUT_DIR / f'{name}.png'
@@ -378,6 +470,25 @@ def main():
                 print(f'  (cropped {w}x{h} -> {keep_w}x{keep_h})')
             out_path.write_bytes(data)
             print(f'  -> {out_path.relative_to(OUT_DIR.parent.parent.parent)} ({len(data)} bytes)')
+        except Exception as e:
+            print(f'  [ERR] {name}: {e}')
+            errors.append((name, e))
+    # Entity-Icons mob heads: 16x16 pixel-art, upscale x16 to 256x256 like
+    # the other item textures. Consistent style across every mob.
+    for name, path in MOB_ICONS.items():
+        out_path = OUT_DIR / f'{name}.png'
+        if out_path.exists():
+            print(f'[SKIP] {name} (already exists)')
+            continue
+        url = _EI_BASE + path
+        try:
+            print(f'[FETCH] {name} <- {url}')
+            data = fetch(url)
+            png_bytes, src_w, src_h = upscale_png_bytes(data, TARGET_SIZE // 16)
+            if src_w != 16 or src_h != 16:
+                print(f'  [WARN] {name}: expected 16x16, got {src_w}x{src_h}')
+            out_path.write_bytes(png_bytes)
+            print(f'  -> {out_path.relative_to(OUT_DIR.parent.parent.parent)} ({len(png_bytes)} bytes)')
         except Exception as e:
             print(f'  [ERR] {name}: {e}')
             errors.append((name, e))

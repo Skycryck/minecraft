@@ -30,6 +30,18 @@ function ctxPct(value,total){
   return`<div class="sub ctx-sub">${p}% ${t('ctx_of_server')}</div>`;
 }
 
+// Map a mob entity id to its pixel-art head icon. MOB_ICONS in
+// build_icons.py covers every vanilla entity; `player` is the only
+// special case (PvP pseudo-entity, no mob render — show a sword instead).
+// Anything else (corrupt or modded entity ids) returns '' so the row
+// just renders the name without a broken image.
+const MOB_ICON_OVERRIDE={player:'iron_sword'};
+function mobIcon(name){
+  if(MOB_ICON_OVERRIDE[name])return mcIcon(MOB_ICON_OVERRIDE[name]);
+  if(MC_ICONS_HR.has(name))return mcIcon(name);
+  return '';
+}
+
 // ═══════════════════════════════════════
 // MOBILE TOP-N + EXPAND TOGGLE
 // ═══════════════════════════════════════
@@ -533,6 +545,9 @@ function showSection(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);
   if(el)el.classList.add('active');
+  // Heatmap scroll/fade must run after the section is visible — scrollWidth
+  // and clientWidth are 0 on display:none elements.
+  if(el)initHeatmapScroll(el);
   if(id==='overview')renderOverviewCharts();
   if(id==='leaderboards')renderLeaderboardCharts();
   if(id.startsWith('player-'))renderPlayerCharts(id.replace('player-',''));
@@ -576,6 +591,32 @@ function ensurePlayerSection(name){
   contentEl.insertAdjacentHTML('beforeend',buildPlayerSection(name));
   renderedPlayers.add(name);
 }
+
+// Heatmap (52w × 7d) overflows horizontally on narrow viewports. Default
+// scrollLeft is 0 (showing old/empty weeks) while the signal lives on the
+// right. We force scroll to the end and toggle edge-fade classes so the
+// user can tell there's more content on either side.
+function initHeatmapScroll(root){
+  if(!root)return;
+  root.querySelectorAll('.heatmap-wrap').forEach(wrap=>{
+    const scroll=wrap.querySelector('.heatmap-scroll');
+    if(!scroll)return;
+    const update=()=>{
+      const overflow=scroll.scrollWidth-scroll.clientWidth;
+      if(overflow<=1){wrap.classList.remove('has-overflow','at-start','at-end');return}
+      wrap.classList.add('has-overflow');
+      wrap.classList.toggle('at-start',scroll.scrollLeft<=1);
+      wrap.classList.toggle('at-end',scroll.scrollLeft>=overflow-1);
+    };
+    scroll.scrollLeft=scroll.scrollWidth;
+    update();
+    if(!scroll.dataset.wiredScroll){
+      scroll.addEventListener('scroll',update,{passive:true});
+      scroll.dataset.wiredScroll='1';
+    }
+  });
+}
+window.addEventListener('resize',()=>initHeatmapScroll(contentEl),{passive:true});
 function ensureCompareSection(a,b){
   const id=`compare-${a}__${b}`;
   if(renderedCompares.has(id))return;
@@ -616,7 +657,7 @@ function buildOverview(){
     ${buildServerHeatmapHtml()}
     <div class="card" data-chart-card="chart-overview-bar">
       <div class="overview-bar-header">
-        <h3><span class="icon">${mcIcon('knowledge_book')}</span> ${t('chart_overview_bar')}</h3>
+        <h3 id="overviewBarTitle"></h3>
         <label class="sr-only" for="overviewMetric">${t('overview_metric_label')}</label>
         <select id="overviewMetric" class="overview-metric-select" aria-label="${t('overview_metric_label')}">
           <option value="play_hours">${t('radar_playtime')}</option>
@@ -669,19 +710,22 @@ function renderOverviewCharts(){
     attachExpandToggle(card,id,sorted.length,()=>mkBar(id,metric,tooltipSuffix,yLabel));
   };
   const METRICS=[
-    {key:'play_hours',       labelKey:'radar_playtime', suffix:'h',    axisKey:'axis_hours'},
-    {key:'total_mined',      labelKey:'radar_mined',    suffix:'',     axisKey:'axis_blocks'},
-    {key:'mob_kills',        labelKey:'radar_kills',    suffix:'',     axisKey:'axis_kills'},
-    {key:'total_distance_km',labelKey:'radar_distance', suffix:' km',  axisKey:'axis_km'},
-    {key:'total_crafted',    labelKey:'radar_crafted',  suffix:'',     axisKey:'axis_blocks'},
-    {key:'deaths',           labelKey:'radar_deaths',   suffix:'',     axisKey:'axis_deaths'},
+    {key:'play_hours',       labelKey:'radar_playtime', suffix:'h',    axisKey:'axis_hours',  iconKey:'recovery_compass',colorVar:'--c-survival'},
+    {key:'total_mined',      labelKey:'radar_mined',    suffix:'',     axisKey:'axis_blocks', iconKey:'diamond_pickaxe', colorVar:'--c-mining'},
+    {key:'mob_kills',        labelKey:'radar_kills',    suffix:'',     axisKey:'axis_kills',  iconKey:'diamond_sword',   colorVar:'--c-combat'},
+    {key:'total_distance_km',labelKey:'radar_distance', suffix:' km',  axisKey:'axis_km',     iconKey:'filled_map',      colorVar:'--c-travel'},
+    {key:'total_crafted',    labelKey:'radar_crafted',  suffix:'',     axisKey:'axis_blocks', iconKey:'crafting_table',  colorVar:'--c-craft'},
+    {key:'deaths',           labelKey:'radar_deaths',   suffix:'',     axisKey:'axis_deaths', iconKey:'skeleton_skull',  colorVar:'--c-survival'},
   ];
+  const titleEl=document.getElementById('overviewBarTitle');
+  const setTitle=m=>{if(titleEl)titleEl.innerHTML=`<span class="icon">${mcIcon(m.iconKey)}</span> ${t('chart_overview_bar_prefix')} <span style="color:var(${m.colorVar})">${t(m.labelKey)}</span>`};
   const sel=document.getElementById('overviewMetric');
   if(sel){
     const saved=localStorage.getItem('mc-overview-metric');
     if(saved&&METRICS.some(m=>m.key===saved))sel.value=saved;
     const renderOverviewBar=()=>{
       const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+      setTitle(m);
       mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
     };
     renderOverviewBar();
@@ -689,6 +733,7 @@ function renderOverviewCharts(){
       sel.addEventListener('change',()=>{
         localStorage.setItem('mc-overview-metric',sel.value);
         const m=METRICS.find(x=>x.key===sel.value)||METRICS[0];
+        setTitle(m);
         mkBar('chart-overview-bar',m.key,m.suffix,t(m.axisKey));
       });
       sel.dataset.wired='1';
@@ -949,7 +994,7 @@ function buildHeatmapHtml(name){
     :'';
   return `<div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('card_heatmap')}</h3>
     <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(1)}${t('hm_hours_unit')}${streakSuffix}</div>
-    <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
+    <div class="heatmap-wrap"><div class="heatmap-scroll"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
   </div>`;
 }
@@ -998,7 +1043,7 @@ function buildServerHeatmapHtml(){
   const legend=op.map(o=>`<span class="hm-swatch" style="background:${color};opacity:${o||0.15}"></span>`).join('');
   return `<div class="card"><h3><span class="icon">${mcIcon('recovery_compass')}</span> ${t('card_server_heatmap')}</h3>
     <div class="heatmap-meta">${daysActive} ${t('hm_days_active')} · ${totalHours.toFixed(0)}${t('hm_hours_unit')} total</div>
-    <div class="heatmap-wrap"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div>
+    <div class="heatmap-wrap"><div class="heatmap-scroll"><svg class="heatmap" viewBox="0 -14 ${w} ${h+14}" preserveAspectRatio="xMidYMid meet">${monthLabels}${cells}</svg></div></div>
     <div class="heatmap-legend"><span>${t('hm_less')}</span>${legend}<span>${t('hm_more')}</span></div>
   </div>`;
 }
@@ -1055,14 +1100,15 @@ function buildPlayerSection(name){
   const recBadges=records.length?`<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">${records.map(r=>`<span class="record-badge">${label(r).substring(0,20)}</span>`).join('')}</div>`:'';
 
   const killedBy=Object.entries(p.killed_by||{}).sort((a,b)=>b[1]-a[1]);
-  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li><span style="color:var(--text)">${label(m)}</span> <span style="color:var(--c-combat);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">'+t('no_death')+'</li>';
+  const kbHtml=killedBy.length?killedBy.map(([m,c])=>`<li>${mobIcon(m)}<span style="color:var(--text);flex:1">${label(m)}</span><span style="color:var(--c-combat);font-weight:600">${c}×</span></li>`).join(''):'<li style="color:var(--text-muted)">'+t('no_death')+'</li>';
 
-  const mkList=(entries,color)=>{
+  const mkList=(entries,color,iconFn)=>{
     if(!entries.length)return '<li style="color:var(--text-muted)">-</li>';
     const mx=Math.max(...entries.map(e=>e[1]));
     return entries.map(([k,v])=>{
       const w=mx>0?(v/mx*100):0;
-      return `<li><span class="name">${label(k)}</span><span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span><span class="val">${fmt(v)}</span></li>`;
+      const ic=iconFn?iconFn(k):'';
+      return `<li>${ic}<span class="name">${label(k)}</span><span class="bar-bg"><span class="bar-fill" style="width:${w}%;background:${color}"></span></span><span class="val">${fmt(v)}</span></li>`;
     }).join('');
   };
 
@@ -1107,14 +1153,14 @@ function buildPlayerSection(name){
       <div class="card"><h3><span class="icon">${mcIcon('diamond_boots')}</span> ${t('card_distances')}</h3><div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-mono);margin:-.25rem 0 .5rem">${t('travel_time_sub',totalTravelHours(p.distances).toFixed(1),p.play_hours>0?Math.round(totalTravelHours(p.distances)/p.play_hours*100):0)}</div><div class="chart-wrap"><canvas id="chart-dist-${name}"></canvas></div></div>
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('creeper_head')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
+      <div class="card"><h3><span class="icon">${mcIcon('totem_of_undying')}</span> ${t('card_killed_by')}</h3><ul class="leaderboard" style="font-size:.8rem">${kbHtml}</ul></div>
     </div>
     <div class="card">
       <h3><span class="icon">${mcIcon('diamond_pickaxe')}</span> ${t('card_treemap')}</h3>
       ${buildTreemapHtml(Object.entries(p.mined_top15||{}))}
     </div>
     <div class="grid grid-2">
-      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--c-combat)')}</ol></div>
+      <div class="card"><h3><span class="icon">${mcIcon('diamond_sword')}</span> ${t('card_top10_killed')}</h3><ol class="leaderboard">${mkList(Object.entries(p.killed_top10||{}),'var(--c-combat)',mobIcon)}</ol></div>
       <div class="card"><h3><span class="icon">${mcIcon('crafting_table')}</span> ${t('card_top10_crafted')}</h3><ol class="leaderboard">${mkList(Object.entries(p.crafted_top15||{}).slice(0,10),'var(--c-craft)')}</ol></div>
     </div>
     <div class="grid grid-2">

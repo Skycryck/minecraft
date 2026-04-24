@@ -16,6 +16,8 @@ The index.html file is created in the parent directory of <data_dir_path>.
 e.g. stats/<server-name>/data → stats/<server-name>/index.html
 """
 
+from __future__ import annotations
+
 import json
 import os
 import sys

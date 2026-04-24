@@ -104,6 +104,28 @@ def _load_play_hours(snapshot_dir: Path) -> dict[str, float]:
     return out
 
 
+def list_snapshot_dates(snapshots_root: Path) -> list[str]:
+    """Return the ISO dates of every snapshot dir under ``snapshots_root``.
+
+    Sorted ascending. Used client-side so the heatmap tooltip can tell the
+    difference between "no snapshot on this date" and "snapshot present but
+    the previous day is missing so no delta could be computed".
+    """
+    if not snapshots_root.exists() or not snapshots_root.is_dir():
+        return []
+    out: list[str] = []
+    for d in snapshots_root.iterdir():
+        if not d.is_dir():
+            continue
+        try:
+            date.fromisoformat(d.name)
+        except ValueError:
+            continue
+        out.append(d.name)
+    out.sort()
+    return out
+
+
 def compute_daily_play_hours(snapshots_root: Path) -> dict[str, dict[str, float]]:
     """Map UUID → {YYYY-MM-DD: hours_played_that_day} from consecutive snapshots.
 

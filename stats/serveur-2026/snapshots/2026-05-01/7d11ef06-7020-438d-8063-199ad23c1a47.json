@@ -1,0 +1,41 @@
+{
+  "stats": {
+    "minecraft:mined": {
+      "minecraft:short_grass": 3,
+      "minecraft:kelp_plant": 1,
+      "minecraft:dirt": 1,
+      "minecraft:cherry_fence": 1,
+      "minecraft:grass_block": 5
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 3396,
+      "minecraft:walk_one_cm": 23366,
+      "minecraft:leave_game": 1,
+      "minecraft:walk_under_water_one_cm": 2326,
+      "minecraft:damage_taken": 260,
+      "minecraft:boat_one_cm": 29632,
+      "minecraft:play_time": 12784,
+      "minecraft:jump": 104,
+      "minecraft:time_since_death": 3328,
+      "minecraft:sprint_one_cm": 43537,
+      "minecraft:open_chest": 7,
+      "minecraft:fall_one_cm": 4740,
+      "minecraft:swim_one_cm": 8892,
+      "minecraft:total_world_time": 12784,
+      "minecraft:fly_one_cm": 20399,
+      "minecraft:walk_on_water_one_cm": 8879,
+      "minecraft:crouch_one_cm": 913,
+      "minecraft:sneak_time": 444,
+      "minecraft:deaths": 2
+    },
+    "minecraft:used": {
+      "minecraft:cherry_fence": 1,
+      "minecraft:dirt": 5
+    },
+    "minecraft:picked_up": {
+      "minecraft:dirt": 5,
+      "minecraft:cherry_fence": 1
+    }
+  },
+  "DataVersion": 4788
+}

@@ -1,5 +1,30 @@
 {
   "stats": {
+    "minecraft:custom": {
+      "minecraft:talked_to_villager": 1,
+      "minecraft:time_since_rest": 76,
+      "minecraft:walk_one_cm": 104143,
+      "minecraft:leave_game": 7,
+      "minecraft:walk_under_water_one_cm": 646,
+      "minecraft:mob_kills": 4,
+      "minecraft:damage_taken": 500,
+      "minecraft:play_time": 116964,
+      "minecraft:damage_dealt": 1082,
+      "minecraft:jump": 325,
+      "minecraft:time_since_death": 38290,
+      "minecraft:aviate_one_cm": 325814,
+      "minecraft:sprint_one_cm": 174814,
+      "minecraft:open_chest": 11,
+      "minecraft:sleep_in_bed": 2,
+      "minecraft:fall_one_cm": 5554,
+      "minecraft:happy_ghast_one_cm": 171387,
+      "minecraft:total_world_time": 116964,
+      "minecraft:fly_one_cm": 362217,
+      "minecraft:crouch_one_cm": 417,
+      "minecraft:sneak_time": 1118,
+      "minecraft:climb_one_cm": 1420,
+      "minecraft:deaths": 5
+    },
     "minecraft:mined": {
       "minecraft:oak_leaves": 1,
       "minecraft:dirt": 1,
@@ -8,25 +33,8 @@
       "minecraft:grass_block": 1,
       "minecraft:stone": 1
     },
-    "minecraft:custom": {
-      "minecraft:time_since_rest": 17995,
-      "minecraft:walk_one_cm": 62933,
-      "minecraft:leave_game": 6,
-      "minecraft:mob_kills": 4,
-      "minecraft:damage_taken": 351,
-      "minecraft:play_time": 99219,
-      "minecraft:damage_dealt": 1033,
-      "minecraft:jump": 274,
-      "minecraft:time_since_death": 20545,
-      "minecraft:sprint_one_cm": 125993,
-      "minecraft:open_chest": 1,
-      "minecraft:sleep_in_bed": 1,
-      "minecraft:fall_one_cm": 2789,
-      "minecraft:total_world_time": 99219,
-      "minecraft:fly_one_cm": 268795,
-      "minecraft:crouch_one_cm": 204,
-      "minecraft:sneak_time": 195,
-      "minecraft:deaths": 5
+    "minecraft:killed_by": {
+      "minecraft:skeleton": 1
     },
     "minecraft:used": {
       "minecraft:stone_axe": 10,
@@ -35,7 +43,7 @@
       "minecraft:yellow_bed": 1,
       "minecraft:copper_sword": 1,
       "minecraft:diamond_shovel": 3,
-      "minecraft:firework_rocket": 4,
+      "minecraft:firework_rocket": 21,
       "minecraft:diamond_pickaxe": 4,
       "minecraft:chest": 1,
       "minecraft:oak_sapling": 2,
@@ -43,9 +51,6 @@
       "minecraft:white_bed": 1,
       "minecraft:written_book": 1,
       "minecraft:dirt": 3
-    },
-    "minecraft:killed_by": {
-      "minecraft:skeleton": 1
     },
     "minecraft:killed": {
       "minecraft:zombie": 2,
